@@ -93,7 +93,8 @@ public class OlivSoftDesktop
         try { parser.parse(desktopPos.toURI().toURL()); }
         catch (Exception ex)
         { 
-          ex.printStackTrace(); 
+          System.err.println(ex.getLocalizedMessage());
+//        ex.printStackTrace(); 
           dataOk = false;
         }        
       }
@@ -115,7 +116,8 @@ public class OlivSoftDesktop
         catch (Exception ex)
         {
           dataOk = false;
-          ex.printStackTrace();
+          System.err.println(ex.getLocalizedMessage());
+//        ex.printStackTrace();
         }
       }
     }
@@ -125,15 +127,10 @@ public class OlivSoftDesktop
     if (!dataOk)
     {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-      Dimension frameSize = frame.getSize();
-      if (frameSize.height > screenSize.height)
-      {
-        frameSize.height = screenSize.height;
-      }
-      if (frameSize.width > screenSize.width)
-      {
-        frameSize.width = screenSize.width;
-      }
+      Dimension frameSize = null;
+      System.out.println("Defaulting Desktop Dimensions...");
+      frame.setSize(new Dimension((int)(screenSize.width * 0.8), (int)(screenSize.height * 0.8)));
+      frameSize = frame.getSize();
       frame.setLocation( ( screenSize.width - frameSize.width ) / 2, ( screenSize.height - frameSize.height ) / 2 );
     }
     frame.addWindowListener(new WindowAdapter() 
