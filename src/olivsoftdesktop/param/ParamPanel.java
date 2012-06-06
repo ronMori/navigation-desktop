@@ -362,42 +362,79 @@ public final class ParamPanel
     return oa;
   }
   
+  
+  public void  setGnlPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setGnlPrm();
+  }
+  
   public void  setGnlPrm()
   {
     setObject(mkDataArray(CategoryPanel.GNL_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.GNL_CATEGORY_INDEX;
   }
   
+  public void  setNMEAPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setNMEAPrm();
+  }
   public void  setNMEAPrm()
   {
     setObject(mkDataArray(CategoryPanel.NMEA_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.NMEA_CATEGORY_INDEX;
   }
   
-  public void  setSailFaxPrm()
+  public void setSailFaxPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setSailFaxPrm();
+  }
+  public void setSailFaxPrm()
   {
     setObject(mkDataArray(CategoryPanel.SAILFAX_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.SAILFAX_CATEGORY_INDEX;
   }
   
+  public void  setChartLibPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setChartLibPrm();
+  }
   public void  setChartLibPrm()
   {
     setObject(mkDataArray(CategoryPanel.DATABASES_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.DATABASES_CATEGORY_INDEX;
   }
   
+  public void  setAlmanacPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setAlmanacPrm();
+  }
   public void  setAlmanacPrm()
   {
     setObject(mkDataArray(CategoryPanel.ALMANAC_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.ALMANAC_CATEGORY_INDEX;
   }
   
+  public void setTidePrm(String help)
+  {
+    helpTextArea.setText(help);
+    setTidePrm();
+  }
   public void setTidePrm()
   {
     setObject(mkDataArray(CategoryPanel.TIDE_CATEGORY_INDEX));
     currentCategoryIndex = CategoryPanel.TIDE_CATEGORY_INDEX;
   }
   
+  public void setApplicationPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setApplicationPrm();
+  }
   public void setApplicationPrm()
   {
     setObject(mkDataArray(CategoryPanel.TIDE_APPLICATIONS_INDEX));
