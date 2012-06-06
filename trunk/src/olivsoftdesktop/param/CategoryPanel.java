@@ -17,6 +17,14 @@ public class CategoryPanel
 
   public final static String APPLICATIONS_CATEGORY   = "Applications";
   
+  private final static String GNL_CATEGORY_HELP            = "Desktop Parameters";
+  private final static String NMEA_CATEGORY_HELP           = "NMEA Console parameters";
+  private final static String SAILFAX_CATEGORY_HELP        = "SailFax parameters";
+  private final static String DATABASES_CATEGORY_HELP      = "Databases (Tides, Charts, NMEA Journal) location.";
+  private final static String ALMANAC_CATEGORY_HELP        = "Nautical Almanac parameters";
+  private final static String TIDE_CATEGORY_HELP           = "Tides parameters";
+  private final static String APPLICATIONS_CATEGORY_HELP   = "Applications parameters, show or hide";
+
   public final static String[] CATEGORIES = { GNL_CATEGORY, 
                                               NMEA_CATEGORY, 
                                               SAILFAX_CATEGORY, 
@@ -65,19 +73,19 @@ public class CategoryPanel
   public void getEventFormTree(String str)
   {
     if (GNL_CATEGORY.equals(str))
-      table.setGnlPrm();
+      table.setGnlPrm(GNL_CATEGORY_HELP);
     else if (NMEA_CATEGORY.equals(str))
-      table.setNMEAPrm();
+      table.setNMEAPrm(NMEA_CATEGORY_HELP);
     else if (SAILFAX_CATEGORY.equals(str))
-      table.setSailFaxPrm();
+      table.setSailFaxPrm(SAILFAX_CATEGORY_HELP);
     else if (DATABASES_CATEGORY.equals(str))
-      table.setChartLibPrm();
+      table.setChartLibPrm(DATABASES_CATEGORY_HELP);
     else if (ALMANAC_CATEGORY.equals(str))
-      table.setAlmanacPrm();
+      table.setAlmanacPrm(ALMANAC_CATEGORY_HELP);
     else if (TIDE_CATEGORY.equals(str))
-      table.setTidePrm();
+      table.setTidePrm(TIDE_CATEGORY_HELP);
     else if (APPLICATIONS_CATEGORY.equals(str))
-      table.setApplicationPrm();
+      table.setApplicationPrm(APPLICATIONS_CATEGORY_HELP);
   }
   
   public void finalPrmUpdate()
