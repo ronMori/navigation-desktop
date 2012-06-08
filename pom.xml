@@ -60,17 +60,30 @@
       <artifactId>GoogleLocator</artifactId>
       <version>1.0</version>
     </dependency>
-    <dependency>
+    <!--dependency>
       <groupId>NMEA_RMIserver</groupId>
       <artifactId>NMEA_RMIserver</artifactId>
       <version>1.0</version>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>NMEAReader</groupId>
       <artifactId>NMEAReader</artifactId>
       <version>1.0</version>
     </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</releases>
+			<id>OlivierLD</id>
+			<name>Olivier LeDiouris</name>
+			<url>http://lediouris.net/maven2</url>
+			<layout>default</layout>
+		</repository>
+  </repositories>
   <parent>
     <groupId>OlivSoft</groupId>
     <artifactId>OlivSoft</artifactId>
