@@ -254,7 +254,7 @@ public class OlivSoftDesktop
         catch (ParseException pe3)
         {
           // Give up...
-          System.err.println(pe2.getLocalizedMessage());
+          System.err.println(pe3.getLocalizedMessage());
         }
       }
     }
