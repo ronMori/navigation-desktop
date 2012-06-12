@@ -353,7 +353,8 @@ public class OlivSoftDesktop
                 }
                 catch (ParseException pe)
                 {
-                  System.err.println(pe.getLocalizedMessage());                  
+                  if (notificationDate.trim().length() > 0)
+                    System.err.println(pe.getLocalizedMessage());                  
                 }
   //              System.out.println("Properties Date:" + propertiesDate.toString() + ", Provided Date:" + providedDate.toString());
                 if (notificationDate == null || notificationDate.trim().length() == 0 || propertiesDate.before(providedDate))
