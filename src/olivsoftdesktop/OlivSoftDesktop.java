@@ -254,6 +254,7 @@ public class OlivSoftDesktop
         catch (ParseException pe3)
         {
           // Give up...
+          System.err.println("Trying to parse [" + lastModified + "] as [E MM/dd/yyyy HH:mm:ss]");
           System.err.println(pe3.getLocalizedMessage());
         }
       }
