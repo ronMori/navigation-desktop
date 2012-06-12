@@ -247,7 +247,7 @@ public class OlivSoftDesktop
       {
         try
         {
-          SimpleDateFormat sdf = new SimpleDateFormat("E dd MMM yyyy HH:mm:ss", Locale.ENGLISH); // Compiled on Linux
+          SimpleDateFormat sdf = new SimpleDateFormat("E MM/dd/yyyy HH:mm:ss", Locale.ENGLISH); // Compiled on Linux
           sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
           compiledDate = sdf.parse(lastModified);        
         }
