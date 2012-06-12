@@ -230,26 +230,32 @@ public class OlivSoftDesktop
     }
     try
     {
-      SimpleDateFormat sdf = new SimpleDateFormat("E MM/dd/yyyy HH:mm:ss.SS", Locale.ENGLISH);
+      String datePattern = "E MM/dd/yyyy HH:mm:ss.SS";
+      SimpleDateFormat sdf = new SimpleDateFormat(datePattern, Locale.ENGLISH);
       sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
       compiledDate = sdf.parse(lastModified);
+      System.out.println("Compile Date parsed with [" + datePattern + "]");
     }
     catch (ParseException pe)
     {
       // From the class ? like Sun, 19 Feb 2012 03:21:22 GMT 
       try
       {
-        SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+        String datePattern = "E, dd MMM yyyy HH:mm:ss Z";
+        SimpleDateFormat sdf = new SimpleDateFormat(datePattern, Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
         compiledDate = sdf.parse(lastModified);        
+        System.out.println("Compile Date parsed with [" + datePattern + "]");
       }
       catch (ParseException pe2)
       {
         try
         {
-          SimpleDateFormat sdf = new SimpleDateFormat("E MM/dd/yyyy HH:mm:ss", Locale.ENGLISH); // Compiled on Linux
+          String datePattern = "E MM/dd/yyyy HH:mm:ss";
+          SimpleDateFormat sdf = new SimpleDateFormat(datePattern, Locale.ENGLISH);
           sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
           compiledDate = sdf.parse(lastModified);        
+          System.out.println("Compile Date parsed with [" + datePattern + "]");
         }
         catch (ParseException pe3)
         {
