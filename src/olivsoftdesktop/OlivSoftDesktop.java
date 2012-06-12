@@ -245,8 +245,17 @@ public class OlivSoftDesktop
       }
       catch (ParseException pe2)
       {
-        // Give up...
-        System.err.println(pe2.getLocalizedMessage());
+        try
+        {
+          SimpleDateFormat sdf = new SimpleDateFormat("E dd MMM yyyy HH:mm:ss", Locale.ENGLISH); // Compiled on Linux
+          sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
+          compiledDate = sdf.parse(lastModified);        
+        }
+        catch (ParseException pe3)
+        {
+          // Give up...
+          System.err.println(pe2.getLocalizedMessage());
+        }
       }
     }
     catch (Exception ex)
