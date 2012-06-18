@@ -29,13 +29,16 @@ public class RebroadcastPanel
   private JLabel udpPortLabel = new JLabel();
   private JLabel tcpPortLabel = new JLabel();
   private JFormattedTextField httpPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
-  private JFormattedTextField udpPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
-  private JFormattedTextField tcpPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
+  private JFormattedTextField udpPortFormattedTextField  = new JFormattedTextField(new DecimalFormat("#####0"));
+  private JFormattedTextField tcpPortFormattedTextField  = new JFormattedTextField(new DecimalFormat("#####0"));
   private JCheckBox verboseCheckBox = new JCheckBox();
-  private JTextField hostNameTextField = new JTextField();
+  private JTextField udpHostNameTextField = new JTextField();
   private JCheckBox RMICheckBox = new JCheckBox();
   private JLabel rmiPortLabel = new JLabel();
   private JFormattedTextField rmiPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
+  private JCheckBox GPSDCheckBox = new JCheckBox();
+  private JLabel gpsdPortLabel = new JLabel();
+  private JFormattedTextField gpsdPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
 
   public RebroadcastPanel()
   {
@@ -85,12 +88,18 @@ public class RebroadcastPanel
     tcpPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
     tcpPortFormattedTextField.setPreferredSize(new Dimension(50, 19));
     tcpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
-    tcpPortFormattedTextField.setText("3001");
+    tcpPortFormattedTextField.setText("7001");
     verboseCheckBox.setText("verbose");
-    hostNameTextField.setText("230.0.0.1");
-    hostNameTextField.setHorizontalAlignment(JTextField.LEFT);
-    hostNameTextField.setPreferredSize(new Dimension(70, 19));
-    hostNameTextField.setMinimumSize(new Dimension(50, 19));
+    udpHostNameTextField.setText("230.0.0.1");
+    udpHostNameTextField.setHorizontalAlignment(JTextField.LEFT);
+    udpHostNameTextField.setPreferredSize(new Dimension(70, 19));
+    udpHostNameTextField.setMinimumSize(new Dimension(50, 19));
+
+    gpsdPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
+    gpsdPortFormattedTextField.setPreferredSize(new Dimension(50, 19));
+    gpsdPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
+    gpsdPortFormattedTextField.setText("2947");
+
     this.add(HTTPCheckBox, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 5), 0, 0));
     this.add(UDPCheckBox, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
@@ -111,14 +120,20 @@ public class RebroadcastPanel
           new Insets(0, 5, 0, 5), 0, 0));
     this.add(verboseCheckBox, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 10, 0, 0), 0, 0));
-    this.add(hostNameTextField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+    this.add(udpHostNameTextField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
           new Insets(0, 10, 0, 0), 0, 0));
-
+    
     this.add(RMICheckBox, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 0), 0, 0));
     this.add(rmiPortLabel, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 0), 0, 0));
     this.add(rmiPortFormattedTextField, new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+          new Insets(0, 0, 0, 0), 0, 0));
+    this.add(GPSDCheckBox, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 0, 0, 0), 0, 0));
+    this.add(gpsdPortLabel, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+          new Insets(0, 0, 0, 0), 0, 0));
+    this.add(gpsdPortFormattedTextField, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 0), 0, 0));
     httpPortLabel.setEnabled(false);
     httpPortFormattedTextField.setEnabled(false);
@@ -126,7 +141,7 @@ public class RebroadcastPanel
     
     udpPortLabel.setEnabled(false);
     udpPortFormattedTextField.setEnabled(false);
-    hostNameTextField.setEnabled(false);
+    udpHostNameTextField.setEnabled(false);
 
     rmiPortLabel.setEnabled(false);
     rmiPortFormattedTextField.setEnabled(false);
@@ -144,9 +159,33 @@ public class RebroadcastPanel
     rmiPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
     rmiPortFormattedTextField.setText("1099");
     rmiPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
+
+    GPSDCheckBox.setText("GPSd");
+    gpsdPortLabel.setText("port");
+    gpsdPortLabel.setEnabled(false);
+    
+    gpsdPortFormattedTextField.setEnabled(false);
+    GPSDCheckBox.setEnabled(true);
+    GPSDCheckBox.addActionListener(new ActionListener()
+      {
+        public void actionPerformed(ActionEvent e)
+        {
+          GPSDCheckBox_actionPerformed(e);
+        }
+      });
+    
     tcpPortLabel.setEnabled(false);
+    
     tcpPortFormattedTextField.setEnabled(false);
-    TCPCheckBox.setEnabled(false); // For now...
+    TCPCheckBox.setEnabled(true);
+    TCPCheckBox.addActionListener(new ActionListener()
+      {
+        public void actionPerformed(ActionEvent e)
+        {
+          TCPCheckBox_actionPerformed(e);
+        }
+      });
+
   }
 
   private void HTTPCheckBox_actionPerformed(ActionEvent e)
@@ -162,11 +201,23 @@ public class RebroadcastPanel
     rmiPortFormattedTextField.setEnabled(RMICheckBox.isSelected());
   }
 
+  private void TCPCheckBox_actionPerformed(ActionEvent e)
+  {
+    tcpPortLabel.setEnabled(TCPCheckBox.isSelected());
+    tcpPortFormattedTextField.setEnabled(TCPCheckBox.isSelected());
+  }
+
   private void UDPCheckBox_actionPerformed(ActionEvent e)
   {
     udpPortLabel.setEnabled(UDPCheckBox.isSelected());
     udpPortFormattedTextField.setEnabled(UDPCheckBox.isSelected());
-    hostNameTextField.setEnabled(UDPCheckBox.isSelected());
+    udpHostNameTextField.setEnabled(UDPCheckBox.isSelected());
+  }
+    
+  private void GPSDCheckBox_actionPerformed(ActionEvent e)
+  {
+    gpsdPortLabel.setEnabled(GPSDCheckBox.isSelected());
+    gpsdPortFormattedTextField.setEnabled(GPSDCheckBox.isSelected());
   }
   
   public boolean isHTTPSelected()
@@ -184,6 +235,11 @@ public class RebroadcastPanel
     return TCPCheckBox.isSelected();
   }
   
+  public boolean isGPSDSelected()
+  {
+    return GPSDCheckBox.isSelected();
+  }
+  
   public boolean isRMISelected()
   {
     return RMICheckBox.isSelected();
@@ -196,7 +252,7 @@ public class RebroadcastPanel
     return port;                                                                                                     
   }
   
-  public int getUDTPPort()
+  public int getUDPPort()
   {
     int port = -1;
     try { port = Integer.parseInt(udpPortFormattedTextField.getText()); } catch (Exception nfe) { nfe.printStackTrace(); }
@@ -207,6 +263,13 @@ public class RebroadcastPanel
   {
     int port = -1;
     try { port = Integer.parseInt(tcpPortFormattedTextField.getText()); } catch (Exception nfe) { nfe.printStackTrace(); }
+    return port;                                                                                                     
+  }
+  
+  public int getGPSDPort()
+  {
+    int port = -1;
+    try { port = Integer.parseInt(gpsdPortFormattedTextField.getText()); } catch (Exception nfe) { nfe.printStackTrace(); }
     return port;                                                                                                     
   }
   
@@ -224,6 +287,6 @@ public class RebroadcastPanel
   
   public String udpHost()
   {
-    return hostNameTextField.getText();
+    return udpHostNameTextField.getText();
   }
 }
