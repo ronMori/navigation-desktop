@@ -137,6 +137,7 @@ import olivsoftdesktop.utils.BackgroundWindow;
 import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.HTTPClient;
+import olivsoftdesktop.utils.TCPWriter;
 import olivsoftdesktop.utils.UDPWriter;
 
 import oracle.xml.parser.v2.DOMParser;
@@ -361,7 +362,9 @@ public class DesktopFrame
   private int UDPPort  = -1;
   private int HTTPPort = -1;
   private int RMIPort  = -1;
+  private int GPSDPort = -1;
   private transient UDPWriter udpWriter = null;
+  private transient TCPWriter tcpWriter = null;
   private RebroadcastPanel rebroadcastPanel = null;
   private boolean rebroadcastVerbose = "true".equals(System.getProperty("verbose", "false"));
 
@@ -1564,29 +1567,42 @@ public class DesktopFrame
             {
               public void manageNMEAString(String str)
               {
+                if (str == null)
+                  return;
+                
                 String prefix = "File:";
                 String message = str;
-                if (TCPPort != -1)
+                if (TCPPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
-                  prefix += (" => TCP " + TCPPort);
-                  
+                  if (tcpWriter != null)
+                  {
+                    tcpWriter.write((str + "\n").getBytes());
+                    prefix += (" => TCP " + TCPPort);
+                  }
                 }
-                if (UDPPort != -1)
+                if (UDPPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
                   udpWriter.write(str.getBytes());
                   prefix += (" => UDP " + UDPPort);
                 }
-                if (HTTPPort != -1)
+                if (GPSDPort != -1 && str != null)
+                {
+                  if (rebroadcastVerbose)
+                    System.out.println("Rebroadcasting on GPSD Port " + GPSDPort + ":" + str);
+               // gpsdWriter.write(str.getBytes());
+                  prefix += (" => GPSD " + GPSDPort);
+                }
+                if (HTTPPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on HTTP Port " + HTTPPort + ":" + str);
                   prefix += (" => XML/HTTP " + HTTPPort);
                 }
-                if (RMIPort != -1)
+                if (RMIPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on RMI Port " + RMIPort + ":" + str);
@@ -1734,7 +1750,11 @@ public class DesktopFrame
               {
                 if (rebroadcastVerbose)
                   System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
-                prefix += (" => TCP " + TCPPort);
+                if (tcpWriter != null)
+                {
+                  tcpWriter.write((str + "\n").getBytes());
+                  prefix += (" => TCP " + TCPPort);
+                }
               }
               if (UDPPort != -1)
               {
@@ -1742,6 +1762,16 @@ public class DesktopFrame
                   System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
                 udpWriter.write(str.getBytes());
                 prefix += (" => UDP " + UDPPort);
+              }
+              if (GPSDPort != -1)
+              {
+                if (rebroadcastVerbose)
+                  System.out.println("Rebroadcasting on GPSd Port " + GPSDPort + ":" + str);
+          //    if (gpsdWriter != null)
+                {
+          //      gpsdWriter.write((str + "\n").getBytes());
+                  prefix += (" => GPSd " + GPSDPort);
+                }
               }
               if (HTTPPort != -1)
               {
@@ -1765,6 +1795,7 @@ public class DesktopFrame
           String tcpPort = (ParamPanel.getData()[ParamData.NMEA_TCP_PORT][ParamPanel.PRM_VALUE]).toString();
           String udpPort = (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString();
           String rmiPort = (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString();
+// TODO   String gpsdPort = (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString();
           String brate   = (ParamPanel.getData()[ParamData.NMEA_BAUD_RATE][ParamPanel.PRM_VALUE]).toString();
           int option = -1;
           String port = "";
@@ -2391,16 +2422,39 @@ public class DesktopFrame
           
           if (rebroadcastPanel.isUDPSelected() && UDPPort == -1)
           {
-            UDPPort = rebroadcastPanel.getUDTPPort();
+            UDPPort = rebroadcastPanel.getUDPPort();
             System.out.println("Creating UDP writer on " + rebroadcastPanel.udpHost() + ":" + UDPPort);
             udpWriter = new UDPWriter(UDPPort, rebroadcastPanel.udpHost()); 
           }
           else if (!rebroadcastPanel.isUDPSelected() && UDPPort != -1)
             UDPPort = -1;
           
-          if (rebroadcastPanel.isTCPSelected())
+          if (rebroadcastPanel.isTCPSelected() && TCPPort == -1)
           {
-            ;            
+            TCPPort = rebroadcastPanel.getTCPPort();
+//          System.out.println("Creating TCP writer on " + rebroadcastPanel.tcpHost() + ":" + TCPPort);
+            System.out.println("Creating TCP writer on port " + TCPPort);
+            tcpWriter = new TCPWriter(TCPPort); // , rebroadcastPanel.tcpHost()); 
+          }
+          else if (!rebroadcastPanel.isTCPSelected() && TCPPort != -1)
+          {
+            TCPPort = -1;
+            try { tcpWriter.close(); }
+            catch (Exception ex) { System.err.println(ex.getLocalizedMessage()); }
+          }
+          
+          if (rebroadcastPanel.isGPSDSelected() && GPSDPort == -1)
+          {
+            JOptionPane.showMessageDialog(this, "Implemented soon", "GPSd", JOptionPane.INFORMATION_MESSAGE);
+            GPSDPort = rebroadcastPanel.getGPSDPort();
+            System.out.println("Creating GPSD writer on port " + GPSDPort);
+//          gpsdWriter = new GPSDWriter(GPSDPort); // , rebroadcastPanel.tcpHost()); 
+          }
+          else if (!rebroadcastPanel.isGPSDSelected() && GPSDPort != -1)
+          {
+            GPSDPort = -1;
+//          try { gpsdWriter.close(); }
+//          catch (Exception ex) { System.err.println(ex.getLocalizedMessage()); }
           }
 
           if (rebroadcastPanel.isRMISelected() && RMIPort == -1)
