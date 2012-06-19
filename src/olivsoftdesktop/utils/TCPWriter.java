@@ -14,6 +14,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
+import javax.swing.JOptionPane;
+
 public class TCPWriter
 {
   private int tcpPort               = 7001;
@@ -44,6 +46,7 @@ public class TCPWriter
     }
     catch (Exception ex)
     {
+      JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), "TCP Writer", JOptionPane.ERROR_MESSAGE);
       ex.printStackTrace();
     }
   }
@@ -70,7 +73,8 @@ public class TCPWriter
     catch (SocketException se)
     {
       System.err.println("SocketException:[" + se.getMessage() + "]");
-      if (se.getMessage().indexOf("Connection reset by peer") > -1) // TODO Catch more errors
+      if (se.getMessage().indexOf("Connection reset by peer") > -1 ||
+          se.getMessage().indexOf("Software caused connection abort: socket write error") > -1) // Catch more errors ?
       {
         setSocket(null);
         try
