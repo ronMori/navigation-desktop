@@ -20,6 +20,8 @@ import java.text.SimpleDateFormat;
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
 
+import ocss.gpsd.GPSdUtils;
+
 import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.GeoPos;
 import ocss.nmea.parser.Speed;
@@ -27,7 +29,6 @@ import ocss.nmea.parser.UTCDate;
 
 public class GPSDWriter
 {
-  private final static SimpleDateFormat TO_DURATION = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'");
   private int tcpPort               = 2497;
   private Socket tcpSocket          = null;
   private ServerSocket serverSocket = null;
@@ -123,7 +124,7 @@ public class GPSDWriter
       {
         String mess = new String(message);
 //      System.out.println("Rebroadcasting [" + mess + "] on GPSd");
-        // TODO Parse appropriate strings...
+        // Parse appropriate strings...
         if ("GLL".equals(mess.substring(3, 6)) ||
             "RMC".equals(mess.substring(3, 6)))
         {
@@ -137,13 +138,7 @@ public class GPSDWriter
             try { cog = ((Angle360)ndc.get(NMEADataCache.COG)).getValue(); } catch (Exception ex) {}
             if (utcDate != null && gp != null)
             {
-              String time = TO_DURATION.format(utcDate.getValue());
-              String responseSentence = "{\"class\":\"TPV\",\"tag\":\"MID2\",\"time\":\"" + time + 
-                                        "\",\"ept\":0.00,\"lat\":" + gp.lat + 
-                                        ",\"lon\":" + gp.lng + 
-                                        ",\"alt\":0.0,\"epx\":0.0,\"epy\":0.0,\"epv\":0.0,\"track\":" + cog + 
-                                        ",\"speed\":" + sog + 
-                                        ",\"climb\":0.0,\"eps\":0.0,\"mode\":3}";
+              String responseSentence = GPSdUtils.produceTPV(utcDate.getValue(), gp, cog, sog);
               responseSentence += "\n";
               outToClient.writeBytes(responseSentence);
               outToClient.flush();
