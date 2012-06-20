@@ -177,7 +177,7 @@ public class OlivSoftDesktop
       try 
       { 
         String jarFileURL = strURL.substring(0, strURL.indexOf(jarIdentifier) + jarIdentifier.length()); // Must end with ".jar!/"
-    //      System.out.println("Trying to reach [" + jarFileURL + "]");
+    //  System.out.println("Trying to reach [" + jarFileURL + "]");
         URL jarURL = new URL(jarFileURL);
         JarFile myJar = ((JarURLConnection)jarURL.openConnection()).getJarFile();
         Manifest manifest = myJar.getManifest();
@@ -232,7 +232,7 @@ public class OlivSoftDesktop
     {
       String datePattern = "E MM/dd/yyyy HH:mm:ss.SS";
       SimpleDateFormat sdf = new SimpleDateFormat(datePattern, Locale.ENGLISH);
-      sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
+      sdf.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
       compiledDate = sdf.parse(lastModified);
       System.out.println("Compile Date parsed with [" + datePattern + "]");
     }
@@ -253,7 +253,7 @@ public class OlivSoftDesktop
         {
           String datePattern = "E MM/dd/yyyy HH:mm:ss";
           SimpleDateFormat sdf = new SimpleDateFormat(datePattern, Locale.ENGLISH);
-          sdf.setTimeZone(TimeZone.getTimeZone("Pacific/Los_Angeles"));
+          sdf.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
           compiledDate = sdf.parse(lastModified);        
           System.out.println("Compile Date parsed with [" + datePattern + "]");
         }
@@ -273,7 +273,7 @@ public class OlivSoftDesktop
   }
 
   private static boolean proceed = false;
-  public final static String VERSION_NUMBER = "1.0.0.1";
+  public final static String VERSION_NUMBER = "1.0.0.2";
   public final static String PRODUCT_ID     = "desktop." + VERSION_NUMBER;
   
   public final static String PRODUCT_KEY    = "DESKTOP";
