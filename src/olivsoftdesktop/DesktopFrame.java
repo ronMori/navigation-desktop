@@ -696,6 +696,7 @@ public class DesktopFrame
         */
       });
 
+    timeBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     bgwal.add(timeBGWindow);
     
     bgwal.add(gpsSignalBGWindow);
@@ -707,28 +708,29 @@ public class DesktopFrame
     bgwal.add(positionBGWindow);
     positionBGWindow.setBgWinX(100);
     positionBGWindow.setBgWinY(40);
-    positionBGWindow.setDataFontColor(Color.blue);
+    
+    positionBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     positionBGWindow.setMinNumLine(2);
     positionBGWindow.setDisplayBGWindow(false);
     
     bgwal.add(sogcogBGWindow);
     sogcogBGWindow.setBgWinX(100);
     sogcogBGWindow.setBgWinY(70);
-    sogcogBGWindow.setDataFontColor(Color.black);
+    sogcogBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     sogcogBGWindow.setMinNumLine(2);
     sogcogBGWindow.setDisplayBGWindow(false);
     
     bgwal.add(gpsTimeBGWindow);
     gpsTimeBGWindow.setBgWinX(100);
     gpsTimeBGWindow.setBgWinY(100);
-    gpsTimeBGWindow.setDataFontColor(Color.blue);
+    gpsTimeBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     gpsTimeBGWindow.setMinNumLine(1);
     gpsTimeBGWindow.setDisplayBGWindow(false);
     
     bgwal.add(nmeaBGWindow);
     nmeaBGWindow.setBgWinX(120);
     nmeaBGWindow.setBgWinY(120);
-    nmeaBGWindow.setDataFontColor(Color.blue);
+    nmeaBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     nmeaBGWindow.setMinNumLine(1);
     nmeaBGWindow.setDisplayBGWindow(false);
     
@@ -742,7 +744,7 @@ public class DesktopFrame
     bgwal.add(rtaBGWindow);
     rtaBGWindow.setBgWinX(120);
     rtaBGWindow.setBgWinY(120);
-    rtaBGWindow.setDataFontColor(Color.blue);
+    rtaBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     rtaBGWindow.setMinNumLine(1);
     rtaBGWindow.setDisplayBGWindow(false);
     
@@ -1239,6 +1241,11 @@ public class DesktopFrame
           setBackgroundImage();
         }
         
+        public void bgWinColorChanged()
+        {
+          setBGWinColor();
+        }
+        
         public void startReadingNMEAPort() 
         {
           System.out.println("NMEA port reading requested...");
@@ -1439,6 +1446,18 @@ public class DesktopFrame
       catch (Exception ex)
       {
         this.setVisible(true);
+      }
+    }
+  }
+  
+  private void setBGWinColor()
+  {
+    Color c = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+    for (BackgroundWindow bgw : bgwal)
+    {
+      if (!bgw.getWinTitle().equals(GPS_SIGNAL_BG_WINDOW_TITLE))
+      {
+        bgw.setDataFontColor(c);
       }
     }
   }

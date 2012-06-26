@@ -1,5 +1,6 @@
 package olivsoftdesktop.utils;
 
+import java.awt.Color;
 import java.awt.Component;
 
 import java.awt.Dimension;
@@ -171,6 +172,25 @@ public class DesktopUtilities
     {
       ex.printStackTrace();
     }
+  }
+
+  public static Color buildColor(String str)
+  {
+    String[] st = str.split(";");
+    int b = 0, g = 0, r = 0;
+    if (st.length != 3)
+      throw new RuntimeException("Bad color definition: [" + str + "]");
+    r = Integer.parseInt(st[0]);
+    g = Integer.parseInt(st[1]);
+    b = Integer.parseInt(st[2]);
+    Color c = new Color(r, g, b);
+    return c;
+  }
+
+  public static String colorToString(Color c)
+  {
+    String s = Integer.toString(c.getRed()) + ";" + Integer.toString(c.getGreen()) + ";" + Integer.toString(c.getBlue());
+    return s;
   }
 
   public static class ToolFileFilter

@@ -37,7 +37,8 @@ public class ParamData
     "Google Locator",                                                          // 27
     "Tides",                                                                   // 28
     // 
-    "NMEA Source RMI Port"                                                     // 29
+    "NMEA Source RMI Port",                                                    // 29
+    "Background Windows Font color"                                            // 30
   };
   
   public final static String[] helptext =
@@ -72,6 +73,7 @@ public class ParamData
     /* 27 */ "Google Locator, generates a URL on Google Maps. Modification will require restart.",
     /* 28 */ "Tides, world wide tide predictions. Modification will require restart.",
     /* 29 */ "Port used to read NMEA Data from RMI. Used along with the NMEA Source Host",
+    /* 30 */ "Font color for the background windows"        
   };
   
   public final static String PARAM_FILE_NAME = "config" + File.separator + "desktop-prms.xml"; 
@@ -106,6 +108,7 @@ public class ParamData
   public final static int USE_GOOGLE_APP               = 27;
   public final static int USE_TIDES_APP                = 28;
   public final static int NMEA_RMI_PORT                = 29; // 1099
+  public final static int BG_WIN_FONT_COLOR            = 30;
 
-  public final static int NB_PARAMETERS    = 30;
+  public final static int NB_PARAMETERS    = 31;
 }
