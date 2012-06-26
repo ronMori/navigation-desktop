@@ -67,6 +67,15 @@ public class DesktopContext
     }    
   }
 
+  public void fireBGWinColorChanged()
+  {    
+    for (int i=0; i < this.getListeners().size(); i++)
+    {
+      DesktopEventListener l = this.getListeners().get(i);
+      l.bgWinColorChanged();
+    }    
+  }
+  
   public void fireStartReadingNMEAPort()
   {
     for (int i=0; i < this.getListeners().size(); i++)

@@ -7,7 +7,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
-
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
@@ -16,9 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import java.util.ArrayList;
 import java.util.EventObject;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JCheckBox;
@@ -31,7 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -43,14 +39,13 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import olivsoftdesktop.ctx.DesktopContext;
-
 import olivsoftdesktop.ctx.JTableFocusChangeListener;
 
 import olivsoftdesktop.param.widget.ColorPickerCellEditor;
 import olivsoftdesktop.param.widget.FieldAndButtonCellEditor;
-
 import olivsoftdesktop.param.widget.FieldPlusFinder;
 
+import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.SerialPortList;
 
 import oracle.xml.parser.v2.DOMParser;
@@ -59,6 +54,7 @@ import oracle.xml.parser.v2.XMLDocument;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+
 
 public final class ParamPanel 
            extends JPanel 
@@ -200,6 +196,9 @@ public final class ParamPanel
       case ParamData.NMEA_RMI_PORT:
         it = "1099";
         break;
+      case ParamData.BG_WIN_FONT_COLOR:
+        it = new ParamColor(Color.blue, "");
+        break;
       default:
         break;
     }
@@ -269,6 +268,8 @@ public final class ParamPanel
                      i == ParamData.USE_GOOGLE_APP || 
                      i == ParamData.USE_TIDES_APP)
               data[i][PRM_VALUE] = new Boolean(s);
+            else if (i == ParamData.BG_WIN_FONT_COLOR)
+              data[i][PRM_VALUE] = new ParamColor(DesktopUtilities.buildColor(s), "");
             else
               data[i][PRM_VALUE] = s; // All the string fall in this bucket
           }
@@ -303,7 +304,8 @@ public final class ParamPanel
       ParamData.INTERNAL_FRAMES_TRANSPARENCY,
       ParamData.BACKGROUND_IMAGE,
       ParamData.NMEA_DATA_STREAM,
-      ParamData.PLAY_SOUNDS
+      ParamData.PLAY_SOUNDS,
+      ParamData.BG_WIN_FONT_COLOR
     },
     new int[] // NMEA
     { 
@@ -576,6 +578,10 @@ public final class ParamPanel
             else if (currentIndex == ParamData.BACKGROUND_IMAGE)
             {
               DesktopContext.getInstance().fireBackgroundImageChanged();
+            }
+            else if (currentIndex == ParamData.BG_WIN_FONT_COLOR)
+            {
+              DesktopContext.getInstance().fireBGWinColorChanged();
             }
             else if (currentIndex == ParamData.SAILFAX_CATALOG)
             {
@@ -884,8 +890,11 @@ public final class ParamPanel
     public Color getColor()
     { return this.color; }
 
-    public String toString()
+    public String toString_1()
     { return this.colorName; }
+
+    public String toString()
+    { return DesktopUtilities.colorToString(this.color); }
   }
   
   public class ParamEditor 
