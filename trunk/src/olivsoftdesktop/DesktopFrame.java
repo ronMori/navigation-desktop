@@ -24,6 +24,8 @@ import app.starfinder.SkyInternalFrame;
 import app.starfinder.ctx.SFContext;
 import app.starfinder.ctx.StarFinderEventListener;
 
+import calculation.SightReductionUtil;
+
 import chartlib.ctx.ChartLibContext;
 
 import chartlib.event.ChartLibListener;
@@ -75,6 +77,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -97,6 +100,15 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+
+import nauticalalmanac.Anomalies;
+import nauticalalmanac.Context;
+import nauticalalmanac.Core;
+import nauticalalmanac.Jupiter;
+import nauticalalmanac.Mars;
+import nauticalalmanac.Moon;
+import nauticalalmanac.Saturn;
+import nauticalalmanac.Venus;
 
 import nightsky.ctx.SkyMapContext;
 import nightsky.ctx.SkyMapEventListener;
@@ -212,6 +224,7 @@ public class DesktopFrame
   private JMenuItem menuToolsDisplayGPSSpeedCourse = new JMenuItem();
   private JMenuItem menuToolsDisplayNMEA           = new JMenuItem();
   private JMenuItem menuToolsDisplayAW             = new JMenuItem();
+  private JMenuItem menuToolsDisplayRTA            = new JMenuItem();
   
   private JMenu menuHelp = new JMenu();
   private JMenuItem menuHelpAbout = new JMenuItem();
@@ -224,6 +237,7 @@ public class DesktopFrame
   private String hsString      = "0 kts\n0\272";
   private String gpsTimeString = "00:00:00";
   private String nmeaString    = "00:00:00";
+  private String rtaString     = "Almanac";
   
   private String windString    = "00.00 000\n";
   private String bspString     = "00.00\n";
@@ -335,6 +349,8 @@ public class DesktopFrame
               bgw.displayBackGroundWindow(gr, nmeaString);
             else if (bgw.getWinTitle().equals(AW_BG_WINDOW_TITLE))
               bgw.displayBackGroundWindow(gr, windString);
+            else if (bgw.getWinTitle().equals(REALTIME_ALMANAC_BG_WINDOW_TITLE))
+              bgw.displayBackGroundWindow(gr, rtaString);
             else
               bgw.paintBackgroundWindow(gr);
           }
@@ -405,6 +421,7 @@ public class DesktopFrame
   private final static String AW_BG_WINDOW_TITLE         = "App.Wind";
 
   private final static String NMEA_BG_WINDOW_TITLE       = "NMEA Data";
+  private final static String REALTIME_ALMANAC_BG_WINDOW_TITLE = "Real time Almanac";
 
   private transient BackgroundWindow timeBGWindow = new BackgroundWindow(TIME_BG_WINDOW_TITLE);
   private transient BackgroundWindow gpsSignalBGWindow = new BackgroundWindow(GPS_SIGNAL_BG_WINDOW_TITLE, 
@@ -546,6 +563,7 @@ public class DesktopFrame
                             ys + BG_WINDOW_HEADER_SIZE + (awDisplayHeight / 2) - 5); // AWS
       }
     };
+  private transient BackgroundWindow rtaBGWindow = new BackgroundWindow(REALTIME_ALMANAC_BG_WINDOW_TITLE);
   
   ImageIcon bgImage = null;
   JLabel bgLabel = null;
@@ -575,6 +593,7 @@ public class DesktopFrame
                 menuToolsDisplayGPSSpeedCourse.setEnabled(!(getBGWinByTitle(SOG_COG_BG_WINDOW_TITLE).isDisplayBGWindow()));
                 menuToolsDisplayNMEA.setEnabled(!(getBGWinByTitle(NMEA_BG_WINDOW_TITLE).isDisplayBGWindow()));
                 menuToolsDisplayAW.setEnabled(!(getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow()));
+                menuToolsDisplayRTA.setEnabled(!(getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow()));
               }
               else if (button == BackgroundWindow.ZOOMEXPAND_IMAGE)
               {                                     
@@ -719,6 +738,13 @@ public class DesktopFrame
     awBGWindow.setDataFontColor(Color.cyan);
     awBGWindow.setMinNumLine(5);
     awBGWindow.setDisplayBGWindow(false);
+    
+    bgwal.add(rtaBGWindow);
+    rtaBGWindow.setBgWinX(120);
+    rtaBGWindow.setBgWinY(120);
+    rtaBGWindow.setDataFontColor(Color.blue);
+    rtaBGWindow.setMinNumLine(1);
+    rtaBGWindow.setDisplayBGWindow(false);
     
     DesktopContext.getInstance().setTopFrame(this);
     setBackgroundImage();    
@@ -1150,6 +1176,35 @@ public class DesktopFrame
                                                     {
                                                       bgw.setDisplayBGWindow(!bgw.isDisplayBGWindow()); 
                                                       menuToolsDisplayAW.setEnabled(!bgw.isDisplayBGWindow());
+                                                      if (bgw.isDisplayBGWindow())
+                                                      {
+                                                        if (nmeaDataThread == null || !nmeaDataThread.isAlive())
+                                                        {
+                                                          String streamType = (ParamPanel.getData()[ParamData.NMEA_DATA_STREAM][ParamPanel.PRM_VALUE]).toString();
+                                                          if (streamType.equals("NMEA Port"))
+                                                            nmeaDataThread = new NMEACacheReaderThread();
+                                                          else
+                                                            nmeaDataThread = new HTTPNMEAReaderThread();
+                                                          nmeaDataThread.start();
+                                                        }
+                                                      }
+                                                      break;
+                                                    }
+                                                  }
+                                                } 
+                                              });
+      menuToolsDisplayRTA.setText("Display Real time Almanac");
+      menuTools.add(menuToolsDisplayRTA);
+      menuToolsDisplayRTA.addActionListener( new ActionListener() 
+                                              { 
+                                                public void actionPerformed( ActionEvent ae ) 
+                                                { 
+                                                  for (BackgroundWindow bgw : bgwal)
+                                                  {
+                                                    if (bgw.getWinTitle().equals(REALTIME_ALMANAC_BG_WINDOW_TITLE))
+                                                    {
+                                                      bgw.setDisplayBGWindow(!bgw.isDisplayBGWindow()); 
+                                                      menuToolsDisplayRTA.setEnabled(!bgw.isDisplayBGWindow());
                                                       if (bgw.isDisplayBGWindow())
                                                       {
                                                         if (nmeaDataThread == null || !nmeaDataThread.isAlive())
@@ -2055,7 +2110,8 @@ public class DesktopFrame
              getBGWinByTitle(POSITION_BG_WINDOW_TITLE).isDisplayBGWindow()   ||
              getBGWinByTitle(SOG_COG_BG_WINDOW_TITLE).isDisplayBGWindow()    ||
              getBGWinByTitle(NMEA_BG_WINDOW_TITLE).isDisplayBGWindow()       || 
-             getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow())
+             getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow()         ||
+             getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow())
       {
         try
         {
@@ -2111,7 +2167,8 @@ public class DesktopFrame
             try 
             { 
 //            gpsTimeString = "GPS Time:" + sdf3.format(NMEACache.getInstance().getGpsDate());
-              gpsTimeString = "GPS Time:" + sdf3.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+//            gpsTimeString = "GPS Time:" + sdf3.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+              gpsTimeString = sdf.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
             } 
             catch (Exception ignore) 
             {
@@ -2195,6 +2252,110 @@ public class DesktopFrame
               satList.add(gps);
             }
           }
+          
+          if (getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow()) // Calculate Almanac
+          {
+            GeoPos pos = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true));
+            UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+            if (utcDate == null) // Then get System date
+            {
+              Date ut = TimeUtil.getGMT();
+              utcDate = new UTCDate(ut);
+            }
+            // Almanac Data
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(utcDate.getValue());
+            double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
+            Core.julianDate(cal.get(Calendar.YEAR), 
+                            cal.get(Calendar.MONTH) + 1, 
+                            cal.get(Calendar.DAY_OF_MONTH), 
+                            cal.get(Calendar.HOUR_OF_DAY), 
+                            cal.get(Calendar.MINUTE), 
+                            cal.get(Calendar.SECOND), 
+                            deltaT);
+            
+            Anomalies.nutation();
+            Anomalies.aberration();
+            
+            Core.aries();
+            Core.sun();
+            Venus.compute();
+            Mars.compute();
+            Jupiter.compute();
+            Saturn.compute();
+            Moon.compute();
+            Core.polaris();
+            Core.moonPhase();
+            Core.weekDay();
+            SightReductionUtil sru = null;
+            if (pos != null)
+            {
+              sru = new SightReductionUtil();
+              sru.setL(pos.lat);
+              sru.setG(pos.lng);
+            }
+            rtaString = "GHA Aries   " + GeomUtil.decToSex(Context.GHAAtrue, GeomUtil.SWING, GeomUtil.NONE);                
+            rtaString += "\nGHA Sun     " + GeomUtil.decToSex(Context.GHAsun, GeomUtil.SWING, GeomUtil.NONE);                 
+            rtaString += "\nD Sun       " + GeomUtil.decToSex(Context.DECsun, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAsun);
+              sru.setD(Context.DECsun);    
+              sru.calculate();  
+              rtaString += "\nSun Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nSun Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+            rtaString += "\nGHA Moon    " + GeomUtil.decToSex(Context.GHAmoon, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\nD Moon      " + GeomUtil.decToSex(Context.DECmoon, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAmoon);
+              sru.setD(Context.DECmoon);    
+              sru.calculate();  
+              rtaString += "\nMoon Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nMoon Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+            rtaString += "\nGHA Venus    " + GeomUtil.decToSex(Context.GHAvenus, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\nD Venus      " + GeomUtil.decToSex(Context.DECvenus, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAvenus);
+              sru.setD(Context.DECvenus);    
+              sru.calculate();  
+              rtaString += "\nVenus Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nVenus Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+            rtaString += "\nGHA Mars    " + GeomUtil.decToSex(Context.GHAmars, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\nD Mars      " + GeomUtil.decToSex(Context.DECmars, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAmars);
+              sru.setD(Context.DECmars);    
+              sru.calculate();  
+              rtaString += "\nMars Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nMars Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+            rtaString += "\nGHA Jupiter    " + GeomUtil.decToSex(Context.GHAjupiter, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\nD Jupiter      " + GeomUtil.decToSex(Context.DECjupiter, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAjupiter);
+              sru.setD(Context.DECjupiter);    
+              sru.calculate();  
+              rtaString += "\nJupiter Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nJupiter Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+            rtaString += "\nGHA Saturn    " + GeomUtil.decToSex(Context.GHAsaturn, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\nD Saturn      " + GeomUtil.decToSex(Context.DECsaturn, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            if (pos != null)
+            {
+              sru.setAHG(Context.GHAsaturn);
+              sru.setD(Context.DECsaturn);    
+              sru.calculate();  
+              rtaString += "\nSaturn Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\nSaturn Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+            }
+          }
         }
         catch (Exception ex)
         {
@@ -2222,7 +2383,7 @@ public class DesktopFrame
              getBGWinByTitle(POSITION_BG_WINDOW_TITLE).isDisplayBGWindow()   ||
              getBGWinByTitle(SOG_COG_BG_WINDOW_TITLE).isDisplayBGWindow()    ||
              getBGWinByTitle(NMEA_BG_WINDOW_TITLE).isDisplayBGWindow()       ||
-             getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow())
+             getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow()) // TODO REAL_TIMNE_ALMANAC
       {
         String allNMEAData = "";
         try { allNMEAData = HTTPClient.getContent(nmeaServerURL); } catch (Exception ex) { ex.printStackTrace(); }
