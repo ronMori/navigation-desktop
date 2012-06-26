@@ -702,7 +702,7 @@ public class DesktopFrame
     bgwal.add(gpsSignalBGWindow);
     gpsSignalBGWindow.setBgWinX(100);
     gpsSignalBGWindow.setBgWinY(10);
-    gpsSignalBGWindow.setDataFontColor(Color.red);
+    gpsSignalBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
     gpsSignalBGWindow.setDisplayBGWindow(false);
     
     bgwal.add(positionBGWindow);
@@ -1455,7 +1455,7 @@ public class DesktopFrame
     Color c = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
     for (BackgroundWindow bgw : bgwal)
     {
-      if (!bgw.getWinTitle().equals(GPS_SIGNAL_BG_WINDOW_TITLE))
+//    if (!bgw.getWinTitle().equals(GPS_SIGNAL_BG_WINDOW_TITLE))
       {
         bgw.setDataFontColor(c);
       }
