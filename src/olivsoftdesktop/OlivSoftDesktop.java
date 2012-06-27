@@ -12,6 +12,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 
 import java.awt.event.WindowAdapter;
@@ -109,9 +113,35 @@ public class OlivSoftDesktop
           int w = Integer.parseInt(root.getAttribute("w"));
           int h = Integer.parseInt(root.getAttribute("h"));
 //        System.out.println("Restoring in " + x + ", " + y);
-          Dimension dim = new Dimension(w, h);
-          frame.setSize(dim);
-          frame.setLocation(x, y);
+          GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+          GraphicsDevice[] screenDevices = ge.getScreenDevices();
+          boolean foundMatch = false;
+          for (GraphicsDevice curGs: screenDevices)
+          {
+            GraphicsConfiguration[] gc = curGs.getConfigurations();
+            for (GraphicsConfiguration curGc: gc)
+            {
+              Rectangle bounds = curGc.getBounds();
+//            System.out.println(bounds.getX() + "," + bounds.getY() + " " + bounds.getWidth() + " x " + bounds.getHeight());
+              if (x > bounds.getX() && x < (bounds.getX() + bounds.getWidth()) && y > bounds.getY() && y < (bounds.getY() + bounds.getHeight()))
+              {
+                foundMatch = true;
+                break;
+              }
+            }
+          }
+
+          if (!foundMatch)
+          {
+            System.out.println("Frame position has been saved on another screen configuration. Reseting.");
+            dataOk = false;
+          }
+          else
+          {
+            Dimension dim = new Dimension(w, h);
+            frame.setSize(dim);
+            frame.setLocation(x, y);
+          }
         }
         catch (Exception ex)
         {
