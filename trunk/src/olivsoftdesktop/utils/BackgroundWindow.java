@@ -1,5 +1,7 @@
 package olivsoftdesktop.utils;
 
+import coreutilities.Utilities;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -7,12 +9,17 @@ import java.awt.FontFormatException;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.URL;
+
+import java.util.ArrayList;
+
+import java.util.List;
 
 import javax.swing.ImageIcon;
 
@@ -302,19 +309,46 @@ public class BackgroundWindow
     drawData(graphics, dataString, xs, ys);
   }
   
+  private int[] alignment = null;
+  
+  public void setAlignment(int[] ia)
+  {
+    this.alignment = ia;
+  }
+  
+  private final static int BETWEEN_COLS_IN_TABLE = 10;
+  
   public void drawData(Graphics graphics, String dataString, int xs, int ys)
   {
     if (dataString != null)
     {
       graphics.setFont(dataFont);
       String[] dataLine = dataString.split("\n");
+      
       graphics.setColor(dataFontColor);
-      for (int i=0; i<dataLine.length; i++)
+      if (dataString.indexOf("\t") > -1)
       {
-        graphics.drawString(dataLine[i], 
-                            xs + BG_WINDOW_DATA_OFFSET_SIZE, 
-                            ys + dataFont.getSize());
-        ys += (dataFont.getSize() + 2);
+        List<String[]> table = new ArrayList<String[]>();
+        int width = 0;
+        for (String s : dataLine)
+        {
+          String[] cols = s.split("\t");
+          width = cols.length;
+          table.add(cols);
+        }
+        String[][] data = new String[dataLine.length][width];
+        data = table.toArray(data);
+        ys = Utilities.drawPanelTable(data, graphics, new Point(xs + BG_WINDOW_DATA_OFFSET_SIZE, ys + dataFont.getSize()), BETWEEN_COLS_IN_TABLE, 2, alignment);
+      }
+      else
+      {
+        for (int i=0; i<dataLine.length; i++)
+        {
+          graphics.drawString(dataLine[i], 
+                              xs + BG_WINDOW_DATA_OFFSET_SIZE, 
+                              ys + dataFont.getSize());
+          ys += (dataFont.getSize() + 2);
+        }
       }
     }
   }
@@ -331,6 +365,9 @@ public class BackgroundWindow
     }
   }
   
+  /*
+   * Also sets the Width, bawsed on the dataString
+   */
   public void calculateWinHeight(Graphics graphics, String dataString)
   {
     if (recalculateWinDimension)
@@ -339,11 +376,34 @@ public class BackgroundWindow
       String[] dataLine = dataString.split("\n");
       int strHeight = dataFont.getSize();
       int progressWidth = 0;
-      for (int i=0; i<dataLine.length; i++)
+      if (dataString.indexOf("\t") > -1) // Table
       {
-        int strWidth = graphics.getFontMetrics(dataFont).stringWidth(dataLine[i]);
-        if (strWidth > progressWidth)
-          progressWidth = strWidth;
+        List<Integer> maxColLength = new ArrayList<Integer>();
+        for (int i=0; i<dataLine.length; i++)
+        {
+          if (dataLine[i].indexOf("\t") > -1)
+          {          
+            String[] cols = dataLine[i].split("\t");
+            int w = 0;
+            for (int j=0; j<cols.length; j++)
+            {
+              if (maxColLength.size() <= j)
+                maxColLength.add(0);
+              maxColLength.set(j, Math.max(maxColLength.get(j), graphics.getFontMetrics(dataFont).stringWidth(cols[j])));
+            }
+          }
+        }
+        for (Integer i : maxColLength)
+          progressWidth += (i.intValue() + BETWEEN_COLS_IN_TABLE);
+        progressWidth -= BETWEEN_COLS_IN_TABLE;
+      }
+      else
+      {
+        for (int i=0; i<dataLine.length; i++)
+        {
+          int strWidth = graphics.getFontMetrics(dataFont).stringWidth(dataLine[i]);
+          progressWidth = Math.max(strWidth, progressWidth);
+        }
       }
       if ((progressWidth + (2 * BG_WINDOW_DATA_OFFSET_SIZE) + (2 * BG_WINDOW_BORDER_SIZE)) > bgWinW)
         bgWinW = (progressWidth + (2 * BG_WINDOW_DATA_OFFSET_SIZE) + (2 * BG_WINDOW_BORDER_SIZE));

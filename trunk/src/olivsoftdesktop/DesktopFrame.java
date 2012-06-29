@@ -30,6 +30,8 @@ import chartlib.ctx.ChartLibContext;
 
 import chartlib.event.ChartLibListener;
 
+import coreutilities.Utilities;
+
 import coreutilities.sql.SQLUtil;
 
 import generatelocator.GenInternalFrame;
@@ -742,6 +744,7 @@ public class DesktopFrame
     awBGWindow.setDisplayBGWindow(false);
     
     bgwal.add(rtaBGWindow);
+    rtaBGWindow.setAlignment(new int[] {Utilities.LEFT_ALIGNED, Utilities.LEFT_ALIGNED, Utilities.RIGHT_ALIGNED});
     rtaBGWindow.setBgWinX(120);
     rtaBGWindow.setBgWinY(120);
     rtaBGWindow.setDataFontColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.BG_WIN_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
@@ -2313,66 +2316,66 @@ public class DesktopFrame
               sru.setL(pos.lat);
               sru.setG(pos.lng);
             }
-            rtaString = "GHA Aries   " + GeomUtil.decToSex(Context.GHAAtrue, GeomUtil.SWING, GeomUtil.NONE);                
-            rtaString += "\nGHA Sun     " + GeomUtil.decToSex(Context.GHAsun, GeomUtil.SWING, GeomUtil.NONE);                 
-            rtaString += "\nD Sun       " + GeomUtil.decToSex(Context.DECsun, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);
+            rtaString = "Aries\tGHA\t" + GeomUtil.decToSex(Context.GHAAtrue, GeomUtil.SWING, GeomUtil.NONE);                
+            rtaString += "\nSun\tGHA\t" + GeomUtil.decToSex(Context.GHAsun, GeomUtil.SWING, GeomUtil.NONE);                 
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsun, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);
             if (pos != null)
             {
               sru.setAHG(Context.GHAsun);
               sru.setD(Context.DECsun);    
               sru.calculate();  
-              rtaString += "\nSun Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nSun Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
-            rtaString += "\nGHA Moon    " + GeomUtil.decToSex(Context.GHAmoon, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\nD Moon      " + GeomUtil.decToSex(Context.DECmoon, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            rtaString += "\nMoon\tGHA\t" + GeomUtil.decToSex(Context.GHAmoon, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmoon, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
             if (pos != null)
             {
               sru.setAHG(Context.GHAmoon);
               sru.setD(Context.DECmoon);    
               sru.calculate();  
-              rtaString += "\nMoon Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nMoon Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
-            rtaString += "\nGHA Venus    " + GeomUtil.decToSex(Context.GHAvenus, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\nD Venus      " + GeomUtil.decToSex(Context.DECvenus, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            rtaString += "\nVenus\tGHA\t" + GeomUtil.decToSex(Context.GHAvenus, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECvenus, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
             if (pos != null)
             {
               sru.setAHG(Context.GHAvenus);
               sru.setD(Context.DECvenus);    
               sru.calculate();  
-              rtaString += "\nVenus Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nVenus Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
-            rtaString += "\nGHA Mars    " + GeomUtil.decToSex(Context.GHAmars, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\nD Mars      " + GeomUtil.decToSex(Context.DECmars, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            rtaString += "\nMars\tGHA\t" + GeomUtil.decToSex(Context.GHAmars, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmars, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
             if (pos != null)
             {
               sru.setAHG(Context.GHAmars);
               sru.setD(Context.DECmars);    
               sru.calculate();  
-              rtaString += "\nMars Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nMars Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
-            rtaString += "\nGHA Jupiter    " + GeomUtil.decToSex(Context.GHAjupiter, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\nD Jupiter      " + GeomUtil.decToSex(Context.DECjupiter, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            rtaString += "\nJupiter\tGHA\t" + GeomUtil.decToSex(Context.GHAjupiter, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECjupiter, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
             if (pos != null)
             {
               sru.setAHG(Context.GHAjupiter);
               sru.setD(Context.DECjupiter);    
               sru.calculate();  
-              rtaString += "\nJupiter Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nJupiter Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
-            rtaString += "\nGHA Saturn    " + GeomUtil.decToSex(Context.GHAsaturn, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\nD Saturn      " + GeomUtil.decToSex(Context.DECsaturn, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+            rtaString += "\nSaturn\tGHA\t" + GeomUtil.decToSex(Context.GHAsaturn, GeomUtil.SWING, GeomUtil.NONE);                  
+            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsaturn, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
             if (pos != null)
             {
               sru.setAHG(Context.GHAsaturn);
               sru.setD(Context.DECsaturn);    
               sru.calculate();  
-              rtaString += "\nSaturn Alt     " + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\nSaturn Z       " + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
             }
           }
         }
