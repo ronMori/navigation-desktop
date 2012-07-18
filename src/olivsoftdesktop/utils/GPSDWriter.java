@@ -31,7 +31,7 @@ import ocss.nmea.parser.UTCDate;
 
 public class GPSDWriter
 {
-  private int tcpPort               = 2497;
+  private int tcpPort               = 2947;
   private Socket tcpSocket          = null;
   private ServerSocket serverSocket = null;
   
@@ -47,8 +47,11 @@ public class GPSDWriter
     try 
     { 
       serverSocket = new ServerSocket(tcpPort);
-      Thread socketThread = new SocketThread();
-      socketThread.start();      
+      if (!protocolEstablished)
+      {
+        Thread socketThread = new SocketThread();
+        socketThread.start();
+      }
     }
     catch (Exception ex)
     {
@@ -145,8 +148,7 @@ public class GPSDWriter
         while (go)
         {
           String clientSentence = inFromClient.readLine();
-          String responseSentence  = "";
-          
+          String responseSentence  = "";          
           System.out.println("ClientRequest:" + clientSentence);
           
           if (clientSentence != null && clientSentence.trim().length() > 0)
