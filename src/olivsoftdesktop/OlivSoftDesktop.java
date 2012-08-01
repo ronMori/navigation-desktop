@@ -482,6 +482,8 @@ public class OlivSoftDesktop
               {
                 if (value.endsWith(".html/"))
                   value = value.substring(0, value.length() - 1);
+                if (value.endsWith("\\"))
+                  value = value.substring(0, value.length() - 1);
                 Utilities.openInBrowser(value);
               }
             }
