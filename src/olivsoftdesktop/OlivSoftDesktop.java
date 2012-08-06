@@ -303,20 +303,15 @@ public class OlivSoftDesktop
   }
 
   private static boolean proceed = false;
-  public final static String VERSION_NUMBER = "1.0.0.2";
-  public final static String PRODUCT_ID     = "desktop." + VERSION_NUMBER;
-  
-  public final static String PRODUCT_KEY    = "DESKTOP";
-  public final static String STRUCTURE_FILE_NAME = "." + File.separator + "config" + File.separator + "structure.xml";
   
   public static void checkForUpdate(final JFrame parent)
   {
     // Checking for update
     proceed = true; // TODO A parameter...
     Thread checkForUpdate = // new CheckForUpdateThread("weather_assistant");
-      new CheckForUpdateThread(PRODUCT_ID, 
+      new CheckForUpdateThread(DesktopContext.PRODUCT_ID, 
                                new DOMParser(), 
-                               STRUCTURE_FILE_NAME, 
+                               DesktopContext.STRUCTURE_FILE_NAME, 
                                proceed);
     // Add listener
     CoreContext.getInstance().addApplicationListener(new CoreEventListener()
@@ -344,7 +339,7 @@ public class OlivSoftDesktop
     checkForUpdate.start();
   }
 
-  private final static String NOTIFICATION_PROP_FILE_NAME = "notification_" + PRODUCT_KEY + ".properties";
+  private final static String NOTIFICATION_PROP_FILE_NAME = "notification_" + DesktopContext.PRODUCT_KEY + ".properties";
   private final static SimpleDateFormat SDF = new SimpleDateFormat("E dd MMM yyyy, HH:mm:ss z");
   
   public static void checkForNotification(final Date manifestDate)
@@ -390,7 +385,7 @@ public class OlivSoftDesktop
                 if (notificationDate == null || notificationDate.trim().length() == 0 || propertiesDate.before(providedDate))
                   notificationDate = NotificationCheck.getDateFormat().format(providedDate);          
               }
-              NotificationCheck nc = new NotificationCheck(PRODUCT_KEY, notificationDate);
+              NotificationCheck nc = new NotificationCheck(DesktopContext.PRODUCT_KEY, notificationDate);
               Map<Date, String> map = nc.check();
               String productName = nc.getProductName();
               // Display Notification Here.

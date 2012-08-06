@@ -1,6 +1,8 @@
 
 package olivsoftdesktop.ctx;
 
+import java.io.File;
+
 import java.util.ArrayList;
 
 import java.util.List;
@@ -13,6 +15,12 @@ import oracle.xml.parser.v2.DOMParser;
 
 public class DesktopContext
 {
+  public final static String VERSION_NUMBER = "3.0.0.3"; // In sync with the Weather Wizard
+  public final static String PRODUCT_ID     = "desktop." + VERSION_NUMBER;
+  
+  public final static String PRODUCT_KEY    = "DESKTOP";
+  public final static String STRUCTURE_FILE_NAME = "." + File.separator + "config" + File.separator + "structure.xml";
+
   private static DesktopContext instance = null;
   private DOMParser parser = null;
   private transient List<DesktopEventListener> applicationListeners = null;
