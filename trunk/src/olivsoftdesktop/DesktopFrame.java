@@ -1958,6 +1958,7 @@ public class DesktopFrame
         System.setProperty("tide.flavor", (ParamPanel.getData()[ParamData.TIDE_FLAVOR][ParamPanel.PRM_VALUE]).toString().toLowerCase());
         // Set display.sun.moon.data
         System.setProperty("display.sun.moon.data", ((Boolean)(ParamPanel.getData()[ParamData.COMPUTE_SUN_MOON_DATA][ParamPanel.PRM_VALUE])).toString());
+        System.setProperty("max.recent.stations", ((Integer)(ParamPanel.getData()[ParamData.MAX_TIDE_RECENT_STATIONS][ParamPanel.PRM_VALUE])).toString());
         System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
         tideengineimplementation.utils.AstroComputer.setDeltaT(((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue());
 //      System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());

@@ -199,6 +199,9 @@ public final class ParamPanel
       case ParamData.BG_WIN_FONT_COLOR:
         it = new ParamColor(Color.blue, "");
         break;
+      case ParamData.MAX_TIDE_RECENT_STATIONS:
+        it = new Integer(5);
+        break;
       default:
         break;
     }
@@ -270,7 +273,9 @@ public final class ParamPanel
               data[i][PRM_VALUE] = new Boolean(s);
             else if (i == ParamData.BG_WIN_FONT_COLOR)
               data[i][PRM_VALUE] = new ParamColor(DesktopUtilities.buildColor(s), "");
-            else
+            else if (i == ParamData.MAX_TIDE_RECENT_STATIONS) 
+              data[i][PRM_VALUE] = new Integer(s);
+            else 
               data[i][PRM_VALUE] = s; // All the string fall in this bucket
           }
           catch (Exception ex)
@@ -336,7 +341,8 @@ public final class ParamPanel
     new int[] // TIDES
     {
       ParamData.TIDE_FLAVOR,
-      ParamData.COMPUTE_SUN_MOON_DATA
+      ParamData.COMPUTE_SUN_MOON_DATA,
+      ParamData.MAX_TIDE_RECENT_STATIONS
     },
     new int[] // APPLICATIONS
     {
@@ -464,7 +470,8 @@ public final class ParamPanel
               currentIndex == ParamData.NMEA_TCP_PORT  ||
               currentIndex == ParamData.NMEA_UDP_PORT  ||
               currentIndex == ParamData.NMEA_RMI_PORT  ||
-              currentIndex == ParamData.NMEA_BAUD_RATE) // The int values
+              currentIndex == ParamData.NMEA_BAUD_RATE ||
+              currentIndex == ParamData.MAX_TIDE_RECENT_STATIONS) // The int values
           {
             try 
             { 
@@ -1019,6 +1026,13 @@ public final class ParamPanel
         componentToApply = tf;
         tf.setFont(new Font("Dialog", 0, 9));
         tf.setText(((Float)value).toString());
+      }
+      else if (column == 1 && value instanceof Integer)
+      {
+      //      System.out.println("Colunm:" + column  + ", Value is a " + value.getClass().getName());
+        componentToApply = tf;
+        tf.setFont(new Font("Dialog", 0, 9));
+        tf.setText(((Integer)value).toString());
       }
       else if (column == 1 && value instanceof LoggedDataDirectory)
       {
