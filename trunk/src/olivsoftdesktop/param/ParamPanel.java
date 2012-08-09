@@ -477,6 +477,7 @@ public final class ParamPanel
             { 
               int x = Integer.parseInt(after); 
               localData[i][PRM_VALUE] = new Integer(x);
+              System.setProperty("max.recent.stations", Integer.toString(x));
             }
             catch (Exception e) 
             { 
