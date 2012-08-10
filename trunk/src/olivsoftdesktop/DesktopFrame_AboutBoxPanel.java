@@ -1,12 +1,19 @@
 package olivsoftdesktop;
 
+import coreutilities.Utilities;
+
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import java.io.File;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
@@ -21,6 +28,7 @@ public class DesktopFrame_AboutBoxPanel
   private GridBagLayout layoutMain = new GridBagLayout();
   private Border border = BorderFactory.createEtchedBorder();
   private JLabel currentDirLabel = new JLabel();
+  private JLabel logoLabel = new JLabel();
 
   public DesktopFrame_AboutBoxPanel()
   {
@@ -39,17 +47,39 @@ public class DesktopFrame_AboutBoxPanel
   {
     this.setLayout( layoutMain );
     this.setBorder( border );
-    labelTitle.setText("OlivSoft Desktop");
+    this.setBackground(Color.white);
+    labelTitle.setText("OlivSoft Navigation Desktop");
     labelAuthor.setText("olivier@lediouris.net");
     labelCopyright.setText("Copyright OlivSoft, 2009 and beyond");
-    labelCompany.setText("The Don Pedro Project");
+    labelCompany.setText("<html><a href='http://code.google.com/p/navigation-desktop/'>The Navigation Desktop Project</a></html>");
+    labelCompany.addMouseListener(new MouseAdapter()
+      {
+        public void mouseClicked(MouseEvent e)
+        {
+          try
+          {
+            Utilities.openInBrowser("http://code.google.com/p/navigation-desktop/");
+          }
+          catch (Exception ignore)
+          {
+          }
+        }
+      });
     String currDir = new File(".").getAbsolutePath();      
     currentDirLabel.setText("Running from " + currDir);
-    this.add( labelTitle, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(5, 15, 0, 15), 0, 0) );
-    this.add( labelAuthor, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 15, 0, 15), 0, 0) );
-    this.add( labelCopyright, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 15, 0, 15), 0, 0) );
-    this.add( labelCompany, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 15, 5, 15), 0, 0) );
-    this.add(currentDirLabel, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+    logoLabel.setIcon(new ImageIcon(this.getClass().getResource("logo.jpg")));
+
+    this.add( labelTitle, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(5, 15, 0, 15), 0, 0));
+    this.add( labelAuthor, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 15, 0, 15), 0, 0));
+    this.add( labelCopyright, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 15, 0, 15), 0, 0));
+    this.add( labelCompany, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 15, 5, 15), 0, 0));
+    this.add(currentDirLabel, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 15, 0, 0), 0, 0));
+    this.add(logoLabel, new GridBagConstraints(0, 0, 1, 5, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+          new Insets(0, 0, 0, 0), 0, 0));
   }
 }
