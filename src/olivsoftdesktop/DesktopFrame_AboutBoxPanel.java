@@ -3,6 +3,7 @@ package olivsoftdesktop;
 import coreutilities.Utilities;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -11,6 +12,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import java.io.File;
+
+import java.net.URI;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -49,7 +52,21 @@ public class DesktopFrame_AboutBoxPanel
     this.setBorder( border );
     this.setBackground(Color.white);
     labelTitle.setText("OlivSoft Navigation Desktop");
-    labelAuthor.setText("olivier@lediouris.net");
+    labelAuthor.setText("<html><a href='mailto:olivier@lediouris.net'>olivier@lediouris.net</a></html>");
+    labelAuthor.addMouseListener(new MouseAdapter()
+      {
+        public void mouseClicked(MouseEvent e)
+        {
+          try
+          {
+//          Desktop.getDesktop().mail(new URI("mailto", "olivier@lediouris.net", null)); // ?subject=From the Navigation Desktop"));
+            Desktop.getDesktop().mail(new URI("mailto:olivier@lediouris.net?subject=From+the+Navigation+Desktop"));
+          }
+          catch (Exception ignore)
+          {
+          }
+        }
+      });
     labelCopyright.setText("Copyright OlivSoft, 2009 and beyond");
     labelCompany.setText("<html><a href='http://code.google.com/p/navigation-desktop/'>The Navigation Desktop Project</a></html>");
     labelCompany.addMouseListener(new MouseAdapter()
