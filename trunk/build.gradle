@@ -55,7 +55,7 @@ task tellMeProxy (description: "Spits out the proxy settings.") << {
 
 compileJava.dependsOn(tellMeProxy)
 
-task run(type: JavaExec, dependsOn: build, description: "Test run.") << {
+task run(type: JavaExec, dependsOn: build, description: "Test run.") {
   main = 'olivsoftdesktop.OlivSoftDesktop'   
 //jvmArgs "-verbose"
   classpath project.configurations.default 
