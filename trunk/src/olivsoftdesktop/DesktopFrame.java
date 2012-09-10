@@ -1574,7 +1574,7 @@ public class DesktopFrame
         System.setProperty("nmea.udp.port", (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString());
         System.setProperty("nmea.host.name", (ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString());
         System.setProperty("nmea.baud.rate", (ParamPanel.getData()[ParamData.NMEA_BAUD_RATE][ParamPanel.PRM_VALUE]).toString());
-        System.setProperty("nmea.simulation.data.file", (ParamPanel.getData()[ParamData.NMEA_SIMULATION][ParamPanel.PRM_VALUE]).toString());
+//      System.setProperty("nmea.simulation.data.file", (ParamPanel.getData()[ParamData.NMEA_SIMULATION][ParamPanel.PRM_VALUE]).toString());
 
         String nmeaProperties = System.getProperty("nmea.config.file", "nmea-config.properties");
         String serialPort     = System.getProperty("nmea.serial.port", null);
@@ -1792,6 +1792,7 @@ public class DesktopFrame
         centerFrame(masterDim, almanac);
         break;
       case LOCATOR:
+        System.setProperty("boat.id",   (ParamPanel.getData()[ParamData.BOAT_ID][ParamPanel.PRM_VALUE]).toString());
         System.setProperty("http.host", (ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString());
         System.setProperty("http.port", (ParamPanel.getData()[ParamData.NMEA_HTTP_PORT][ParamPanel.PRM_VALUE]).toString());
 
