@@ -4,7 +4,43 @@ import java.io.File;
 
 public class ParamData 
 {
-  public final static String[] labels =
+  public final static int NMEA_CHANNEL                 =  0;  // Serial, TCP, UDP
+  public final static int NMEA_SERIAL_PORT             =  1;  // COMXX
+  public final static int NMEA_TCP_PORT                =  2;  // 3005
+  public final static int NMEA_HTTP_PORT               =  3;  // 6666
+  public final static int NMEA_HOST_NAME               =  4;  // localhost
+  public final static int NMEA_CONFIG_FILE             =  5;  // nmea.properties
+  public final static int SAILFAX_CATALOG              =  6;  // pac-fax-data.xml  
+  public final static int DB_LOCATION                  =  7;  // ..\all-db
+  public final static int BACKGROUND_IMAGE             =  8;  // ....
+  public final static int NMEA_BAUD_RATE               =  9;  // ....
+  public final static int NMEA_SIMULATION              = 10;  // .... UNUSED!!
+  public final static int DELTA_T                      = 11;  // 65.984
+  public final static int NMEA_DATA_STREAM             = 12;  // NMEA port, HTTP // for the desktop BGWindows
+  public final static int AIRMAIL_LOCATION             = 13;  // C:\Program Files\Airmail
+  public final static int PLAY_SOUNDS                  = 14;  // true
+  public final static int NMEA_UDP_PORT                = 15;  // 8001
+  public final static int TIDE_FLAVOR                  = 16;  // XML
+  public final static int DESKTOP_MESSAGE              = 17;  // Navigation Console
+  public final static int INTERNAL_FRAMES_TRANSPARENCY = 18;  // Navigation Console
+  public final static int COMPUTE_SUN_MOON_DATA        = 19;
+  public final static int USE_CHART_APP                = 20;
+  public final static int USE_NMEA_APP                 = 21;
+  public final static int USE_STAR_FINDER_APP          = 22;
+  public final static int USE_SAILFAX_APP              = 23;
+  public final static int USE_LUNAR_APP                = 24;
+  public final static int USE_SIGHT_RED_APP            = 25;
+  public final static int USE_PUBLISHER_APP            = 26;
+  public final static int USE_GOOGLE_APP               = 27;
+  public final static int USE_TIDES_APP                = 28;
+  public final static int NMEA_RMI_PORT                = 29; // 1099
+  public final static int BG_WIN_FONT_COLOR            = 30;
+  public final static int MAX_TIDE_RECENT_STATIONS     = 31;
+  public final static int BOAT_ID                      = 32;
+
+  public final static int NB_PARAMETERS                = 33;
+
+  private final static String[] LABELS =
   {
     "NMEA Source Channel",                                                     //  0
     "NMEA Source Serial Port",                                                 //  1
@@ -16,7 +52,7 @@ public class ParamData
     "DB directory or URL (for Chart Library, Tides & NMEA Console Journal)",   //  7
     "Background Image",                                                        //  8
     "NMEA Source Baud Rate",                                                   //  9
-    "NMEA Source Simulation Data File",                                        // 10
+    "NMEA Source Simulation Data File",                                        // 10. UNUSED
     "Delta T in seconds",                                                      // 11
     "NMEA Source Data Stream",                                                 // 12
     "Airmail Location",                                                        // 13
@@ -39,10 +75,17 @@ public class ParamData
     // 
     "NMEA Source RMI Port",                                                    // 29
     "Background Windows Font color",                                           // 30
-    "Max number of recent stations for the Tides"                              // 31
+    "Max number of recent stations for the Tides",                             // 31
+    //
+    "Boat ID"                                                                  // 32
   };
   
-  public final static String[] helptext =
+  public final static String[] getLabels()
+  {
+    return LABELS.clone();
+  }
+  
+  private final static String[] HELPTEXT =
   {
     /*  0 */ "NMEA Source: Serial, TCP, UDP or RMI. Serial is the most common, other methods can be used when re-broadcasting the NMEA stream",
     /*  1 */ "If the Channel is Serial, then this field should be set. That would be COM1, COM2, or something like that.",
@@ -75,43 +118,14 @@ public class ParamData
     /* 28 */ "Tides, world wide tide predictions. Modification will require restart.",
     /* 29 */ "Port used to read NMEA Data from RMI. Used along with the NMEA Source Host",
     /* 30 */ "Font color for the background windows",        
-    /* 31 */ "For the Tides application, specifies the max number of recent tide station in the 'Recent Stations' menu item"        
+    /* 31 */ "For the Tides application, specifies the max number of recent tide station in the 'Recent Stations' menu item",
+    /* 32 */ "Boat ID used by the Google Locator to retrieve your boat name. You can request a boat ID by going to http://donpedro.lediouris.net/php/locator/idform.html or by sending an email to olivier@lediouris.net"
   };
   
+  public final static String[] getHelpText()
+  {
+    return HELPTEXT.clone();
+  }
+  
   public final static String PARAM_FILE_NAME = "config" + File.separator + "desktop-prms.xml"; 
-
-  public final static int NMEA_CHANNEL     =  0;  // Serial, TCP, UDP
-  public final static int NMEA_SERIAL_PORT =  1;  // COMXX
-  public final static int NMEA_TCP_PORT    =  2;  // 3005
-  public final static int NMEA_HTTP_PORT   =  3;  // 6666
-  public final static int NMEA_HOST_NAME   =  4;  // localhost
-  public final static int NMEA_CONFIG_FILE =  5;  // nmea.properties
-  public final static int SAILFAX_CATALOG  =  6;  // pac-fax-data.xml  
-  public final static int DB_LOCATION      =  7;  // ..\all-db
-  public final static int BACKGROUND_IMAGE =  8;  // ....
-  public final static int NMEA_BAUD_RATE   =  9;  // ....
-  public final static int NMEA_SIMULATION  = 10;  // .... Unused!!
-  public final static int DELTA_T          = 11;  // 65.984
-  public final static int NMEA_DATA_STREAM = 12;  // NMEA port, HTTP // for the desktop BGWindows
-  public final static int AIRMAIL_LOCATION = 13;  // C:\Program Files\Airmail
-  public final static int PLAY_SOUNDS      = 14;  // true
-  public final static int NMEA_UDP_PORT    = 15;  // 8001
-  public final static int TIDE_FLAVOR      = 16;  // XML
-  public final static int DESKTOP_MESSAGE  = 17;  // Navigation Console
-  public final static int INTERNAL_FRAMES_TRANSPARENCY = 18;  // Navigation Console
-  public final static int COMPUTE_SUN_MOON_DATA        = 19;
-  public final static int USE_CHART_APP                = 20;
-  public final static int USE_NMEA_APP                 = 21;
-  public final static int USE_STAR_FINDER_APP          = 22;
-  public final static int USE_SAILFAX_APP              = 23;
-  public final static int USE_LUNAR_APP                = 24;
-  public final static int USE_SIGHT_RED_APP            = 25;
-  public final static int USE_PUBLISHER_APP            = 26;
-  public final static int USE_GOOGLE_APP               = 27;
-  public final static int USE_TIDES_APP                = 28;
-  public final static int NMEA_RMI_PORT                = 29; // 1099
-  public final static int BG_WIN_FONT_COLOR            = 30;
-  public final static int MAX_TIDE_RECENT_STATIONS     = 31;
-
-  public final static int NB_PARAMETERS    = 32;
 }

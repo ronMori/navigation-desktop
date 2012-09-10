@@ -112,7 +112,7 @@ public final class ParamPanel
   {    
     for (int i=0; i<ParamData.NB_PARAMETERS; i++)
     {
-      data[i][PRM_NAME]   = new ParamDisplayLabel(ParamData.labels[i], ParamData.helptext[i]);
+      data[i][PRM_NAME]   = new ParamDisplayLabel(ParamData.getLabels()[i], ParamData.getHelpText()[i]);
       data[i][PRM_VALUE]   = oneFactorySetting(i);
     }
   }
@@ -202,6 +202,9 @@ public final class ParamPanel
       case ParamData.MAX_TIDE_RECENT_STATIONS:
         it = new Integer(5);
         break;
+      case ParamData.BOAT_ID:
+        it = "DP";
+        break;
       default:
         break;
     }
@@ -217,7 +220,7 @@ public final class ParamPanel
   { 
     if (data == null)
     {
-      data = new Object[ParamData.labels.length][names.length];
+      data = new Object[ParamData.getLabels().length][names.length];
       try
       {
         FileInputStream fis = new FileInputStream(ParamData.PARAM_FILE_NAME);
@@ -228,12 +231,12 @@ public final class ParamPanel
           parser.parse(fis);
           doc = parser.getDocument();
         }
-        for (int i=0; i < ParamData.labels.length; i++)
+        for (int i=0; i < ParamData.getLabels().length; i++)
         {
           NodeList nl = doc.selectNodes("/desktop-parameters/param[@id='" + Integer.toString(i) + "']");
           try
           {
-            data[i][PRM_NAME] = new ParamDisplayLabel(ParamData.labels[i], ParamData.helptext[i]);
+            data[i][PRM_NAME] = new ParamDisplayLabel(ParamData.getLabels()[i], ParamData.getHelpText()[i]);
             String s = nl.item(0).getFirstChild().getNodeValue();        
             if (i == ParamData.NMEA_CHANNEL)
               data[i][PRM_VALUE] = new ListOfChannels(s);
@@ -280,7 +283,7 @@ public final class ParamPanel
           }
           catch (Exception ex)
           {
-            System.out.println("ParamPanel:" + ex.toString() + " for [" + ParamData.labels[i] + "]");
+            System.out.println("ParamPanel:" + ex.toString() + " for [" + ParamData.getLabels()[i] + "]");
             data[i][PRM_VALUE] = oneFactorySetting(i);
           }
 //        System.out.println("** setUserValue: i=" + Integer.toString(i) + " : [" + data[i][PRM_VALUE].toString() + "], a [" + data[i][PRM_VALUE].getClass().getName() + "] for [" + ParamData.labels[i] + "].");
@@ -337,6 +340,10 @@ public final class ParamPanel
     new int[] // ALMANAC
     {
       ParamData.DELTA_T
+    },
+    new int[] // Locator
+    {
+      ParamData.BOAT_ID
     },
     new int[] // TIDES
     {
@@ -416,6 +423,11 @@ public final class ParamPanel
     currentCategoryIndex = CategoryPanel.DATABASES_CATEGORY_INDEX;
   }
   
+  public void  setLocatorPrm(String help)
+  {
+    helpTextArea.setText(help);
+    setLocatorPrm();
+  }
   public void  setAlmanacPrm(String help)
   {
     helpTextArea.setText(help);
@@ -427,6 +439,12 @@ public final class ParamPanel
     currentCategoryIndex = CategoryPanel.ALMANAC_CATEGORY_INDEX;
   }
   
+  public void  setLocatorPrm()
+  {
+    setObject(mkDataArray(CategoryPanel.LOCATOR_CATEGORY_INDEX));
+    currentCategoryIndex = CategoryPanel.LOCATOR_CATEGORY_INDEX;
+  }
+
   public void setTidePrm(String help)
   {
     helpTextArea.setText(help);
@@ -513,7 +531,7 @@ public final class ParamPanel
               {
                 JOptionPane.showMessageDialog(this, 
                                               "Bad value for [" + after + "], [" + before + "]\n" +
-                                              "for [" + ParamData.labels[ParamData.INTERNAL_FRAMES_TRANSPARENCY] + "]\n" +
+                                              "for [" + ParamData.getLabels()[ParamData.INTERNAL_FRAMES_TRANSPARENCY] + "]\n" +
                                               "Must be between 0 and 1.", 
                                               "Parameters modified", 
                                               JOptionPane.ERROR_MESSAGE);
