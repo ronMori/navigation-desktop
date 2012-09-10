@@ -15,7 +15,8 @@ import oracle.xml.parser.v2.DOMParser;
 
 public class DesktopContext
 {
-  public final static String VERSION_NUMBER = "3.0.0.3"; // In sync with the Weather Wizard
+//public final static String VERSION_NUMBER = "3.0.0.3"; // In sync with the Weather Wizard
+  public final static String VERSION_NUMBER = "3.0.0.4"; // In sync with the Weather Wizard
   public final static String PRODUCT_ID     = "desktop." + VERSION_NUMBER;
   
   public final static String PRODUCT_KEY    = "DESKTOP";
