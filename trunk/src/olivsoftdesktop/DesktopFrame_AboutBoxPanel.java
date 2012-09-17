@@ -21,6 +21,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import olivsoftdesktop.ctx.DesktopContext;
+
 public class DesktopFrame_AboutBoxPanel
   extends JPanel
 {
@@ -51,7 +53,7 @@ public class DesktopFrame_AboutBoxPanel
     this.setLayout( layoutMain );
     this.setBorder( border );
     this.setBackground(Color.white);
-    labelTitle.setText("OlivSoft Navigation Desktop");
+    labelTitle.setText("OlivSoft Navigation Desktop " + DesktopContext.VERSION_NUMBER);
     labelAuthor.setText("<html><a href='mailto:olivier@lediouris.net'>olivier@lediouris.net</a></html>");
     labelAuthor.addMouseListener(new MouseAdapter()
       {
