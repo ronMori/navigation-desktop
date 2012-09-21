@@ -3,7 +3,6 @@ package olivsoftdesktop;
 // TASK See how to make generic Contexts, Listeners, InternalFrames... for dynamic content
 // import chartlib.ui.components.ChartLibInternalFrame;
 
-
 import app.almanac.ctx.APContext;
 import app.almanac.ctx.APEventListener;
 import app.almanac.gui.AlmanacPublisherInternalFrame;
@@ -79,7 +78,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -1781,15 +1779,27 @@ public class DesktopFrame
         break;
       case ALMANAC:
         System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
-        almanac = new AlmanacPublisherInternalFrame();
-        almanac.setIconifiable(true);
-        almanac.setClosable(true);
-        almanac.setMaximizable(true);
-        almanac.setResizable(true);
-        desktop.add(almanac);
-        almanac.setVisible(true);
-        almanacMenuItem.setEnabled(false);
-        centerFrame(masterDim, almanac);
+        boolean rtRunning = !realTimeAlmanacMenuItem.isEnabled();
+        boolean rtBGWinRunning = !menuToolsDisplayRTA.isEnabled();
+        if (rtRunning || rtBGWinRunning) // Real Time Almanac or RT BG Window
+        {
+          String message = "Please close the Real Time Almanac applications (App or Background Window)\n" +
+                           "before running the Almanac Publisher.\n" +
+                           "Running them together would result in erroneous data.";
+          JOptionPane.showMessageDialog(this, message, "Almanac Publisher", JOptionPane.WARNING_MESSAGE);
+        }
+        else
+        {
+          almanac = new AlmanacPublisherInternalFrame();
+          almanac.setIconifiable(true);
+          almanac.setClosable(true);
+          almanac.setMaximizable(true);
+          almanac.setResizable(true);
+          desktop.add(almanac);
+          almanac.setVisible(true);
+          almanacMenuItem.setEnabled(false);
+          centerFrame(masterDim, almanac);
+        }
         break;
       case LOCATOR:
         System.setProperty("boat.id",   (ParamPanel.getData()[ParamData.BOAT_ID][ParamPanel.PRM_VALUE]).toString());
