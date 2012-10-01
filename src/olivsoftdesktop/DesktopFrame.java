@@ -80,6 +80,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -2271,7 +2272,7 @@ public class DesktopFrame
                        tempString;
           
           satList = new ArrayList<GPSSatellite>();
-          HashMap<Integer, SVData> satmap = NMEACache.getInstance().getSatellites();
+          Map<Integer, SVData> satmap = NMEACache.getInstance().getSatellites();
 
           if (satmap != null)
           {
