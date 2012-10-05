@@ -894,7 +894,8 @@ public final class ParamPanel
                                                  "HTTP"};
   private final static String[] tideFlavorValues  = {"XML",
                                                      "SQL",
-                                                     "SQLITE"};
+                                                     "SQLITE",
+                                                     "SERIALIZED"};
   public static class ParamColor
   {
     Color color;
