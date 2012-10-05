@@ -1744,6 +1744,7 @@ public class DesktopFrame
         centerFrame(masterDim, skyMap);
         break;
       case LUNAR:
+        System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
         clearLunar = new ClearLunarInternalFrame();
         clearLunar.setIconifiable(true);
         clearLunar.setClosable(true);
