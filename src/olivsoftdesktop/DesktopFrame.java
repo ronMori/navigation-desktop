@@ -1,8 +1,5 @@
 package olivsoftdesktop;
 
-// TASK See how to make generic Contexts, Listeners, InternalFrames... for dynamic content
-// import chartlib.ui.components.ChartLibInternalFrame;
-
 import app.almanac.ctx.APContext;
 import app.almanac.ctx.APEventListener;
 import app.almanac.gui.AlmanacPublisherInternalFrame;
@@ -78,7 +75,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -175,9 +171,12 @@ import user.util.TimeUtil;
 
 import util.NMEACache;
 
+
 public class DesktopFrame
   extends JFrame
 {
+  @SuppressWarnings("compatibility:-245439477831537528")
+  private final static long serialVersionUID = 1L;
   private final static String LISTENER_FAMILY = "DESKTOP_SERIALPORT_BROADCASTER";
   
   private boolean fullscreen = false;
@@ -185,11 +184,11 @@ public class DesktopFrame
   private DesktopFrame instance = this;
   private boolean minimizeNMEAConsole = false;
   
-  private final SimpleDateFormat sdf  = new SimpleDateFormat("dd MMM yyyy '\n'HH:mm:ss 'UTC'");
-  private final SimpleDateFormat sdf2 = new SimpleDateFormat("'Solar Time:' HH:mm:ss");
-  private final SimpleDateFormat sdf3 = new SimpleDateFormat("HH:mm:ss 'UTC'");
-  private final DecimalFormat df2     = new DecimalFormat("00");
-  private final DecimalFormat df22    = new DecimalFormat("00.00");
+  private final static SimpleDateFormat SDF  = new SimpleDateFormat("dd MMM yyyy '\n'HH:mm:ss 'UTC'");
+  private final static SimpleDateFormat SDF2 = new SimpleDateFormat("'Solar Time:' HH:mm:ss");
+//private final static SimpleDateFormat SDF3 = new SimpleDateFormat("HH:mm:ss 'UTC'");
+  private final static DecimalFormat DF2     = new DecimalFormat("00");
+  private final static DecimalFormat DF22    = new DecimalFormat("00.00");
   
   private BorderLayout layoutMain = new BorderLayout();
   private JMenuBar menuBar = new JMenuBar();
@@ -254,6 +253,8 @@ public class DesktopFrame
   
   private JDesktopPane desktop = new JDesktopPane()
     {
+      @SuppressWarnings("compatibility:-2193568848390199696")
+      private final static long serialVersionUID = 1L;
       private Polygon buildReflectPolygon(JDesktopPane panel)
       {
         // Build 101 points + 2 (bottom)
@@ -2124,7 +2125,7 @@ public class DesktopFrame
       while (getBGWinByTitle(TIME_BG_WINDOW_TITLE).isDisplayBGWindow())
       {
         Date ut = TimeUtil.getGMT();
-        timeString = "System:\n" + sdf.format(ut);
+        timeString = "System:\n" + SDF.format(ut);
         int offset = TimeUtil.getGMTOffset();
         String strOffset = Integer.toString(offset);
         if (offset > 0) strOffset = "+" + strOffset;
@@ -2191,7 +2192,7 @@ public class DesktopFrame
           try 
           { 
 //          hsString += (NMEACache.getInstance().getSog()); 
-            hsString += df22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
+            hsString += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
           } 
           catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
           hsString += " kts";
@@ -2204,7 +2205,7 @@ public class DesktopFrame
             { 
 //            gpsTimeString = "GPS Time:" + sdf3.format(NMEACache.getInstance().getGpsDate());
 //            gpsTimeString = "GPS Time:" + sdf3.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
-              gpsTimeString = sdf.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+              gpsTimeString = SDF.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
             } 
             catch (Exception ignore) 
             {
@@ -2221,7 +2222,7 @@ public class DesktopFrame
 //          System.out.println("[time:" + time + ", g:" + g + "]");
             double offset = (g / 15d) * 3600d * 1000d; // in milliseconds
             time += offset;
-            solarTime = "\n" + sdf2.format(new Date(time));
+            solarTime = "\n" + SDF2.format(new Date(time));
           }
           catch (Exception ex)
           {
@@ -2254,12 +2255,12 @@ public class DesktopFrame
           double temp  = 0d;
           try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
           
-          windString  = "AWS:" + df22.format(aws) + " kts, AWA:" + Integer.toString(awa) + "\272\n";
-          bspString   = "BSP:" + df22.format(bsp) + " kts\n";
+          windString  = "AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + "\272\n";
+          bspString   = "BSP:" + DF22.format(bsp) + " kts\n";
           hdgString   = "HDG:" + Integer.toString(hdg) + "\n";
-          logString   = "Log: " + df22.format(bl) + " nm, " + df22.format(sl) + " nm\n";
-          depthString = "DBT: " + df22.format(depth) + " m\n";
-          tempString  = "Water Temp:" + df22.format(temp) + "\272C";
+          logString   = "Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm\n";
+          depthString = "DBT: " + DF22.format(depth) + " m\n";
+          tempString  = "Water Temp:" + DF22.format(temp) + "\272C";
           
           nmeaString = gpsTimeString + "\n" + 
                        posString + "\n" +
@@ -2459,7 +2460,7 @@ public class DesktopFrame
             try 
             { 
               h = Integer.parseInt(dataDoc.selectNodes("/data/utc/@h").item(0).getNodeValue());
-              gpsTimeString += ("GPS Time:" + df2.format(h)) ;
+              gpsTimeString += ("GPS Time:" + DF2.format(h)) ;
             } 
             catch (Exception ex) 
             { 
@@ -2470,7 +2471,7 @@ public class DesktopFrame
             try 
             { 
               m = Integer.parseInt(dataDoc.selectNodes("/data/utc/@m").item(0).getNodeValue());
-              gpsTimeString += df2.format(m); 
+              gpsTimeString += DF2.format(m); 
             } 
             catch (Exception ex) 
             { 
@@ -2481,7 +2482,7 @@ public class DesktopFrame
             try 
             { 
               s = (int)Double.parseDouble(dataDoc.selectNodes("/data/utc/@s").item(0).getNodeValue());
-              gpsTimeString += df2.format(s); 
+              gpsTimeString += DF2.format(s); 
             } 
             catch (Exception ex) 
             { 
@@ -2501,7 +2502,7 @@ public class DesktopFrame
               long time = cal.getTimeInMillis();              
               double offset = (g / 15d) * 3600d * 1000d; // in milliseconds
               time += offset;
-              solarTime = "\n" + sdf2.format(new Date(time));
+              solarTime = "\n" + SDF2.format(new Date(time));
             }
             
             nmeaString = gpsTimeString + "\n" + 
@@ -2577,7 +2578,7 @@ public class DesktopFrame
       System.out.println(line[i]);
   }
   
-  class RebroadcastPopup extends JPopupMenu
+  private class RebroadcastPopup extends JPopupMenu
                          implements ActionListener,
                                     PopupMenuListener
   {
