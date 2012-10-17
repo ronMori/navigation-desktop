@@ -1,5 +1,6 @@
 package olivsoftdesktop;
 
+
 import app.almanac.ctx.APContext;
 import app.almanac.ctx.APEventListener;
 import app.almanac.gui.AlmanacPublisherInternalFrame;
@@ -28,6 +29,8 @@ import chartlib.event.ChartLibListener;
 
 import coreutilities.Utilities;
 
+import coreutilities.gui.JumboDisplay;
+
 import coreutilities.sql.SQLUtil;
 
 import generatelocator.GenInternalFrame;
@@ -45,7 +48,7 @@ import java.awt.Frame;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -97,6 +100,8 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.plaf.InternalFrameUI;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
 
 import nauticalalmanac.Anomalies;
 import nauticalalmanac.Context;
@@ -175,7 +180,7 @@ import util.NMEACache;
 public class DesktopFrame
   extends JFrame
 {
-  @SuppressWarnings("compatibility:-245439477831537528")
+  @SuppressWarnings("compatibility:5264052920075352797")
   private final static long serialVersionUID = 1L;
   private final static String LISTENER_FAMILY = "DESKTOP_SERIALPORT_BROADCASTER";
   
@@ -226,6 +231,8 @@ public class DesktopFrame
   private JMenuItem menuToolsDisplayAW             = new JMenuItem();
   private JMenuItem menuToolsDisplayRTA            = new JMenuItem();
   
+  private JCheckBoxMenuItem foregroundDataMenuItem = new JCheckBoxMenuItem();
+
   private JMenu menuHelp = new JMenu();
   private JMenuItem menuHelpAbout = new JMenuItem();
   private JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -250,33 +257,38 @@ public class DesktopFrame
   
   private transient Thread nmeaDataThread = null;
   private transient DesktopNMEAReader nmeaReader = null;
-  
+
   private JDesktopPane desktop = new JDesktopPane()
     {
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
-      private Polygon buildReflectPolygon(JDesktopPane panel)
+
+      private void drawGlossyRectangularDisplay(Graphics2D g2d, Point topLeft, Point bottomRight, Color lightColor, Color darkColor, float transparency)
       {
-        // Build 101 points + 2 (bottom)
-        int[] x = new int[103];
-        int[] y = new int[103];
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency));
+        g2d.setPaint(null);
 
-        for (int i=0; i<=100; i++)
-        {
-          x[i] = (int)((float)i * (float)panel.getWidth() / 100f);
-          double _x = ((i / 100d) * 30d) - 15d;
-          double _y = ((_x / 10d) * (_x / 10d) * (_x / 10d));
-//        System.out.println("i=" + i + ", x:" + x[i] + ", X:" + _x + ", y:" + _y);
-          y[i] = (int)(panel.getHeight() / 2d) - (int)((panel.getHeight() / 12d) * _y);
-        }
-        x[101] = panel.getWidth(); y[101] = panel.getHeight();
-        x[102] = 0;                y[102] = panel.getHeight();
+        g2d.setColor(darkColor);
 
-        Polygon p = new Polygon(x, y, 103);
-        
-        return p;
+        int width  = bottomRight.x - topLeft.x;
+        int height = bottomRight.y - topLeft.y;
+
+        g2d.fillRoundRect(topLeft.x , topLeft.y, width, height, 30, 30);
+
+        Point gradientOrigin = new Point(0, //topLeft.x + (width) / 2,
+                                         0);
+        GradientPaint gradient = new GradientPaint(gradientOrigin.x, 
+                                                   gradientOrigin.y, 
+                                                   lightColor, 
+                                                   gradientOrigin.x, 
+                                                   gradientOrigin.y + (height / 3), 
+                                                   darkColor); // vertical, light on top
+        g2d.setPaint(gradient);
+        int offset = 1; //(int)(width * 0.025);
+        int arcRadius = 5;
+        g2d.fillRoundRect(topLeft.x + offset, topLeft.y + offset, (width - (2 * offset)), (height - (2 * offset)), 2 * arcRadius, 2 * arcRadius); 
       }
-      
+
       public void paintComponent(Graphics gr)
       {
         ((Graphics2D)gr).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -305,19 +317,16 @@ public class DesktopFrame
         }
         gr.setFont(f);
         
-        if (false) // C'est moche
+        if (false) // Glossy effect
         {
           startColor = new Color(255, 255, 255);
           endColor   = new Color(102, 102, 102);
-          // Transparency
-          ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1f));
-          gradient = new GradientPaint(0, this.getHeight(), startColor, 0, 0, endColor); // vertical, upside down
-          ((Graphics2D)gr).setPaint(gradient);
-          Polygon p = new Polygon(new int[] {0, 0, this.getWidth(), this.getWidth()},
-                                  new int[] {(int)(3 * this.getHeight() / 4), this.getHeight(), this.getHeight(), (int)(1 * this.getHeight() / 4)}, 
-                                  4);
-          p = buildReflectPolygon(this);
-          gr.fillPolygon(p);
+          drawGlossyRectangularDisplay((Graphics2D)gr, 
+                                   new Point(10, 10), 
+                                   new Point(this.getWidth() - 10, this.getHeight() - 10), 
+                                   endColor, 
+                                   startColor, 
+                                   0.25f);
         }
         // Reset Transparency
         float alphaForEveryone = ((Float)ParamPanel.getData()[ParamData.INTERNAL_FRAMES_TRANSPARENCY][ParamPanel.PRM_VALUE]).floatValue();
@@ -357,9 +366,15 @@ public class DesktopFrame
               bgw.paintBackgroundWindow(gr);
           }
         }
-      }
+        if (foregroundData.booleanValue())
+          specialInternalFrame.moveToFront();
+      }      
     };
 
+  private Boolean foregroundData = Boolean.valueOf(false);
+  private JInternalFrame specialInternalFrame = new JInternalFrame(); // ForeGround window, transparent
+  private List<String> grabbedData = new ArrayList<String>();
+  
   private static List<BackgroundWindow> bgwal = new ArrayList<BackgroundWindow>(1);
   
   private JInternalFrame sailfaxFrame    = null;
@@ -573,6 +588,9 @@ public class DesktopFrame
   private void jbInit()
     throws Exception
   {
+    if (foregroundData.booleanValue())
+      startDataGrabber();
+
     desktop.addMouseListener(new MouseAdapter()
       {
         @Override
@@ -810,6 +828,10 @@ public class DesktopFrame
 //  backGroundNMEAServer.setToolTipText("<html>RMI NMEA Server<br>For remote access</html>");
 //  backGroundNMEAServer.setSelected(false);
     
+    foregroundDataMenuItem.setText("Show foreground data");
+    foregroundDataMenuItem.setToolTipText("<html>Shows current data <br><b>on top</b> of all windows.</html>");
+    foregroundDataMenuItem.setSelected(foregroundData.booleanValue());
+    
     chartLibMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(CHARTLIB); } } );
     nmeaConsoleMenuItem.addActionListener( new ActionListener() 
       { 
@@ -856,6 +878,18 @@ public class DesktopFrame
     
     backGroundNMEARead.addActionListener(new ActionListener()  { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(READ_REBROADCAST); } } );
 //  backGroundNMEAServer.addActionListener(new ActionListener()  { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(RMI_NMEA_SERVER); } } );
+    
+    foregroundDataMenuItem.addActionListener(new ActionListener()  
+    { 
+      public void actionPerformed( ActionEvent ae ) 
+      { 
+        foregroundData = Boolean.valueOf(foregroundDataMenuItem.isSelected());
+        specialInternalFrame.setVisible(foregroundData.booleanValue());   
+        if (foregroundData.booleanValue())
+          startDataGrabber();
+        repaint();
+      } 
+    });
     
     menuFileExit.setText( "Exit" );
     menuFileExit.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { fileExit_ActionPerformed( ae ); } } );
@@ -992,13 +1026,16 @@ public class DesktopFrame
     menuToolsPreferences.setText("Preferences");
     menuBar.add(menuTools);
     menuTools.add(menuToolsPreferences);
-    menuTools.add(new JSeparator());
+    menuTools.add(new JSeparator());    
     menuToolsPreferences.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { showPreferencesDialog(); } } );
     menuToolsFullScreen.setText("Full Screen");
     menuTools.add(menuToolsFullScreen);
     menuToolsFullScreen.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { fullScreen(); } } );
     // Temp
     menuToolsFullScreen.setEnabled(false);
+    
+    menuTools.add(foregroundDataMenuItem);
+    menuTools.add(new JSeparator());        
 
     if (((Boolean)(ParamPanel.getData()[ParamData.USE_NMEA_APP][ParamPanel.PRM_VALUE])).booleanValue())
     {
@@ -1234,8 +1271,70 @@ public class DesktopFrame
     bottomPanel.add(progressBar, BorderLayout.EAST);
     progressBar.setVisible(false);
     this.getContentPane().add( bottomPanel, BorderLayout.SOUTH );
-
     this.getContentPane().add( desktop, BorderLayout.CENTER );
+
+    InternalFrameUI ifu = specialInternalFrame.getUI();
+    ((BasicInternalFrameUI)ifu).setNorthPane(null);   // Remove the title bar   
+
+    specialInternalFrame.setLocation(10, 10);
+    specialInternalFrame.setSize(250, 200);
+    specialInternalFrame.setOpaque(false);
+    specialInternalFrame.setBorder(null);    // Remove the border
+    Color bg = new Color(0, 0, 0, 0); // This color is transparent black
+    specialInternalFrame.setBackground(bg);
+    specialInternalFrame.getContentPane().setLayout(new BorderLayout());
+    specialInternalFrame.getContentPane().add(new JPanel()
+                                              {
+                                                @SuppressWarnings("compatibility:-7001108031039269352")
+                                                private final static long serialVersionUID = 1L;
+                                                
+                                                @Override
+                                                protected void paintComponent(Graphics g)
+                                                {
+                                                  if (foregroundData.booleanValue())
+                                                  {
+                                                    ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                                                                                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);      
+                                                    ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                                                                     RenderingHints.VALUE_ANTIALIAS_ON);      
+                                                    this.setOpaque(false);
+  
+                                                    // Display the dynamic data here
+                                                    Dimension dim = this.getSize();
+                                                    double radius = (Math.min(dim.width, dim.height) - 10d) / 2d;
+                                                    // Rose
+                                                    g.setColor(Color.red); // was darkGray
+                                                    int graphicXOffset = 0;
+                                                    int graphicYOffset = 0;
+                                                    for (int i=0; i<360; i+= 5)
+                                                    {
+                                                      int x1 = (dim.width / 2) + (int)((radius - (i%45==0?20:10)) * Math.cos(Math.toRadians(i)));  
+                                                      int y1 = (dim.height / 2) + (int)((radius - (i%45==0?20:10)) * Math.sin(Math.toRadians(i)));  
+                                                      int x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
+                                                      int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
+                                                      g.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
+                                                    }                                                  
+                                                    g.setColor(Color.green);
+                                                 // g.setFont(g.getFont().deriveFont(Font.BOLD));
+                                                    Font digiFont = null;
+                                                    try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
+                                                    catch (Exception ex) { System.err.println(ex.getMessage()); }
+                                                    if (digiFont != null)
+                                                      g.setFont(digiFont.deriveFont(Font.BOLD, 16f));
+                                                    else
+                                                      g.setFont(g.getFont().deriveFont(Font.BOLD));
+                                                    int y = 20;
+                                                    for (String s : grabbedData)
+                                                    {
+                                                      g.drawString(s, 5, y);
+                                                      y += (g.getFont().getSize() + 2);
+                                                    }
+                                                  }
+                                                }                                                
+                                              }, 
+                                              BorderLayout.CENTER);    
+    specialInternalFrame.setVisible(foregroundData.booleanValue());
+    desktop.add(specialInternalFrame);
     
     DesktopContext.getInstance().addApplicationListener(new DesktopEventListener()
       {
@@ -1544,7 +1643,8 @@ public class DesktopFrame
           String toLoad = "chartlib.ui.components.ChartLibInternalFrame";
           Class c = Class.forName(toLoad);
     //    @SuppressWarnings("unchecked")
-          Constructor constr = c.getConstructor(new Class<?>[] { Connection.class });
+   //     Constructor constr = c.getConstructor(new Class<?>[] { Connection.class });
+          Constructor constr = c.getConstructor(Connection.class);
           Object obj = constr.newInstance(chartConnection);
           chartLib = (JInternalFrame) obj;
 //        chartLib = new ChartLibInternalFrame(conn);
@@ -2115,6 +2215,131 @@ public class DesktopFrame
                                     JOptionPane.DEFAULT_OPTION);
     if (opt == JOptionPane.OK_OPTION)
       cp.finalPrmUpdate();
+  }
+  
+  private void startDataGrabber()
+  {
+    Thread dataGrabber = new Thread()
+      {
+        public void run()
+        {
+          String degSymbol = " "; // "\272"; 
+          while (foregroundData.booleanValue())
+          {
+            grabbedData = new ArrayList<String>();
+            // Time
+            Date ut = TimeUtil.getGMT();
+            grabbedData.add("System:" + SDF.format(ut));
+            double offset = TimeUtil.getGMTOffset();
+            String strOffset = Integer.toString((int)offset);
+            if (offset > 0) strOffset = "+" + strOffset;
+            grabbedData.add("UTC Offset:" + strOffset);
+            // NMEA Data
+            String str = "";
+            try 
+            { 
+              str += ("L:" + GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS));
+            } 
+            catch (Exception ex) 
+            { 
+              System.err.println(ex.getLocalizedMessage());
+              str += "-"; 
+            }
+            grabbedData.add(str);            
+            str = "";
+            double g = 0;
+            try 
+            { 
+              g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
+              str += ("G:" + GeomUtil.decToSex(g, GeomUtil.NO_DEG, GeomUtil.EW)); 
+            } 
+            catch (Exception ex) 
+            { 
+              System.out.println(ex.getLocalizedMessage());
+              str += "-"; 
+            }
+            grabbedData.add(str);            
+            str = "COG:";
+            try 
+            { 
+              str += Integer.toString((int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG, true)).getValue()); 
+            } 
+            catch (Exception ex) 
+            { 
+              System.err.println("COG in Cache:" + ex.getLocalizedMessage()); 
+              str += "-"; 
+            }
+            str += (degSymbol + " SOG:");
+            try 
+            { 
+              str += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
+            } 
+            catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
+            str += " kts";
+            grabbedData.add(str);            
+            
+            str = "xx:xx:xx";            
+            try 
+            { 
+              try 
+              { 
+                str = SDF.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+                grabbedData.add(str);            
+              } 
+              catch (Exception ignore) 
+              {
+                System.err.println(ignore.getLocalizedMessage());
+              }
+              long time = 0L;
+              try 
+              { 
+                time = ((UTCTime)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); 
+              } 
+              catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
+              catch (Exception oops) { oops.printStackTrace(); }
+            //          System.out.println("[time:" + time + ", g:" + g + "]");
+              offset = (g / 15d) * 3600d * 1000d; // in milliseconds
+              time += offset;
+              str = SDF2.format(new Date(time));
+              grabbedData.add(str);            
+            }
+            catch (Exception ex)
+            {
+              ex.printStackTrace();
+            }
+
+            double aws = 0d;
+            try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+            int awa    = 0;
+            try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+            double bsp = 0d;
+            try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+            int hdg    = 0;
+            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+            
+            double bl = 0d;
+            try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
+            double sl = 0d;
+            try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
+            double depth = 0d;
+            try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
+            double temp  = 0d;
+            try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
+            
+            grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
+            grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
+            grabbedData.add("HDG:" + Integer.toString(hdg));
+            grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
+            grabbedData.add("DBT: " + DF22.format(depth) + " m");
+            grabbedData.add("Water Temp:" + DF22.format(temp) + degSymbol + "C");
+            
+            specialInternalFrame.repaint();
+            try { Thread.sleep(1000L); } catch (Exception ex) {} 
+          }
+       // System.out.println("DataGrabber thread terminated.");
+        }
+      };
+    dataGrabber.start();
   }
   
   private class TimeThread extends Thread
