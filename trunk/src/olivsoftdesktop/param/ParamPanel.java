@@ -59,6 +59,9 @@ import org.w3c.dom.Text;
 public final class ParamPanel 
            extends JPanel 
 {
+  @SuppressWarnings("compatibility:-7630492256577044663")
+  private final static long serialVersionUID = 1L;
+  
   private static boolean verbose = true;
   
   private BorderLayout borderLayout1 = new BorderLayout();
@@ -694,6 +697,9 @@ public final class ParamPanel
   {
     dataModel = new AbstractTableModel()
     {
+        @SuppressWarnings("compatibility:9070027359489543434")
+        private final static long serialVersionUID = 1L;
+
       public int getColumnCount()
       { return names.length; }
       public int getRowCount()
@@ -714,6 +720,8 @@ public final class ParamPanel
     };
     table = new JTable(dataModel)
     {
+        @SuppressWarnings("compatibility:-6277413828840729633")
+        private final static long serialVersionUID = 1L;
       /* For the tooltip text */
       public Component prepareRenderer(TableCellRenderer renderer,
                                        int rowIndex, 
@@ -723,7 +731,7 @@ public final class ParamPanel
         if (c instanceof JComponent) 
         {
           JComponent jc = (JComponent)c;
-          try { jc.setToolTipText(getValueAt(rowIndex, vColIndex).toString()); } catch (Exception e) {}
+          try { jc.setToolTipText(getValueAt(rowIndex, vColIndex).toString()); } catch (Exception e) { e.printStackTrace(); }
         }
         return c;
       }
@@ -738,10 +746,13 @@ public final class ParamPanel
     KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener(new JTableFocusChangeListener(table));
   }
 
-  public class ColorTableCellRenderer
+  public static class ColorTableCellRenderer
        extends JLabel
     implements TableCellRenderer
   {
+    @SuppressWarnings("compatibility:-7810679012468272669")
+    private final static long serialVersionUID = 1L;
+
     transient Object curValue = null;
 
     public Component getTableCellRendererComponent(JTable table,
@@ -894,9 +905,9 @@ public final class ParamPanel
                                                  "HTTP"};
   private final static String[] tideFlavorValues  = {"XML",
                                                      "SQL",
-                                                     "SQLITE",
+                                                     "SQLITE" /*,
                                                      "SERIALIZED",
-                                                     "JSON"};
+                                                     "JSON" */};
   public static class ParamColor
   {
     Color color;
@@ -925,10 +936,13 @@ public final class ParamPanel
     { return DesktopUtilities.colorToString(this.color); }
   }
   
-  public class ParamEditor 
+  public static class ParamEditor 
        extends JComponent 
     implements TableCellEditor
   {
+    @SuppressWarnings("compatibility:68475031554043737")
+    private final static long serialVersionUID = 1L;
+
     JComponent componentToApply;
     protected transient Vector<CellEditorListener> listeners;
     protected transient Object originalValue;
