@@ -83,6 +83,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import java.util.TimeZone;
+
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDesktopPane;
@@ -190,7 +192,9 @@ public class DesktopFrame
   private boolean minimizeNMEAConsole = false;
   
   private final static SimpleDateFormat SDF  = new SimpleDateFormat("dd MMM yyyy '\n'HH:mm:ss 'UTC'");
+  static { SDF.setTimeZone(TimeZone.getTimeZone("Etc/UTC")); }
   private final static SimpleDateFormat SDF2 = new SimpleDateFormat("'Solar Time:' HH:mm:ss");
+  static { SDF2.setTimeZone(TimeZone.getTimeZone("Etc/UTC")); }
 //private final static SimpleDateFormat SDF3 = new SimpleDateFormat("HH:mm:ss 'UTC'");
   private final static DecimalFormat DF2     = new DecimalFormat("00");
   private final static DecimalFormat DF22    = new DecimalFormat("00.00");
@@ -2283,7 +2287,8 @@ public class DesktopFrame
             { 
               try 
               { 
-                str = SDF.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+                UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                str = SDF.format(utcDate.getValue());
                 grabbedData.add(str);            
               } 
               catch (Exception ignore) 
