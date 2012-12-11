@@ -208,6 +208,12 @@ public final class ParamPanel
       case ParamData.BOAT_ID:
         it = "DP";
         break;
+      case ParamData.MAX_ANALOG_BSP:
+        it = new Double(10);
+        break;
+      case ParamData.MAX_ANALOG_TWS:
+        it = new Double(50);
+        break;
       default:
         break;
     }
@@ -253,7 +259,9 @@ public final class ParamPanel
               data[i][PRM_VALUE] = new ImageFile(s);                 
             else if (i == ParamData.DB_LOCATION)
               data[i][PRM_VALUE] = new DataDirectory("DB Files Location", s);                 
-            else if (i == ParamData.DELTA_T) 
+            else if (i == ParamData.DELTA_T ||
+                     i == ParamData.MAX_ANALOG_BSP ||
+                     i == ParamData.MAX_ANALOG_TWS) 
               data[i][PRM_VALUE] = new Double(s);
             else if (i == ParamData.NMEA_DATA_STREAM)
               data[i][PRM_VALUE] = new ListOfDataStreams(s);              
@@ -327,7 +335,9 @@ public final class ParamPanel
       ParamData.NMEA_RMI_PORT,
       ParamData.NMEA_BAUD_RATE,      
       ParamData.NMEA_HOST_NAME,
-      ParamData.NMEA_HTTP_PORT /*,
+      ParamData.NMEA_HTTP_PORT,
+      ParamData.MAX_ANALOG_BSP,
+      ParamData.MAX_ANALOG_TWS /*,
       ParamData.NMEA_CONFIG_FILE */ /* Unused */ /*,
       ParamData.NMEA_SIMULATION */  /* Unused */
     }, 
@@ -509,7 +519,9 @@ public final class ParamPanel
               ok2go = false; 
             }           
           }
-          else if (currentIndex == ParamData.DELTA_T)
+          else if (currentIndex == ParamData.DELTA_T ||
+                   currentIndex == ParamData.MAX_ANALOG_BSP ||
+                   currentIndex == ParamData.MAX_ANALOG_TWS)
           {
             try 
             { 
@@ -582,7 +594,9 @@ public final class ParamPanel
                      currentIndex == ParamData.NMEA_UDP_PORT ||
                      currentIndex == ParamData.NMEA_RMI_PORT ||
                      currentIndex == ParamData.NMEA_BAUD_RATE ||
-                     currentIndex == ParamData.NMEA_SIMULATION)
+                     currentIndex == ParamData.NMEA_SIMULATION ||
+                     currentIndex == ParamData.MAX_ANALOG_BSP ||
+                     currentIndex == ParamData.MAX_ANALOG_TWS)
             {              
               String mess = "";
               if (DesktopContext.getInstance().getTopFrame().isNMEAConsoleRunning())

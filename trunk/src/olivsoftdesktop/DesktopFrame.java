@@ -1680,6 +1680,9 @@ public class DesktopFrame
         System.setProperty("nmea.baud.rate", (ParamPanel.getData()[ParamData.NMEA_BAUD_RATE][ParamPanel.PRM_VALUE]).toString());
 //      System.setProperty("nmea.simulation.data.file", (ParamPanel.getData()[ParamData.NMEA_SIMULATION][ParamPanel.PRM_VALUE]).toString());
 
+        System.setProperty("max.analog.bsp", (ParamPanel.getData()[ParamData.MAX_ANALOG_BSP][ParamPanel.PRM_VALUE]).toString());
+        System.setProperty("max.analog.tws", (ParamPanel.getData()[ParamData.MAX_ANALOG_TWS][ParamPanel.PRM_VALUE]).toString());
+
         String nmeaProperties = System.getProperty("nmea.config.file", "nmea-config.properties");
         String serialPort     = System.getProperty("nmea.serial.port", null);
         int br                = Integer.parseInt(System.getProperty("nmea.baud.rate", "0"));
@@ -1730,6 +1733,8 @@ public class DesktopFrame
         centerFrame(masterDim, nmeaDataFrame);
         break;
       case REPLAY_NMEA:
+        System.setProperty("max.analog.bsp", (ParamPanel.getData()[ParamData.MAX_ANALOG_BSP][ParamPanel.PRM_VALUE]).toString());
+        System.setProperty("max.analog.tws", (ParamPanel.getData()[ParamData.MAX_ANALOG_TWS][ParamPanel.PRM_VALUE]).toString());
         if (backGroundNMEARead.isSelected()) // Already reading NMEA port
         {
           String message = "NMEA Port is being read.\n" +
