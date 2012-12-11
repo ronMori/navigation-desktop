@@ -37,8 +37,10 @@ public class ParamData
   public final static int BG_WIN_FONT_COLOR            = 30;
   public final static int MAX_TIDE_RECENT_STATIONS     = 31;
   public final static int BOAT_ID                      = 32;
+  public final static int MAX_ANALOG_BSP               = 33;
+  public final static int MAX_ANALOG_TWS               = 34;
 
-  public final static int NB_PARAMETERS                = 33;
+  public final static int NB_PARAMETERS                = 35;
 
   private final static String[] LABELS =
   {
@@ -77,7 +79,10 @@ public class ParamData
     "Background Windows Font color",                                           // 30
     "Max number of recent stations for the Tides",                             // 31
     //
-    "Boat ID"                                                                  // 32
+    "Boat ID",                                                                 // 32
+    //
+    "Max value for BSP Analog Display",                                        // 33
+    "Max value for TWS Analog Display"                                         // 34
   };
   
   public final static String[] getLabels()
@@ -119,7 +124,9 @@ public class ParamData
     /* 29 */ "Port used to read NMEA Data from RMI. Used along with the NMEA Source Host",
     /* 30 */ "Font color for the background windows",        
     /* 31 */ "For the Tides application, specifies the max number of recent tide station in the 'Recent Stations' menu item",
-    /* 32 */ "Boat ID used by the Google Locator to retrieve your boat name. You can request a boat ID by going to http://donpedro.lediouris.net/php/locator/idform.html or by sending an email to olivier@lediouris.net"
+    /* 32 */ "Boat ID used by the Google Locator to retrieve your boat name. You can request a boat ID by going to http://donpedro.lediouris.net/php/locator/idform.html or by sending an email to olivier@lediouris.net",
+    /* 33 */ "Maximum value for the boat speed analog display",
+    /* 34 */ "Maximum value for the true wind speed analog display"
   };
   
   public final static String[] getHelpText()
