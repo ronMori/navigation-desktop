@@ -917,9 +917,9 @@ public final class ParamPanel
                                                  "RMI"};
   private final static String[] streamValues  = {"NMEA Port",
                                                  "HTTP"};
-  private final static String[] tideFlavorValues  = {"XML",
+  private final static String[] tideFlavorValues  = {"XML" /*, // Reduced to only one element
                                                      "SQL",
-                                                     "SQLITE" /*,
+                                                     "SQLITE" ,
                                                      "SERIALIZED",
                                                      "JSON" */};
   public static class ParamColor
