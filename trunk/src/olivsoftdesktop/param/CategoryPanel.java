@@ -11,7 +11,7 @@ public class CategoryPanel
   public final static String GNL_CATEGORY            = "Desktop";
   public final static String NMEA_CATEGORY           = "NMEA Console";
   public final static String SAILFAX_CATEGORY        = "SailFax";
-  public final static String DATABASES_CATEGORY      = "Databases (Tides, Charts, NMEA Journal)";
+  public final static String DATABASES_CATEGORY      = "Databases (Charts, NMEA Journal)";
   public final static String ALMANAC_CATEGORY        = "Nautical Almanac";
   public final static String LOCATOR_CATEGORY        = "Google Locator";
   public final static String TIDE_CATEGORY           = "Tides";
@@ -21,7 +21,7 @@ public class CategoryPanel
   private final static String GNL_CATEGORY_HELP            = "Desktop Parameters";
   private final static String NMEA_CATEGORY_HELP           = "NMEA Console parameters";
   private final static String SAILFAX_CATEGORY_HELP        = "SailFax parameters";
-  private final static String DATABASES_CATEGORY_HELP      = "Databases (Tides, Charts, NMEA Journal) location.";
+  private final static String DATABASES_CATEGORY_HELP      = "Databases (Charts, NMEA Journal) location.";
   private final static String ALMANAC_CATEGORY_HELP        = "Nautical Almanac parameters";
   private final static String LOCATOR_CATEGORY_HELP        = "Google locator parameters";
   private final static String TIDE_CATEGORY_HELP           = "Tides parameters";
