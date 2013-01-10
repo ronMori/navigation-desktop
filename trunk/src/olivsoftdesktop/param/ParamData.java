@@ -51,7 +51,7 @@ public class ParamData
     "NMEA Source Host",                                                        //  4
     "NMEA Config File",                                                        //  5
     "SailFax Repository File",                                                 //  6
-    "DB directory or URL (for Chart Library, Tides & NMEA Console Journal)",   //  7
+    "DB directory or URL (for Chart Library & NMEA Console Journal)",          //  7
     "Background Image",                                                        //  8
     "NMEA Source Baud Rate",                                                   //  9
     "NMEA Source Simulation Data File",                                        // 10. UNUSED
