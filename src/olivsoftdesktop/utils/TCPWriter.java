@@ -36,6 +36,7 @@ public class TCPWriter
             try 
             { 
               Socket skt = serverSocket.accept(); 
+              System.out.println(".......... serverSocket accepted (TCP:" + tcpPort + ").");
               setSocket(skt);
             } 
             catch (Exception ex) 
@@ -56,18 +57,28 @@ public class TCPWriter
     this.tcpSocket = skt;
   }
   
+  private DataOutputStream out = null;
+  
   public void write(byte[] message)
   {
     if ("true".equals(System.getProperty("verbose", "false")))
-      System.out.println("TCP write on port " + tcpPort + " [" + new String(message) + "]");
+    {
+      System.out.println("TCP write on port " + tcpPort + " [" + new String(message, 0, message.length - 2) + "]");
+      for (byte b : message)
+        System.out.print(formatByteHexa(b) + " ");
+      System.out.println();
+    }
     try
     {
       if (tcpSocket != null)
       {
-        DataOutputStream out = new DataOutputStream(tcpSocket.getOutputStream());
+        if (out == null)
+          out = new DataOutputStream(tcpSocket.getOutputStream());
         out.write(message);
         out.flush();
-//      out.close();
+//      tcpSocket.getOutputStream().write(message);
+//      tcpSocket.getOutputStream().flush();
+     // out.close();
       }
     }
     catch (SocketException se)
@@ -110,6 +121,14 @@ public class TCPWriter
       System.err.println("TCPWriter.write:" + ex.getLocalizedMessage());
       ex.printStackTrace();
     }
+  }
+  
+  private String formatByteHexa(byte b)
+  {
+    String s = Integer.toHexString(b).toUpperCase();
+    while (s.length() < 2)
+      s = "0" + s;
+    return s;
   }
   
   public void close() throws Exception
