@@ -130,6 +130,7 @@ import nmea.server.utils.HTTPServer;
 import nmea.ui.NMEAInternalFrame;
 import nmea.ui.viewer.elements.AWDisplay;
 
+import ocss.nmea.api.NMEAParser;
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.Depth;
@@ -407,8 +408,11 @@ public class DesktopFrame
   private RebroadcastPanel rebroadcastPanel = null;
   private boolean rebroadcastVerbose = "true".equals(System.getProperty("verbose", "false"));
 
+  private static String NMEA_EOS = new String(new char[] {0x0A, 0x0D});
+  
   public DesktopFrame()
   {
+//  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.WINDOWS_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
     try
     {
       jbInit();
@@ -1763,10 +1767,10 @@ public class DesktopFrame
                 if (TCPPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
-                    System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
+                    System.out.println("Rebroadcasting on TCP Port " + TCPPort + ": [" + str + "]");
                   if (tcpWriter != null)
                   {
-                    tcpWriter.write((str + "\n").getBytes());
+                    tcpWriter.write((str + getNMEA_EOS()).getBytes());
                     prefix += (" => TCP " + TCPPort);
                   }
                 }
@@ -1774,8 +1778,8 @@ public class DesktopFrame
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
-                  udpWriter.write(str.getBytes());
-                  prefix += (" => UDP " + UDPPort);
+                  udpWriter.write((str + getNMEA_EOS()).getBytes());
+                  prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
                 }
                 if (GPSDPort != -1 && str != null)
                 {
@@ -1954,7 +1958,7 @@ public class DesktopFrame
                   System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
                 if (tcpWriter != null)
                 {
-                  tcpWriter.write((str + "\n").getBytes());
+                  tcpWriter.write((str + getNMEA_EOS()).getBytes());
                   prefix += (" => TCP " + TCPPort);
                 }
               }
@@ -1962,8 +1966,8 @@ public class DesktopFrame
               {
                 if (rebroadcastVerbose)
                   System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
-                udpWriter.write(str.getBytes());
-                prefix += (" => UDP " + UDPPort);
+                udpWriter.write((str + getNMEA_EOS()).getBytes());
+                prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
               }
               if (GPSDPort != -1)
               {
@@ -2351,7 +2355,12 @@ public class DesktopFrame
       };
     dataGrabber.start();
   }
-  
+
+  public String getNMEA_EOS()
+  {
+    return NMEA_EOS;
+  }
+
   private class TimeThread extends Thread
   {
     public void run()
