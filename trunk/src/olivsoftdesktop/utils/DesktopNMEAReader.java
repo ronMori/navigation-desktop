@@ -5,7 +5,7 @@ import nmea.server.NMEAEventManager;
 
 import java.io.File;
 
-import nmea.event.NMEAListener;
+import nmea.event.NMEAReaderListener;
 
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
@@ -13,6 +13,7 @@ import nmea.server.datareader.CustomNMEAClient;
 
 import nmea.server.utils.Utils;
 
+import ocss.nmea.api.NMEAListener;
 import ocss.nmea.api.NMEAReader;
 
 import ocss.nmea.parser.StringParsers;
@@ -93,7 +94,7 @@ public class DesktopNMEAReader
       if (cache != null)
       {
 //      System.out.println("Cache has " + cache.size() + " entry(ies).");
-        NMEAContext.getInstance().addNMEAListener(new NMEAListener()
+        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
           {
             public void manageNMEAString(String str)
             {
@@ -172,7 +173,6 @@ public class DesktopNMEAReader
           throw new RuntimeException(t);
         }
       };
-  
   }
 
   private void read(File f)

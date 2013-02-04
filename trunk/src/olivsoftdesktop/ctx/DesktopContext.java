@@ -27,9 +27,9 @@ public class DesktopContext
 
   private static DesktopContext instance = null;
   private DOMParser parser = null;
-  private transient List<DesktopEventListener> applicationListeners = null;
+  private List<DesktopEventListener> applicationListeners = null;
   private DesktopFrame topFrame = null;
-  private transient RMI_NMEAServerManager serverManager = null;
+  private RMI_NMEAServerManager serverManager = null;
   
   private boolean readingNMEA = false;
   
@@ -121,9 +121,9 @@ public class DesktopContext
     return topFrame;
   }
 
-  public void setReadingNMEA(boolean readingSerial)
+  public void setReadingNMEA(boolean readingNMEA)
   {
-    this.readingNMEA = readingSerial;
+    this.readingNMEA = readingNMEA;
   }
 
   public boolean isReadingNMEA()
