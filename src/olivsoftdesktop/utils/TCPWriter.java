@@ -87,6 +87,7 @@ public class TCPWriter
       if (se.getMessage().indexOf("Connection reset by peer") > -1 ||
           se.getMessage().indexOf("Software caused connection abort: socket write error") > -1) // Catch more errors ?
       {
+        System.err.println("Reseting...");
         setSocket(null);
         try
         {
@@ -99,7 +100,7 @@ public class TCPWriter
                 try 
                 { 
                   Socket skt = serverSocket.accept(); 
-//                System.out.println("Accepted.");
+                  System.out.println("Accepted (reset).");
                   setSocket(skt);
                 } 
                 catch (Exception ex) 

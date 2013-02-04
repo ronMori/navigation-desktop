@@ -82,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import java.util.TimeZone;
 
 import javax.swing.ImageIcon;
@@ -130,7 +129,6 @@ import nmea.server.utils.HTTPServer;
 import nmea.ui.NMEAInternalFrame;
 import nmea.ui.viewer.elements.AWDisplay;
 
-import ocss.nmea.api.NMEAParser;
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.Depth;
@@ -412,7 +410,7 @@ public class DesktopFrame
   
   public DesktopFrame()
   {
-//  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.WINDOWS_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
+//  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.STANDARD_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
     try
     {
       jbInit();
@@ -1311,7 +1309,7 @@ public class DesktopFrame
                                                     Dimension dim = this.getSize();
                                                     double radius = (Math.min(dim.width, dim.height) - 10d) / 2d;
                                                     // Rose
-                                                    g.setColor(Color.red); // was darkGray
+                                                    g.setColor(Color.green); // was darkGray
                                                     int graphicXOffset = 0;
                                                     int graphicYOffset = 0;
                                                     for (int i=0; i<360; i+= 5)
@@ -1322,7 +1320,7 @@ public class DesktopFrame
                                                       int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
                                                       g.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
                                                     }                                                  
-                                                    g.setColor(Color.green);
+                                                    g.setColor(Color.red);
                                                  // g.setFont(g.getFont().deriveFont(Font.BOLD));
                                                     Font digiFont = null;
                                                     try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
