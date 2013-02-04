@@ -118,7 +118,7 @@ import nightsky.ctx.SkyMapEventListener;
 
 import nightsky.full.DualInternalFrame;
 
-import nmea.event.NMEAListener;
+import nmea.event.NMEAReaderListener;
 
 import nmea.server.constants.Constants;
 import nmea.server.ctx.NMEAContext;
@@ -1401,7 +1401,7 @@ public class DesktopFrame
           chartLibMenuItem.setEnabled(true);
         }
       });
-    NMEAContext.getInstance().addNMEAListener(new NMEAListener()
+    NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
       {
         public void internalFrameClosed() 
         {
@@ -1609,7 +1609,7 @@ public class DesktopFrame
   public boolean isAPRunning() { return !almanacMenuItem.isEnabled(); }
   public boolean isTideRunning() { return !tideMenuItem.isEnabled(); }
 
-  private transient NMEAListener nmeaListener = null;
+  private transient NMEAReaderListener nmeaReaderListener = null;
   
   private void appRequest_ActionPerformed(int app)
   {
@@ -1753,7 +1753,7 @@ public class DesktopFrame
                                                             "Load");
           if (simul.trim().length() > 0)
           {
-            nmeaListener = new NMEAListener(LISTENER_FAMILY)
+            nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
             {
               public void manageNMEAString(String str)
               {
@@ -1802,7 +1802,7 @@ public class DesktopFrame
                 setStatus(prefix + " " + message);
               }
             };
-            NMEAContext.getInstance().addNMEAListener(nmeaListener);       
+            NMEAContext.getInstance().addNMEAReaderListener(nmeaReaderListener);       
 
             serialPort = null;
             tcp = null;
@@ -1933,7 +1933,7 @@ public class DesktopFrame
       case READ_REBROADCAST:
         if (backGroundNMEARead.isSelected())
         {          
-          nmeaListener = new NMEAListener(LISTENER_FAMILY)
+          nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
           {
             public void manageNMEAString(String str)
             {
@@ -1994,7 +1994,7 @@ public class DesktopFrame
               setStatus(message);
             }
           };
-          NMEAContext.getInstance().addNMEAListener(nmeaListener);       
+          NMEAContext.getInstance().addNMEAReaderListener(nmeaReaderListener);       
           String comPort = (ParamPanel.getData()[ParamData.NMEA_SERIAL_PORT][ParamPanel.PRM_VALUE]).toString();
           String tcpPort = (ParamPanel.getData()[ParamData.NMEA_TCP_PORT][ParamPanel.PRM_VALUE]).toString();
           String udpPort = (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString();
