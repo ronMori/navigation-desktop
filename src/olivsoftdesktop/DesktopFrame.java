@@ -1790,7 +1790,7 @@ public class DesktopFrame
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on HTTP Port " + HTTPPort + ":" + str);
-                  prefix += (" => XML/HTTP " + HTTPPort);
+                  prefix += (" => " + rebroadcastPanel.getHttpFlavor() + "/HTTP " + HTTPPort);
                 }
                 if (RMIPort != -1 && str != null)
                 {
@@ -2850,7 +2850,10 @@ public class DesktopFrame
             HTTPPort = rebroadcastPanel.getHTTPPort();
             System.out.println("Starting HTTP Server on port " + HTTPPort);
             System.setProperty("http.port", Integer.toString(HTTPPort));
-            new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
+            if (rebroadcastPanel.getHttpFlavor().equals("XML"))
+              new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
+            if (rebroadcastPanel.getHttpFlavor().equals("json"))
+              new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
           }
           else if (HTTPPort != -1 && !rebroadcastPanel.isHTTPSelected())
           {

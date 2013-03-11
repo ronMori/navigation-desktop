@@ -23,6 +23,9 @@ public class RebroadcastPanel
 {
   private GridBagLayout gridBagLayout1 = new GridBagLayout();
   private JCheckBox HTTPCheckBox = new JCheckBox();
+  private JComboBox xmlJsonComboBox = new JComboBox();
+  private JLabel overHttpLabel = new JLabel(" over HTTP");
+  private JPanel httpPanel = new JPanel();
   private JCheckBox UDPCheckBox = new JCheckBox();
   private JCheckBox TCPCheckBox = new JCheckBox();
   private JLabel httpPortLabel = new JLabel();
@@ -39,6 +42,7 @@ public class RebroadcastPanel
   private JCheckBox GPSDCheckBox = new JCheckBox();
   private JLabel gpsdPortLabel = new JLabel();
   private JFormattedTextField gpsdPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
+  private GridBagLayout gridBagLayout2 = new GridBagLayout();
 
   public RebroadcastPanel()
   {
@@ -57,7 +61,10 @@ public class RebroadcastPanel
   {
     this.setLayout(gridBagLayout1);
     this.setSize(new Dimension(376, 187));
-    HTTPCheckBox.setText("XML over HTTP");
+    xmlJsonComboBox.removeAllItems();
+    xmlJsonComboBox.addItem("XML");
+    xmlJsonComboBox.addItem("json");
+    HTTPCheckBox.setText("");
     HTTPCheckBox.addActionListener(new ActionListener()
       {
         public void actionPerformed(ActionEvent e)
@@ -65,6 +72,13 @@ public class RebroadcastPanel
           HTTPCheckBox_actionPerformed(e);
         }
       });
+    httpPanel.setLayout(gridBagLayout2);
+    httpPanel.add(HTTPCheckBox, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 0, 0, 0), 0, 0));
+    httpPanel.add(xmlJsonComboBox, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 1, 0, 0), 0, 0));
+    httpPanel.add(overHttpLabel, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+          new Insets(0, 5, 0, 0), 0, 0));
     UDPCheckBox.setText("UDP");
     UDPCheckBox.addActionListener(new ActionListener()
       {
@@ -100,7 +114,7 @@ public class RebroadcastPanel
     gpsdPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
     gpsdPortFormattedTextField.setText("2947");
 
-    this.add(HTTPCheckBox, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+    this.add(httpPanel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 5), 0, 0));
     this.add(UDPCheckBox, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 5), 0, 0));
@@ -223,6 +237,11 @@ public class RebroadcastPanel
   public boolean isHTTPSelected()
   {
     return HTTPCheckBox.isSelected();
+  }
+  
+  public String getHttpFlavor()
+  {
+    return xmlJsonComboBox.getSelectedItem().toString();
   }
   
   public boolean isUDPSelected()
