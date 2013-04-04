@@ -14,7 +14,7 @@ public class ParamData
   public final static int DB_LOCATION                  =  7;  // ..\all-db
   public final static int BACKGROUND_IMAGE             =  8;  // ....
   public final static int NMEA_BAUD_RATE               =  9;  // ....
-  public final static int NMEA_SIMULATION              = 10;  // .... UNUSED!!
+  public final static int FOREGROUND_FONT_COLOR        = 10;  // Foreground Window Font Color
   public final static int DELTA_T                      = 11;  // 65.984
   public final static int NMEA_DATA_STREAM             = 12;  // NMEA port, HTTP // for the desktop BGWindows
   public final static int AIRMAIL_LOCATION             = 13;  // C:\Program Files\Airmail
@@ -54,7 +54,7 @@ public class ParamData
     "DB directory or URL (for Chart Library & NMEA Console Journal)",          //  7
     "Background Image",                                                        //  8
     "NMEA Source Baud Rate",                                                   //  9
-    "NMEA Source Simulation Data File",                                        // 10. UNUSED
+    "Foreground Window Font Color",                                            // 10.
     "Delta T in seconds",                                                      // 11
     "NMEA Source Data Stream",                                                 // 12
     "Airmail Location",                                                        // 13
@@ -102,7 +102,7 @@ public class ParamData
     /*  7 */ "Directory where the HypersonicSQL Database Files are located (for standalone driver), or database URL (for server driver). For standalone, enter something like \".." + File.separator + "all-db\", for server driver, this would be like \"//localhost:1234/tides\".",
     /*  8 */ "Desktop Background Image",
     /*  9 */ "Baud Rate for the Serial NMEA input",
-    /* 10 */ "NMEA Data File containg data for simulation, incase you're not connected to a GPS or NMEA Station",
+    /* 10 */ "Color of the font used to display the data in the foreground window. Can be tweaked to be visible, depending on what your background looks like.",
     /* 11 */ "Inserted leap seconds, check out http://aa.usno.navy.mil/data/docs/celnavtable.php, http://maia.usno.navy.mil/ser7/deltat.data and http://maia.usno.navy.mil/",
     /* 12 */ "How to read NMEA Data read from the NMEA port, to feed the background windows of the Desktop.",
     /* 13 */ "Directory in which Airmail is installed. Will be used by SailFax to locate SkedFile.txt",

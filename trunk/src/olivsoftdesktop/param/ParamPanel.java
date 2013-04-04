@@ -146,8 +146,8 @@ public final class ParamPanel
       case ParamData.NMEA_BAUD_RATE:
         it = "4800";
         break;
-      case ParamData.NMEA_SIMULATION:
-        it = new NMEAFile("");
+      case ParamData.FOREGROUND_FONT_COLOR:
+        it = new ParamColor(Color.red, "");
         break;
       case ParamData.NMEA_CONFIG_FILE:
         it = new PropertiesFile("nmea.properties");
@@ -251,8 +251,6 @@ public final class ParamPanel
               data[i][PRM_VALUE] = new ListOfChannels(s);
             else if (i == ParamData.NMEA_CONFIG_FILE)
               data[i][PRM_VALUE] = new PropertiesFile(s);                 
-            else if (i == ParamData.NMEA_SIMULATION)
-              data[i][PRM_VALUE] = new NMEAFile(s);                 
             else if (i == ParamData.SAILFAX_CATALOG)
               data[i][PRM_VALUE] = new XMLFile(s);                 
             else if (i == ParamData.BACKGROUND_IMAGE)
@@ -285,7 +283,8 @@ public final class ParamPanel
                      i == ParamData.USE_GOOGLE_APP || 
                      i == ParamData.USE_TIDES_APP)
               data[i][PRM_VALUE] = new Boolean(s);
-            else if (i == ParamData.BG_WIN_FONT_COLOR)
+            else if (i == ParamData.BG_WIN_FONT_COLOR ||
+                     i == ParamData.FOREGROUND_FONT_COLOR)
               data[i][PRM_VALUE] = new ParamColor(DesktopUtilities.buildColor(s), "");
             else if (i == ParamData.MAX_TIDE_RECENT_STATIONS) 
               data[i][PRM_VALUE] = new Integer(s);
@@ -324,7 +323,8 @@ public final class ParamPanel
       ParamData.BACKGROUND_IMAGE,
       ParamData.NMEA_DATA_STREAM,
       ParamData.PLAY_SOUNDS,
-      ParamData.BG_WIN_FONT_COLOR
+      ParamData.BG_WIN_FONT_COLOR,
+      ParamData.FOREGROUND_FONT_COLOR
     },
     new int[] // NMEA
     { 
@@ -594,7 +594,6 @@ public final class ParamPanel
                      currentIndex == ParamData.NMEA_UDP_PORT ||
                      currentIndex == ParamData.NMEA_RMI_PORT ||
                      currentIndex == ParamData.NMEA_BAUD_RATE ||
-                     currentIndex == ParamData.NMEA_SIMULATION ||
                      currentIndex == ParamData.MAX_ANALOG_BSP ||
                      currentIndex == ParamData.MAX_ANALOG_TWS)
             {              
