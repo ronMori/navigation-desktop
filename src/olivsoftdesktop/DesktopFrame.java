@@ -1306,21 +1306,26 @@ public class DesktopFrame
                                                     this.setOpaque(false);
   
                                                     // Display the dynamic data here
-                                                    Dimension dim = this.getSize();
-                                                    double radius = (Math.min(dim.width, dim.height) - 10d) / 2d;
-                                                    // Rose
-                                                    g.setColor(Color.green); // was darkGray
-                                                    int graphicXOffset = 0;
-                                                    int graphicYOffset = 0;
-                                                    for (int i=0; i<360; i+= 5)
+                                                    boolean displayRose = false;
+                                                    
+                                                    if (displayRose)
                                                     {
-                                                      int x1 = (dim.width / 2) + (int)((radius - (i%45==0?20:10)) * Math.cos(Math.toRadians(i)));  
-                                                      int y1 = (dim.height / 2) + (int)((radius - (i%45==0?20:10)) * Math.sin(Math.toRadians(i)));  
-                                                      int x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
-                                                      int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
-                                                      g.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
-                                                    }                                                  
-                                                    g.setColor(Color.red);
+                                                      Dimension dim = this.getSize();
+                                                      double radius = (Math.min(dim.width, dim.height) - 10d) / 2d;
+                                                      // Rose
+                                                      g.setColor(Color.green); // was darkGray. TODO Preference
+                                                      int graphicXOffset = 0;
+                                                      int graphicYOffset = 0;
+                                                      for (int i=0; i<360; i+= 5)
+                                                      {
+                                                        int x1 = (dim.width / 2) + (int)((radius - (i%45==0?20:10)) * Math.cos(Math.toRadians(i)));  
+                                                        int y1 = (dim.height / 2) + (int)((radius - (i%45==0?20:10)) * Math.sin(Math.toRadians(i)));  
+                                                        int x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
+                                                        int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
+                                                        g.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
+                                                      }
+                                                    }
+                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
                                                  // g.setFont(g.getFont().deriveFont(Font.BOLD));
                                                     Font digiFont = null;
                                                     try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
@@ -1981,7 +1986,7 @@ public class DesktopFrame
               {
                 if (rebroadcastVerbose)
                   System.out.println("Rebroadcasting on HTTP Port " + HTTPPort + ":" + str);
-                prefix += (" => XML/HTTP " + HTTPPort);
+                prefix += (" => " + rebroadcastPanel.getHttpFlavor() + "/HTTP " + HTTPPort);
               }
               if (RMIPort != -1)
               {
@@ -2239,7 +2244,7 @@ public class DesktopFrame
           {
             grabbedData = new ArrayList<String>();
             // Time
-            Date ut = TimeUtil.getGMT();
+            Date ut = new Date(); // TimeUtil.getGMT();
             grabbedData.add("System:" + SDF.format(ut));
             double offset = TimeUtil.getGMTOffset();
             String strOffset = Integer.toString((int)offset);
@@ -2366,7 +2371,7 @@ public class DesktopFrame
 //    System.out.println("Starting timer");
       while (getBGWinByTitle(TIME_BG_WINDOW_TITLE).isDisplayBGWindow())
       {
-        Date ut = TimeUtil.getGMT();
+        Date ut = new Date(); // TimeUtil.getGMT();
         timeString = "System:\n" + SDF.format(ut);
         int offset = TimeUtil.getGMTOffset();
         String strOffset = Integer.toString(offset);
