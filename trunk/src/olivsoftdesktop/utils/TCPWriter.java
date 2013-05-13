@@ -21,6 +21,7 @@ public class TCPWriter
   private int tcpPort               = 7001;
   private Socket tcpSocket          = null;
   private ServerSocket serverSocket = null;
+  private DataOutputStream out = null;  
   
   public TCPWriter(int port)
   {
@@ -28,21 +29,8 @@ public class TCPWriter
 
     try 
     { 
-      serverSocket = new ServerSocket(tcpPort);
-      Thread socketThread = new Thread()
-        {
-          public void run()
-          {
-            try 
-            { 
-              Socket skt = serverSocket.accept(); 
-              System.out.println(".......... serverSocket accepted (TCP:" + tcpPort + ").");
-              setSocket(skt);
-            } 
-            catch (Exception ex) 
-            { System.err.println("SocketThread:" + ex.getLocalizedMessage()); }  
-          }
-        };
+      SocketThread socketThread = new SocketThread(this);
+      out = null;
       socketThread.start();      
     }
     catch (Exception ex)
@@ -57,10 +45,9 @@ public class TCPWriter
     this.tcpSocket = skt;
   }
   
-  private DataOutputStream out = null;
-  
   public void write(byte[] message)
   {
+//  System.out.print("*");
     if ("true".equals(System.getProperty("verbose", "false")))
     {
       System.out.println("TCP write on port " + tcpPort + " [" + new String(message, 0, message.length - 2) + "]");
@@ -83,31 +70,19 @@ public class TCPWriter
     }
     catch (SocketException se)
     {
-      System.err.println("SocketException:[" + se.getMessage() + "]");
+      System.err.println("In " + this.getClass().getName() + ", SocketException:[" + se.getMessage() + "]");
       if (se.getMessage().indexOf("Connection reset by peer") > -1 ||
           se.getMessage().indexOf("Software caused connection abort: socket write error") > -1) // Catch more errors ?
       {
-        System.err.println("Reseting...");
+        System.err.println("In " + this.getClass().getName() + ", reseting...");
         setSocket(null);
         try
         {
-//        serverSocket = new ServerSocket(tcpPort);
-          Thread socketThread = new Thread()
-            {
-              public void run()
-              {
-//              System.out.println("...accept");
-                try 
-                { 
-                  Socket skt = serverSocket.accept(); 
-                  System.out.println("Accepted (reset).");
-                  setSocket(skt);
-                } 
-                catch (Exception ex) 
-                { System.err.println("SocketThread:" + ex.getLocalizedMessage()); }  
-              }
-            };
-          socketThread.start();
+          if (serverSocket != null)
+            serverSocket.close();
+          SocketThread socketThread = new SocketThread(this);
+          out = null;
+          socketThread.start();      
         }
         catch (Exception ex)
         {
@@ -157,6 +132,29 @@ public class TCPWriter
     {
       // TODO: Add catch code
       e.printStackTrace();
+    }
+  }
+  
+  private class SocketThread extends Thread
+  {
+    private TCPWriter parent = null;
+    public SocketThread(TCPWriter parent)
+    {
+      super();
+      this.parent = parent;
+    }
+    public void run()
+    {
+      try 
+      { 
+        parent.serverSocket = new ServerSocket(tcpPort);
+        System.out.println(".......... serverSocket waiting (TCP:" + tcpPort + ").");
+        Socket skt = serverSocket.accept(); 
+        System.out.println(".......... serverSocket accepted (TCP:" + tcpPort + ").");
+        parent.setSocket(skt);
+      } 
+      catch (Exception ex) 
+      { System.err.println("SocketThread:" + ex.getLocalizedMessage()); }  
     }
   }
 }
