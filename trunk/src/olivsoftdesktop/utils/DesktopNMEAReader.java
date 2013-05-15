@@ -139,11 +139,13 @@ public class DesktopNMEAReader
     read((String)null);
   }
 
+  /* Serial */
   private void read(String port)
   {
     read(port, 4800);
   }
 
+  /* Serial */
   private void read(String port, int br)
   {
     System.out.println("Reading...");
@@ -156,6 +158,7 @@ public class DesktopNMEAReader
       };
   }
 
+  /* TCP/UDP/RMI */
   private void read(int port, String hostname, int opt)
   {
     if (opt == CustomNMEAClient.TCP_OPTION)
@@ -175,6 +178,7 @@ public class DesktopNMEAReader
       };
   }
 
+  /* File. Logged Data */
   private void read(File f)
   {
     System.out.println("Reading Data File...");
