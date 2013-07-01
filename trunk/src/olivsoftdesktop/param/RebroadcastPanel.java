@@ -93,7 +93,7 @@ public class RebroadcastPanel
     tcpPortLabel.setText("port");
     httpPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
     httpPortFormattedTextField.setPreferredSize(new Dimension(50, 19));
-    httpPortFormattedTextField.setText("6666");
+    httpPortFormattedTextField.setText("9999");
     httpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
     udpPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
     udpPortFormattedTextField.setPreferredSize(new Dimension(50, 19));

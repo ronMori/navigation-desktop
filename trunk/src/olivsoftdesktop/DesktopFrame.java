@@ -50,6 +50,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -2859,6 +2862,18 @@ public class DesktopFrame
               new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
             if (rebroadcastPanel.getHttpFlavor().equals("json"))
               new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
+            
+            // Remind the URL of the html console (in the clipboard)
+            String consoleURL = "http://localhost:" + Integer.toString(HTTPPort) + "/html5/console.html";
+            String vanillaURL = "http://localhost:" + Integer.toString(HTTPPort) + "/";
+            String mess = "If your browser supports HTML5, you can see\n" + 
+                          consoleURL + " (in the clipboard, type Ctrl+V)\n" +
+                          "otherwise, use\n" +
+                          vanillaURL;
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            StringSelection stringSelection = new StringSelection(consoleURL);
+            clipboard.setContents(stringSelection, null);          
+            JOptionPane.showMessageDialog(this, mess, "HTTP Re-broadcast", JOptionPane.INFORMATION_MESSAGE);
           }
           else if (HTTPPort != -1 && !rebroadcastPanel.isHTTPSelected())
           {
