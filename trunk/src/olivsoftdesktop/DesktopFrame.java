@@ -2878,9 +2878,13 @@ public class DesktopFrame
             // Remind the URL of the html console (in the clipboard)
             String consoleURL = "http://localhost:" + Integer.toString(HTTPPort) + "/html5/console.html";
             String vanillaURL = "http://localhost:" + Integer.toString(HTTPPort) + "/";
-            String mess = "If your browser supports HTML5, you can see\n" + 
-                          consoleURL + " (in the clipboard, type Ctrl+V)\n" +
-                          "otherwise, use\n" +  vanillaURL;
+            String mess = "";
+            if (rebroadcastPanel.getHttpFlavor().equals("XML"))
+              mess = "If your browser supports HTML5, you can see\n" + 
+                     consoleURL + " (in the clipboard, type Ctrl+V)\n" +
+                     "otherwise, use\n" +  vanillaURL;
+            else if (rebroadcastPanel.getHttpFlavor().equals("json"))
+              mess = "Your json data are available at \n" + vanillaURL;
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             StringSelection stringSelection = new StringSelection(consoleURL);
             clipboard.setContents(stringSelection, null);          
