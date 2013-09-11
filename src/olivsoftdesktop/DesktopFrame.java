@@ -411,6 +411,8 @@ public class DesktopFrame
 
   private static String NMEA_EOS = new String(new char[] {0x0A, 0x0D});
   
+  private RebroadcastPopup popup = null;
+  
   public DesktopFrame()
   {
 //  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.STANDARD_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
@@ -919,7 +921,8 @@ public class DesktopFrame
             String statusText = statusBar.getText();
             if (!statusText.equals("Ready"))
             {
-              RebroadcastPopup popup = new RebroadcastPopup();
+              if (popup == null)
+                popup = new RebroadcastPopup();
               popup.show(statusBar, e.getX(), e.getY());
             }
           }
@@ -2833,8 +2836,10 @@ public class DesktopFrame
                                     PopupMenuListener
   {
     private JMenuItem rebroadcast;
+    private JMenuItem html5Console;
 
-    private final static String REBROADCAST = "Re-broadcast...";
+    private final static String REBROADCAST   = "Re-broadcast...";
+    private final static String HTML5_CONSOLE = "HTML5 Console";
 
     public RebroadcastPopup()
     {
@@ -2842,6 +2847,10 @@ public class DesktopFrame
       rebroadcast = new JMenuItem(REBROADCAST);
       this.add(rebroadcast);
       rebroadcast.addActionListener(this);
+      html5Console = new JMenuItem(HTML5_CONSOLE);
+      this.add(html5Console);
+      html5Console.addActionListener(this);
+      html5Console.setEnabled(false);
     }
 
     public void actionPerformed(ActionEvent event)
@@ -2859,7 +2868,10 @@ public class DesktopFrame
             System.out.println("Starting HTTP Server on port " + HTTPPort);
             System.setProperty("http.port", Integer.toString(HTTPPort));
             if (rebroadcastPanel.getHttpFlavor().equals("XML"))
+            {
               new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
+              html5Console.setEnabled(true);
+            }
             if (rebroadcastPanel.getHttpFlavor().equals("json"))
               new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
             
@@ -2868,8 +2880,7 @@ public class DesktopFrame
             String vanillaURL = "http://localhost:" + Integer.toString(HTTPPort) + "/";
             String mess = "If your browser supports HTML5, you can see\n" + 
                           consoleURL + " (in the clipboard, type Ctrl+V)\n" +
-                          "otherwise, use\n" +
-                          vanillaURL;
+                          "otherwise, use\n" +  vanillaURL;
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             StringSelection stringSelection = new StringSelection(consoleURL);
             clipboard.setContents(stringSelection, null);          
@@ -2883,6 +2894,7 @@ public class DesktopFrame
             try { HTTPClient.getContent("http://localhost:" + port + "/exit"); } 
             catch (Exception ex) {}
             HTTPPort = -1;
+            html5Console.setEnabled(false);
           }
           
           if (rebroadcastPanel.isUDPSelected() && UDPPort == -1)
@@ -2934,6 +2946,20 @@ public class DesktopFrame
             DesktopContext.getInstance().getNMEAServerManager().stopServer();
           }
         }
+      }
+      else if (event.getActionCommand().equals(HTML5_CONSOLE))
+      {
+        if (HTTPPort != -1)
+        {
+          String url = "http://localhost:" + Integer.toString(HTTPPort) + "/html5/console.html";
+          try { Utilities.openInBrowser(url); }
+          catch (Exception ex)
+          {
+            JOptionPane.showMessageDialog(this, ex.toString(), "HTML5 Console", JOptionPane.ERROR_MESSAGE);
+          }
+        }
+        else
+          JOptionPane.showMessageDialog(this, "No HTTP Port available??", "HTML5 Console", JOptionPane.WARNING_MESSAGE);
       }
     }
 
