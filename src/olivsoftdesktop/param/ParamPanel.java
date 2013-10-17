@@ -141,7 +141,7 @@ public final class ParamPanel
         it = "localhost";
         break;
       case ParamData.NMEA_HTTP_PORT:
-        it = "6666";
+        it = "9999"; // Chrome does not like 6666
         break;
       case ParamData.NMEA_BAUD_RATE:
         it = "4800";
@@ -913,7 +913,8 @@ public final class ParamPanel
   private final static String[] channelValues = {"Serial",
                                                  "TCP",
                                                  "UDP",
-                                                 "RMI"};
+                                                 "RMI",
+                                                 "XML over HTTP"};
   private final static String[] streamValues  = {"NMEA Port",
                                                  "HTTP"};
   private final static String[] tideFlavorValues  = {"XML" /*, // Reduced to only one element

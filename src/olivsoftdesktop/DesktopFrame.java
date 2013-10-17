@@ -1959,6 +1959,8 @@ public class DesktopFrame
                 prefix += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString());
               else if (channel.equals("RMI"))
                 prefix += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString());
+              else if (channel.startsWith("XML"))
+                prefix += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_HTTP_PORT][ParamPanel.PRM_VALUE]).toString());
               
               // Re-broadcast ?
               if (TCPPort != -1)
@@ -2011,6 +2013,7 @@ public class DesktopFrame
           String udpPort = (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString();
           String rmiPort = (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString();
 // TODO   String gpsdPort = (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString();
+// TODO XML over HTTP, in input          
           String brate   = (ParamPanel.getData()[ParamData.NMEA_BAUD_RATE][ParamPanel.PRM_VALUE]).toString();
           int option = -1;
           String port = "";
@@ -2034,10 +2037,11 @@ public class DesktopFrame
             port = rmiPort;
             comPort = "";
             brate = "0";
-          }
+          } // TODO XML over HTTP
           else
           {
             // ?... Serial
+            System.out.println("Unmanaged (for now) channel [" + channel + "]");
           }
           
           nmeaReader = new DesktopNMEAReader("true".equals(System.getProperty("verbose", "false")),  // Verbose
@@ -2059,6 +2063,8 @@ public class DesktopFrame
             mess += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_UDP_PORT][ParamPanel.PRM_VALUE]).toString());
           else if (channel.equals("RMI"))
             mess += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_RMI_PORT][ParamPanel.PRM_VALUE]).toString());
+          else if (channel.startsWith("XML"))
+            mess += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_HTTP_PORT][ParamPanel.PRM_VALUE]).toString());
 
           this.setStatus(" Reading " + mess + " ...");
           DesktopContext.getInstance().setReadingNMEA(true);
