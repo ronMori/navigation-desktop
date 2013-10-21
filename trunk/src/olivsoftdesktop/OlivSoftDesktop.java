@@ -35,6 +35,7 @@ import java.net.URLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -517,21 +518,83 @@ public class OlivSoftDesktop
 
   public static void main(String[] args)
   {
-    String lnf = System.getProperty("swing.defaultlaf");
-    if (lnf == null) // Let the -Dswing.defaultlaf do the job.
+    boolean headless = "yes".equals(System.getProperty("headless", "no"));
+    
+    if (!headless)
     {
-      try
+      String lnf = System.getProperty("swing.defaultlaf");
+      if (lnf == null) // Let the -Dswing.defaultlaf do the job.
       {
-        if (System.getProperty("swing.defaultlaf") == null)
-          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        try
+        {
+          if (System.getProperty("swing.defaultlaf") == null)
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch(Exception e)
+        {
+          e.printStackTrace();
+        }
       }
-      catch(Exception e)
+      JFrame.setDefaultLookAndFeelDecorated(true); // L&F at the main frame level.
+      
+      new OlivSoftDesktop();
+    }
+    else
+    {
+      // Configuration parameters
+      ParamPanel pp = new ParamPanel();
+      pp.setGnlPrm();
+      pp.setNMEAPrm();
+      pp.setSailFaxPrm();
+      pp.setChartLibPrm();
+      pp.setAlmanacPrm();
+      pp.setLocatorPrm();
+      pp.setTidePrm();
+      pp.setApplicationPrm();
+      
+      int[] options = manageHeadlessOptions(args); // new int[] {READ_NMEA, REBROADCAST_NMEA}; 
+      
+//      System.setProperty("logged.nmea.data", "D:\\OlivSoft\\all-scripts\\logged-data\\2010-11-08.Nuku-Hiva-Tuamotu.nmea"); // Logged NMEA Data 
+//      System.setProperty("verbose", "false");
+//      System.setProperty("http.port", Integer.toString(9999)); // TODO Get this from some context
+      System.out.println("+-------------------------------------------+");
+      System.out.println("| Hit Ctrl+C here to exit the headless mode |");
+      System.out.println("+-------------------------------------------+");
+      new DesktopFrame().headlessAccess(options);
+    }
+  }
+  
+  // Options for the headless feature.
+  public final static int READ_NMEA        = 0x01;
+  public final static int REBROADCAST_NMEA = 0x02;
+  
+  
+  public final static String READ_NMEA_OPT        = "READ_NMEA";
+  public final static String REBROADCAST_NMEA_OPT = "REBROADCAST_NMEA";
+  
+  public static int[] manageHeadlessOptions(String[] args)
+  {
+    int[] opt;
+    final String radical = "-option=";
+    List<Integer> optList = new ArrayList<Integer>(1);
+    for (int i=0; i<args.length; i++)
+    {
+      if (args[i].startsWith(radical))
       {
-        e.printStackTrace();
+        String option = args[i].substring(radical.length());
+        if (option.equals(READ_NMEA_OPT))
+          optList.add(READ_NMEA);
+        else if (option.equals(REBROADCAST_NMEA_OPT))
+          optList.add(REBROADCAST_NMEA);
+        else
+          System.out.println("Unmanaged option [" + option + "]");
       }
     }
-    JFrame.setDefaultLookAndFeelDecorated(true); // L&F at the main frame level.
-    
-    new OlivSoftDesktop();
+    Integer[] optInt = new Integer[optList.size()];
+    optInt = optList.toArray(optInt);
+    opt = new int[optList.size()];
+    for (int i=0; i<opt.length; i++)
+      opt[i] = optInt[i].intValue();
+    return opt;
   }
 }
