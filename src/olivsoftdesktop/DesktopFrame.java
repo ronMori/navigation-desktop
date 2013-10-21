@@ -1748,7 +1748,7 @@ public class DesktopFrame
       case REPLAY_NMEA:
         System.setProperty("max.analog.bsp", (ParamPanel.getData()[ParamData.MAX_ANALOG_BSP][ParamPanel.PRM_VALUE]).toString());
         System.setProperty("max.analog.tws", (ParamPanel.getData()[ParamData.MAX_ANALOG_TWS][ParamPanel.PRM_VALUE]).toString());
-        if (backGroundNMEARead.isSelected()) // Already reading NMEA port
+        if ("no".equals(System.getProperty("headless", "no")) && backGroundNMEARead.isSelected()) // Already reading NMEA port
         {
           String message = "NMEA Port is being read.\n" +
                            "Please stop reading it before replaying NMEA Data.";
@@ -1757,11 +1757,16 @@ public class DesktopFrame
         else
         {
           String nmeaProps = System.getProperty("nmea.config.file", "nmea-config.properties");
-          String simul = coreutilities.Utilities.chooseFile(JFileChooser.FILES_ONLY,
-                                                            "nmea",
-                                                            "NMEA Data",
-                                                            "Load NMEA Data",
-                                                            "Load");
+          String simul = "";
+          if ("no".equals(System.getProperty("headless", "no")))
+            simul = coreutilities.Utilities.chooseFile(JFileChooser.FILES_ONLY,
+                                                       "nmea",
+                                                       "NMEA Data",
+                                                       "Load NMEA Data",
+                                                       "Load");
+          else
+            simul = System.getProperty("logged.nmea.data", "");
+          
           if (simul.trim().length() > 0)
           {
             nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
@@ -1827,15 +1832,18 @@ public class DesktopFrame
                                                   (ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString(),
                                                   simul,
                                                   nmeaProps); 
-            nmeaDataFrame.setIconifiable(true);
-            nmeaDataFrame.setClosable(true);
-            nmeaDataFrame.setMaximizable(true);
-            nmeaDataFrame.setResizable(true);
-            desktop.add(nmeaDataFrame);
-            nmeaDataFrame.setVisible(true);
-            nmeaConsoleMenuItem.setEnabled(false);
-            replayNmeaMenuItem.setEnabled(false);
-            centerFrame(masterDim, nmeaDataFrame);
+            if ("no".equals(System.getProperty("headless", "no")))
+            {
+              nmeaDataFrame.setIconifiable(true);
+              nmeaDataFrame.setClosable(true);
+              nmeaDataFrame.setMaximizable(true);
+              nmeaDataFrame.setResizable(true);
+              desktop.add(nmeaDataFrame);
+              nmeaDataFrame.setVisible(true);
+              nmeaConsoleMenuItem.setEnabled(false);
+              replayNmeaMenuItem.setEnabled(false);
+              centerFrame(masterDim, nmeaDataFrame);
+            }
           }
         }
         break;
@@ -1942,7 +1950,7 @@ public class DesktopFrame
         centerFrame(masterDim, locator);
         break;
       case READ_REBROADCAST:
-        if (backGroundNMEARead.isSelected())
+        if ("yes".equals(System.getProperty("headless", "no")) || backGroundNMEARead.isSelected())
         {          
           nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
           {
@@ -2984,5 +2992,33 @@ public class DesktopFrame
     public void popupMenuCanceled(PopupMenuEvent e)
     {
     }
+  }
+  
+  // Headless Options
+  /*
+   * TODO : Trap Ctrl+C to exit gracefully
+   */
+  public void headlessAccess(int[] options)
+  {
+    for (int i=0; i<options.length; i++)
+    {
+      switch (options[i])
+      {
+        case OlivSoftDesktop.READ_NMEA:
+          String replayFile = System.getProperty("logged.nmea.data", "");
+          if (replayFile.trim().length() == 0)
+            appRequest_ActionPerformed(READ_REBROADCAST); // Read NMEA Channel
+          else
+            appRequest_ActionPerformed(REPLAY_NMEA);      // Replay NMEA data,(file name given in the caller, system variable "logged.nmea.data")
+          break;
+        case OlivSoftDesktop.REBROADCAST_NMEA: // TODO : Rebroadcast options
+          new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
+          System.out.println("Rebroadcast in flight");
+          break;
+        default:
+          break;
+      }
+    }
+    System.out.println("Headeless access, done.");
   }
 }
