@@ -64,11 +64,18 @@ import javax.swing.event.HyperlinkEvent;
 
 import javax.swing.event.HyperlinkListener;
 
+import nmea.server.datareader.CustomNMEAClient;
+
+import nmea.server.utils.HTTPServer;
+
+import nmea.server.utils.Utils;
+
 import olivsoftdesktop.ctx.DesktopContext;
 
 import olivsoftdesktop.param.ParamData;
 import olivsoftdesktop.param.ParamPanel;
 
+import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
 
 import olivsoftdesktop.utils.gui.UpdatePanel;
@@ -541,6 +548,21 @@ public class OlivSoftDesktop
     }
     else
     {
+      if (args.length > 0 && args[0].equalsIgnoreCase("-H"))      
+      {
+        System.out.println("Available parameters (system variables) are:");
+        System.out.println("  -Dheadless=yes|no");
+        System.out.println("  -Dlogged.nmea.data=path/to/logged-data-file");
+        System.out.println("  -Dverbose=true|false");
+        System.out.println("  -Dserial.port=COM15");
+        System.out.println("  -Dnet.port=7001");
+        System.out.println("  -Dhostname=raspberry.boat.net");
+        System.out.println("  -Dnet.transport=TCP|UDP|RMI");
+        System.out.println("  -Dhttp.port=9999");
+        System.out.println("  -Dmax.leeway=15");
+        System.out.println("++ Calibration data are stored in nmea-prms.properties");
+        System.exit(0);        
+      }
       // Configuration parameters
       ParamPanel pp = new ParamPanel();
       pp.setGnlPrm();
@@ -551,50 +573,65 @@ public class OlivSoftDesktop
       pp.setLocatorPrm();
       pp.setTidePrm();
       pp.setApplicationPrm();
-      
-      int[] options = manageHeadlessOptions(args); // new int[] {READ_NMEA, REBROADCAST_NMEA}; 
-      
-//      System.setProperty("logged.nmea.data", "D:\\OlivSoft\\all-scripts\\logged-data\\2010-11-08.Nuku-Hiva-Tuamotu.nmea"); // Logged NMEA Data 
-//      System.setProperty("verbose", "false");
-//      System.setProperty("http.port", Integer.toString(9999)); // TODO Get this from some context
+
       System.out.println("+-------------------------------------------+");
       System.out.println("| Hit Ctrl+C here to exit the headless mode |");
       System.out.println("+-------------------------------------------+");
-      new DesktopFrame().headlessAccess(options);
-    }
-  }
-  
-  // Options for the headless feature.
-  public final static int READ_NMEA        = 0x01;
-  public final static int REBROADCAST_NMEA = 0x02;
-  
-  
-  public final static String READ_NMEA_OPT        = "READ_NMEA";
-  public final static String REBROADCAST_NMEA_OPT = "REBROADCAST_NMEA";
-  
-  public static int[] manageHeadlessOptions(String[] args)
-  {
-    int[] opt;
-    final String radical = "-option=";
-    List<Integer> optList = new ArrayList<Integer>(1);
-    for (int i=0; i<args.length; i++)
-    {
-      if (args[i].startsWith(radical))
+      
+      String serialPort = null; // "COM15";
+      int br            = 4800;
+      String netPort    = null; // "7001";
+      int netOption     = -1;
+      String hostname   = "localhost";
+      String dataFile   = null; // "D:\\OlivSoft\\all-scripts\\logged-data\\2010-11-08.Nuku-Hiva-Tuamotu.nmea";
+
+      dataFile = System.getProperty("logged.nmea.data", null); // Logged NMEA Data 
+      boolean verbose = "true".equals(System.getProperty("verbose", "false"));
+      netPort = System.getProperty("net.port", null); 
+      serialPort = System.getProperty("serial.port", null); 
+      hostname = System.getProperty("hostname", null);
+      String netOptStr = System.getProperty("net.transport", null);
+      if (netOptStr != null)
       {
-        String option = args[i].substring(radical.length());
-        if (option.equals(READ_NMEA_OPT))
-          optList.add(READ_NMEA);
-        else if (option.equals(REBROADCAST_NMEA_OPT))
-          optList.add(REBROADCAST_NMEA);
+        if ("TCP".equals(netOptStr))
+          netOption = CustomNMEAClient.TCP_OPTION;
+        else if ("UDP".equals(netOptStr))
+          netOption = CustomNMEAClient.UDP_OPTION;
+        else if ("RMI".equals(netOptStr))
+          netOption = CustomNMEAClient.RMI_OPTION;
         else
-          System.out.println("Unmanaged option [" + option + "]");
+          System.out.println("Unmanaged network transport [" + netOptStr + "]");
       }
+
+      // default calibration values, nmea-prms.properties
+      Utils.readNMEAParameters();
+
+      final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
+                                                                 serialPort, 
+                                                                 br, 
+                                                                 netPort, 
+                                                                 netOption, 
+                                                                 hostname, 
+                                                                 dataFile, 
+                                                                 ""); // properties file
+      DesktopContext.getInstance().setReadingNMEA(true);
+      // For the HTTP Rebroadcast. uses "http.port"
+      new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
+      System.out.println("Rebroadcast in flight");
+
+      Runtime.getRuntime().addShutdownHook(new Thread() 
+      {
+        public void run() 
+        { 
+          System.out.println("Shutting down");
+          try { nmeaReader.stopReader(); }
+          catch (Exception ex)
+          {
+            System.err.println("Stopping:");
+            ex.printStackTrace();
+          }          
+        }
+      });
     }
-    Integer[] optInt = new Integer[optList.size()];
-    optInt = optList.toArray(optInt);
-    opt = new int[optList.size()];
-    for (int i=0; i<opt.length; i++)
-      opt[i] = optInt[i].intValue();
-    return opt;
   }
 }

@@ -1,27 +1,20 @@
 package olivsoftdesktop.utils;
 
 
-import nmea.server.NMEAEventManager;
-
 import java.io.File;
 
 import nmea.event.NMEAReaderListener;
 
+import nmea.server.NMEAEventManager;
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
 import nmea.server.datareader.CustomNMEAClient;
-
 import nmea.server.utils.Utils;
-
-import ocss.nmea.api.NMEAListener;
-import ocss.nmea.api.NMEAReader;
 
 import ocss.nmea.parser.StringParsers;
 
-import olivsoftdesktop.param.ParamData;
-import olivsoftdesktop.param.ParamPanel;
-
 import util.NMEACache;
+
 
 public class DesktopNMEAReader
   implements NMEAEventManager
