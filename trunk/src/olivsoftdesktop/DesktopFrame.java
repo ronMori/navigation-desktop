@@ -1954,7 +1954,7 @@ public class DesktopFrame
         {          
           nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
           {
-            public void manageNMEAString(String str)
+            public void manageNMEAString(String str) // Receives, Rebroadcasts
             {
 //            String channel = (ParamPanel.getData()[ParamData.NMEA_CHANNEL][ParamPanel.PRM_VALUE]).toString();
               String prefix = channel + " ";
@@ -2992,33 +2992,5 @@ public class DesktopFrame
     public void popupMenuCanceled(PopupMenuEvent e)
     {
     }
-  }
-  
-  // Headless Options
-  /*
-   * TODO : Trap Ctrl+C to exit gracefully
-   */
-  public void headlessAccess(int[] options)
-  {
-    for (int i=0; i<options.length; i++)
-    {
-      switch (options[i])
-      {
-        case OlivSoftDesktop.READ_NMEA:
-          String replayFile = System.getProperty("logged.nmea.data", "");
-          if (replayFile.trim().length() == 0)
-            appRequest_ActionPerformed(READ_REBROADCAST); // Read NMEA Channel
-          else
-            appRequest_ActionPerformed(REPLAY_NMEA);      // Replay NMEA data,(file name given in the caller, system variable "logged.nmea.data")
-          break;
-        case OlivSoftDesktop.REBROADCAST_NMEA: // TODO : Rebroadcast options
-          new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
-          System.out.println("Rebroadcast in flight");
-          break;
-        default:
-          break;
-      }
-    }
-    System.out.println("Headeless access, done.");
   }
 }
