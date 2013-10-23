@@ -64,6 +64,8 @@ import javax.swing.event.HyperlinkEvent;
 
 import javax.swing.event.HyperlinkListener;
 
+import nmea.server.ctx.NMEAContext;
+import nmea.server.ctx.NMEADataCache;
 import nmea.server.datareader.CustomNMEAClient;
 
 import nmea.server.utils.HTTPServer;
@@ -552,15 +554,20 @@ public class OlivSoftDesktop
       {
         System.out.println("Available parameters (system variables) are:");
         System.out.println("  -Dheadless=yes|no");
-        System.out.println("  -Dlogged.nmea.data=path/to/logged-data-file");
         System.out.println("  -Dverbose=true|false");
+        System.out.println("If headless=yes :");
+        System.out.println("To replay logged data, use :");
+        System.out.println("  -Dlogged.nmea.data=path/to/logged-data-file");
+        System.out.println("To read the serial port (Baud Rate 4800), use :");
         System.out.println("  -Dserial.port=COM15");
+        System.out.println("To read the TCP, UDP or RMI port, use :");
         System.out.println("  -Dnet.port=7001");
         System.out.println("  -Dhostname=raspberry.boat.net");
         System.out.println("  -Dnet.transport=TCP|UDP|RMI");
+        System.out.println("Data will be re-broadcasted using XML over HTTP, on a given port, use :");
         System.out.println("  -Dhttp.port=9999");
-        System.out.println("  -Dmax.leeway=15");
-        System.out.println("++ Calibration data are stored in nmea-prms.properties");
+        System.out.println("-----------------------------------------------------------------");
+        System.out.println("Important: Calibration data are stored in nmea-prms.properties");
         System.exit(0);        
       }
       // Configuration parameters
@@ -581,9 +588,11 @@ public class OlivSoftDesktop
       String serialPort = null; // "COM15";
       int br            = 4800;
       String netPort    = null; // "7001";
-      int netOption     = -1;
+      int netOption     = -1;   // Input channel
       String hostname   = "localhost";
       String dataFile   = null; // "D:\\OlivSoft\\all-scripts\\logged-data\\2010-11-08.Nuku-Hiva-Tuamotu.nmea";
+
+      // TODO output channel parameter(s)
 
       dataFile = System.getProperty("logged.nmea.data", null); // Logged NMEA Data 
       boolean verbose = "true".equals(System.getProperty("verbose", "false"));
@@ -605,6 +614,9 @@ public class OlivSoftDesktop
 
       // default calibration values, nmea-prms.properties
       Utils.readNMEAParameters();
+      // Init dev curve
+      String deviationFileName = (String) NMEAContext.getInstance().getCache().get(NMEADataCache.DEVIATION_FILE);
+      NMEAContext.getInstance().setDeviation(Utils.loadDeviationCurve(deviationFileName));
 
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
                                                                  serialPort, 
