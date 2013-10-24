@@ -67,7 +67,7 @@ set JAVA_OPTIONS=${JAVA_OPTIONS} -Dserial.port=COM15
 set CONSOLE_OUTPUT=-output=HTTP:9999 -output=TCP:7001 -output=FILE:./logged-data/headless.nmea
 java ${JAVA_OPTIONS} -classpath ${CP} olivsoftdesktop.OlivSoftDesktop ${CONSOLE_OUTPUT}
 }}}
-This way, you can visualize your data in the Swing Console (the regular graphical one), and have the boat position displayed in OpenCPN simultaneously (if you've set the input connection to TCP, port 7001 in this case).
+This way, you can visualize your data in the Swing Console (the regular graphical one), see the data live in a browser on a tablet (connected on the boat's ad-hoc network) and have the boat position displayed in OpenCPN simultaneously (if you've set the input connection to TCP, port 7001 in this case).
 <br/>
 
 ... More to come.
