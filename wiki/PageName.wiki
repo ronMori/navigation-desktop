@@ -1,7 +1,7 @@
 #summary News.
 
 == 24-OCT-2013 ==
-
+=== Headless Console ===
 There is now a "headless console" for the NMEA Data read from the station.
 It can read several channels, and re-broadcast the data on others.
 Typically, it reads the Serial port, and re-broadcasts on TCP, or HTTP (for the html5 console)...
