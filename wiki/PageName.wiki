@@ -7,7 +7,9 @@ It can read several channels, and re-broadcast the data on others.
 Typically, it reads the Serial port, and re-broadcasts on TCP, or HTTP (for the html5 console)...
 
 To start the headless console:
+<br/>
 Get some help first
+<br/>
 *On Windows*
 {{{
 set JAVA_OPTIONS=%JAVA_OPTIONS% -Dverbose=false
@@ -47,6 +49,7 @@ This also allows you to log the data, into a file, so they can be replayed later
 The memory consumption is ridiculous, the goal will be to run this headless console on a Raspberry PI.
 
 To read the serial port and then rebroadcast on TCP and HTTP, while logging the data, type
+<br/>
 *On Windows*
 {{{
 set JAVA_OPTIONS=%JAVA_OPTIONS% -Dverbose=false
@@ -60,9 +63,10 @@ java %JAVA_OPTIONS% -classpath %CP% olivsoftdesktop.OlivSoftDesktop %CONSOLE_OUT
 set JAVA_OPTIONS=${JAVA_OPTIONS} -Dverbose=false
 set JAVA_OPTIONS=${JAVA_OPTIONS} -Dheadless=yes
 set JAVA_OPTIONS=${JAVA_OPTIONS} -Dserial.port=COM15
-set CONSOLE_OUTPUT=-output=HTTP:9999 -output=TCP:7001 -output=FILE:.\logged-data\headless.nmea
+set CONSOLE_OUTPUT=-output=HTTP:9999 -output=TCP:7001 -output=FILE:./logged-data/headless.nmea
 java ${JAVA_OPTIONS} -classpath ${CP} olivsoftdesktop.OlivSoftDesktop ${CONSOLE_OUTPUT}
 }}}
 This way, you can visualize your data in the Swing Console (the regular graphical one), and have the boat position displayed in OpenCPN simultaneously (if you've set the input connection to TCP, port 7001 in this case).
+<br/>
 
 ... More to come.
