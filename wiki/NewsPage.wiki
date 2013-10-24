@@ -1,4 +1,5 @@
 #summary News.
+#labels Featured
 
 == 24-OCT-2013 ==
 === Headless Console ===
