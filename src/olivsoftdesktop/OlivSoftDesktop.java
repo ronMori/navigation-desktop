@@ -28,6 +28,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -64,6 +67,8 @@ import javax.swing.event.HyperlinkEvent;
 
 import javax.swing.event.HyperlinkListener;
 
+import nmea.event.NMEAReaderListener;
+
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
 import nmea.server.datareader.CustomNMEAClient;
@@ -71,6 +76,9 @@ import nmea.server.datareader.CustomNMEAClient;
 import nmea.server.utils.HTTPServer;
 
 import nmea.server.utils.Utils;
+
+import ocss.nmea.api.NMEAEvent;
+import ocss.nmea.api.NMEAListener;
 
 import olivsoftdesktop.ctx.DesktopContext;
 
@@ -80,6 +88,8 @@ import olivsoftdesktop.param.ParamPanel;
 import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
 
+import olivsoftdesktop.utils.TCPWriter;
+import olivsoftdesktop.utils.UDPWriter;
 import olivsoftdesktop.utils.gui.UpdatePanel;
 
 import oracle.xml.parser.v2.DOMParser;
@@ -88,6 +98,8 @@ import oracle.xml.parser.v2.XMLElement;
 
 public class OlivSoftDesktop
 {
+  private static String NMEA_EOS = new String(new char[] {0x0A, 0x0D});
+
   private OlivSoftDesktop instance = this;
   private JFrame frame = null;
   
@@ -548,10 +560,11 @@ public class OlivSoftDesktop
       
       new OlivSoftDesktop();
     }
-    else
+    else // Headless Console.
     {
       if (args.length > 0 && args[0].equalsIgnoreCase("-H"))      
       {
+        System.out.println("-------------------------------------------------------------------");
         System.out.println("Available parameters (system variables) are:");
         System.out.println("  -Dheadless=yes|no");
         System.out.println("  -Dverbose=true|false");
@@ -564,10 +577,14 @@ public class OlivSoftDesktop
         System.out.println("  -Dnet.port=7001");
         System.out.println("  -Dhostname=raspberry.boat.net");
         System.out.println("  -Dnet.transport=TCP|UDP|RMI");
-        System.out.println("Data will be re-broadcasted using XML over HTTP, on a given port, use :");
-        System.out.println("  -Dhttp.port=9999");
-        System.out.println("-----------------------------------------------------------------");
-        System.out.println("Important: Calibration data are stored in nmea-prms.properties");
+        System.out.println("-------------------------------------------------------------------");
+        System.out.println(" Important ++ : Calibration data are stored in nmea-prms.properties");
+        System.out.println("-------------------------------------------------------------------");
+        System.out.println("For the re-broadcast, use the -output parameter:");
+        System.out.println("  -output=HTTP:9999              Data will be re-broadcasted using XML over HTTP, on this port");
+        System.out.println("  -output=TCP:7001               Data will be re-broadcasted as they are, on this port");
+        System.out.println("  -output=UDP:230.0.0.1:8001     Data will be re-broadcasted as they are, on this port and address");
+        System.out.println("  -output=FILE:path/to/logfile   Data will be logged as they are, in this file");
         System.exit(0);        
       }
       // Configuration parameters
@@ -611,13 +628,13 @@ public class OlivSoftDesktop
         else
           System.out.println("Unmanaged network transport [" + netOptStr + "]");
       }
-
-      // default calibration values, nmea-prms.properties
-      Utils.readNMEAParameters();
+      
+      Utils.readNMEAParameters(); // default calibration values, nmea-prms.properties
       // Init dev curve
       String deviationFileName = (String) NMEAContext.getInstance().getCache().get(NMEADataCache.DEVIATION_FILE);
       NMEAContext.getInstance().setDeviation(Utils.loadDeviationCurve(deviationFileName));
-
+    
+      // Input channel
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
                                                                  serialPort, 
                                                                  br, 
@@ -625,11 +642,110 @@ public class OlivSoftDesktop
                                                                  netOption, 
                                                                  hostname, 
                                                                  dataFile, 
-                                                                 ""); // properties file
+                                                                 ""); // properties file, unused
       DesktopContext.getInstance().setReadingNMEA(true);
-      // For the HTTP Rebroadcast. uses "http.port"
-      new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
-      System.out.println("Rebroadcast in flight");
+      
+      // Output channel(s). check -ouput=...
+      HTTPServer httpServer  = null;
+      TCPWriter tcpWriter    = null;
+      UDPWriter udpWriter    = null;
+      BufferedWriter logFile = null;
+      
+      final String HTTP = "HTTP:";
+      final String TCP  = "TCP:";
+      final String UDP  = "UDP:";
+      final String FILE = "FILE:";
+      
+      String[] output = getOutputChannels(args);
+      for (String out : output)
+      {
+        if (out.startsWith(HTTP))
+        {
+          try
+          {
+            String port = out.substring(HTTP.length());
+            System.setProperty("http.port", port);
+            httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
+          }
+          catch (Exception ex)
+          {
+            ex.printStackTrace();
+          }
+        }
+        else if (out.startsWith(TCP))
+        {
+          try
+          {
+            String port = out.substring(TCP.length());
+            int tcpPort = Integer.parseInt(port);
+            tcpWriter = new TCPWriter(tcpPort);
+          }
+          catch (Exception ex)
+          {
+            
+            ex.printStackTrace();
+          }
+        }
+        else if (out.startsWith(UDP))
+        {
+          try
+          {
+            String port =     out.substring(out.indexOf(":", UDP.length() + 1) + 1);
+            String address =  out.substring(UDP.length(), out.indexOf(":", UDP.length() + 1));
+            int udpPort = Integer.parseInt(port);
+            udpWriter = new UDPWriter(udpPort, address); 
+          }
+          catch (Exception ex)
+          {
+            ex.printStackTrace();
+          }
+        }
+        else if (out.startsWith(FILE))
+        {
+          try
+          {
+            String fName = out.substring(FILE.length());
+            try
+            {
+              logFile = new BufferedWriter(new FileWriter(fName));
+            }
+            catch (Exception ex)
+            {
+              ex.printStackTrace();
+            }
+          }
+          catch (Exception ex)
+          {
+            ex.printStackTrace();
+          }
+        }
+      }
+      final HTTPServer _httpServer  = httpServer;
+      final UDPWriter _udpWriter    = udpWriter;
+      final TCPWriter _tcpWriter    = tcpWriter;
+      final BufferedWriter _logFile = logFile;
+      
+      // Create NMEAListener to re-broadcast appropriately
+      if (udpWriter != null | tcpWriter != null || logFile != null)
+      {
+        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+        {
+            @Override
+            public void manageNMEAString(String nmeaString)
+            {
+              super.manageNMEAString(nmeaString);
+              if (_udpWriter != null)
+                _udpWriter.write((nmeaString + NMEA_EOS).getBytes());
+              if (_tcpWriter != null)
+                _tcpWriter.write((nmeaString + NMEA_EOS).getBytes());
+              if (_logFile != null)
+              {
+                try { _logFile.write(nmeaString + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
+              }
+            }
+          });
+      }
+      System.out.println("Rebroadcast in flight:" + formatOutput(output));
 
       Runtime.getRuntime().addShutdownHook(new Thread() 
       {
@@ -641,9 +757,77 @@ public class OlivSoftDesktop
           {
             System.err.println("Stopping:");
             ex.printStackTrace();
-          }          
+          }       
+          if (_httpServer != null)
+          {
+            System.out.println("Stop HTTP...");
+            shutDownHTTPserver("http://localhost:" + System.getProperty("http.port") + "/exit");
+          }
+          if (_tcpWriter != null)
+          {
+            System.out.println("Stop TCP...");
+            try { _tcpWriter.close(); } catch (Exception ex) {}
+          }
+          if (_udpWriter != null)
+          {
+            System.out.println("Stop UDP...");
+//          try { _udpWriter.close(); } catch (Exception ex) {}
+          }
+          if (_logFile != null)
+          {
+            System.out.println("Stop logging...");
+            try { _logFile.flush(); _logFile.close(); } catch (Exception ex) {}
+          }
         }
       });
     }
+  }
+  
+  private static void shutDownHTTPserver(String req)
+  {
+    try
+    {
+      URL url = new URL(req);
+      URLConnection newURLConn = url.openConnection();
+      InputStream is = newURLConn.getInputStream();
+      byte aByte[] = new byte[2];
+      int nBytes;
+      while((nBytes = is.read(aByte, 0, 1)) != -1) ;
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
+    }
+  }
+  
+  private static String formatOutput(String[] channel)
+  {
+    String formatted = "";
+    if (channel != null)
+    {
+      for (String c : channel)
+        formatted += (c + " ");
+    }
+    return formatted.trim();
+  }
+  
+  private static String[] getOutputChannels(String[] args)
+  {
+    String[] output = null;
+    List<String> outputList = new ArrayList<String>();
+    String prefix = "-output=";
+    for (String prm : args)
+    {
+      if (prm.startsWith(prefix))
+      {
+        outputList.add(prm.substring(prefix.length()));
+      }
+    }
+    if (outputList.size() > 0)
+    {
+      output = new String[outputList.size()];
+      output =outputList.toArray(output);
+    }
+    return output;
   }
 }

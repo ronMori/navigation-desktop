@@ -206,7 +206,10 @@ public class DesktopNMEAReader
     }
     catch (Exception ex)
     {
-      System.err.println(ex.toString());
+      System.err.println("-------------------");
+//    System.err.println(ex.toString());
+      ex.printStackTrace();
+      System.err.println("-------------------");
     }
   }
   
