@@ -59,7 +59,7 @@ public class ParamData
     "NMEA Source Data Stream",                                                 // 12
     "Airmail Location",                                                        // 13
     "Play sounds",                                                             // 14
-    "NMEA Source UDP Port",                                                    // 15
+    "NMEA Source UDP Port (Multicast)",                                        // 15
     "Tide database flavor",                                                    // 16
     "Desktop Background message",                                              // 17
     "Internal Frames transparency",                                            // 18
@@ -94,9 +94,9 @@ public class ParamData
   {
     /*  0 */ "NMEA Source: Serial, TCP, UDP or RMI. Serial is the most common, other methods can be used when re-broadcasting the NMEA stream",
     /*  1 */ "If the Channel is Serial, then this field should be set. That would be COM1, COM2, or something like that.",
-    /*  2 */ "If the Channel is TCP, then this field should be set. Usually a 4-digit number (like 3001). Used along with the NMEA Source Host",
+    /*  2 */ "If the Channel is TCP, then this field should be set. Usually a 4-digit number (like 3001). Used along with the NMEA Source Host. 127.0.0.1 is the default address for localhost.",
     /*  3 */ "Port used to read NMEA Data from HTTP Broadcasting. Used along with the NMEA Source Host",
-    /*  4 */ "Name of the \"broadcaster\" host of the NMEA Data through HTTP, UDP or TCP.",
+    /*  4 */ "Name of the \"broadcaster\" host of the NMEA Data through HTTP, UDP or TCP. Can be a name (like localhost), or an IP address (like 127.0.0.1, 230.0.0.1, etc).",
     /*  5 */ "NMEA Config file, containing the NMEA Sentences prefixes to log.",
     /*  6 */ "SailFax repository, an XML file containing all the transmissions.",
     /*  7 */ "Directory where the HypersonicSQL Database Files are located (for standalone driver), or database URL (for server driver). For standalone, enter something like \".." + File.separator + "all-db\", for server driver, this would be like \"//localhost:1234/tides\".",
@@ -107,7 +107,7 @@ public class ParamData
     /* 12 */ "How to read NMEA Data read from the NMEA port, to feed the background windows of the Desktop.",
     /* 13 */ "Directory in which Airmail is installed. Will be used by SailFax to locate SkedFile.txt",
     /* 14 */ "Play gooffy sounds (like R2D2 and similar crap...)",
-    /* 15 */ "If the Channel is UCP, then this field should be set. Usually a 4-digit number (like 8001). Used along with the NMEA Source Host",
+    /* 15 */ "If the Channel is UDP, then this field should be set. Usually a 4-digit number (like 8001). Used along with the NMEA Source Host. Warning: you need a multicast address to use this option. Otherwise, prefer TCP. Default multicast address for localhost is usually 230.0.0.1",
     /* 16 */ // "How the Tide data (harmonic coefficients) are stored. If the falvor is SQL, we'll use an Hypersonic SQL database, stored in the DB Directory mentionned above. If the flavor is XML, the data are stored in the \"xml.zip\" archive, part of a jar-file. SQLITE will use a database named sqlite" + File.separator + "tidebd.",
     /* 16 */ "How the Tide data (harmonic coefficients) are stored. Reduced to only XML on January 2013.",
     /* 17 */ "The message displayed in the desktop's background next time you restart.",

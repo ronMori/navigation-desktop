@@ -14,14 +14,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 public class TCPWriter
 {
+  private List<Socket> clientSocketlist = new ArrayList<Socket>(1);
+  
   private int tcpPort               = 7001;
-  private Socket tcpSocket          = null;
   private ServerSocket serverSocket = null;
-  private DataOutputStream out = null;  
   
   public TCPWriter(int port)
   {
@@ -30,7 +33,6 @@ public class TCPWriter
     try 
     { 
       SocketThread socketThread = new SocketThread(this);
-      out = null;
       socketThread.start();      
     }
     catch (Exception ex)
@@ -42,12 +44,12 @@ public class TCPWriter
   
   protected void setSocket(Socket skt)
   {
-    this.tcpSocket = skt;
+    this.clientSocketlist.add(skt);
+    System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
   }
   
   public void write(byte[] message)
   {
-//  System.out.print("*");
     if ("true".equals(System.getProperty("verbose", "false")))
     {
       System.out.println("TCP write on port " + tcpPort + " [" + new String(message, 0, message.length - 2) + "]");
@@ -55,47 +57,37 @@ public class TCPWriter
         System.out.print(formatByteHexa(b) + " ");
       System.out.println();
     }
-    try
+    synchronized (clientSocketlist)
     {
-      if (tcpSocket != null)
+      List<Socket> toRemove = new ArrayList<Socket>();
+      for (Socket tcpSocket : clientSocketlist)
       {
-        if (out == null)
-          out = new DataOutputStream(tcpSocket.getOutputStream());
-        out.write(message);
-        out.flush();
-//      tcpSocket.getOutputStream().write(message);
-//      tcpSocket.getOutputStream().flush();
-     // out.close();
-      }
-    }
-    catch (SocketException se)
-    {
-      System.err.println("In " + this.getClass().getName() + ", SocketException:[" + se.getMessage() + "]");
-      if (se.getMessage().indexOf("Connection reset by peer") > -1 ||
-          se.getMessage().indexOf("Software caused connection abort: socket write error") > -1) // Catch more errors ?
-      {
-        System.err.println("In " + this.getClass().getName() + ", reseting...");
-        setSocket(null);
         try
         {
-          if (serverSocket != null)
-            serverSocket.close();
-          SocketThread socketThread = new SocketThread(this);
-          out = null;
-          socketThread.start();      
+          DataOutputStream out = null;  
+          if (out == null)
+            out = new DataOutputStream(tcpSocket.getOutputStream());
+          out.write(message);
+          out.flush();
+        }
+        catch (SocketException se)
+        {
+          toRemove.add(tcpSocket);
         }
         catch (Exception ex)
         {
+          System.err.println("TCPWriter.write:" + ex.getLocalizedMessage());
           ex.printStackTrace();
         }
       }
-      else
-        se.printStackTrace();
-    }
-    catch (Exception ex)
-    {
-      System.err.println("TCPWriter.write:" + ex.getLocalizedMessage());
-      ex.printStackTrace();
+      if (toRemove.size() > 0)
+      {
+        for (Socket skt : toRemove)
+        {
+          this.clientSocketlist.remove(skt);
+          System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
+        }
+      }
     }
   }
   
@@ -109,10 +101,11 @@ public class TCPWriter
   
   public void close() throws Exception
   {
-    tcpSocket.close();  
+    for (Socket tcpSocket : clientSocketlist)
+      tcpSocket.close();  
   }
   
-  public static void main(String[] args)
+  public static void main_(String[] args)
   {
     String gpsd = "{\"class\":\"TVP\",\"tag\":\"MID2\",\"time\":\"2010-04-30T11:48:20.10Z\",\"ept\":0.005,\"lat\":46.498204497,\"lon\":7.568061439,\"alt\":1327.689,\"epx\":15.319,\"epy\":17.054,\"epv\":124.484,\"track\":10.3797,\"speed\":0.091,\"climb\":-0.085,\"eps\",34.11,\"mode\":3}";
     String wpl  = "$GPWPL,3739.856,N,12222.812,W,OPMRNA*59";
@@ -148,13 +141,17 @@ public class TCPWriter
       try 
       { 
         parent.serverSocket = new ServerSocket(tcpPort);
-        System.out.println(".......... serverSocket waiting (TCP:" + tcpPort + ").");
-        Socket skt = serverSocket.accept(); 
-        System.out.println(".......... serverSocket accepted (TCP:" + tcpPort + ").");
-        parent.setSocket(skt);
+        while (true) // Wait for the clients
+        {
+//        System.out.println(".......... serverSocket waiting (TCP:" + tcpPort + ").");
+          Socket clientSkt = serverSocket.accept(); 
+//        System.out.println(".......... serverSocket accepted (TCP:" + tcpPort + ").");
+          parent.setSocket(clientSkt);
+        }
       } 
       catch (Exception ex) 
-      { System.err.println("SocketThread:" + ex.getLocalizedMessage()); }  
+      { System.err.println("SocketThread:" + ex.getLocalizedMessage()); } 
+      System.out.println("..... End of TCP SocketThread.");
     }
   }
 }

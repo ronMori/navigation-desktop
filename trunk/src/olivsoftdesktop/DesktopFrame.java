@@ -129,6 +129,8 @@ import nmea.server.ctx.NMEADataCache;
 import nmea.server.datareader.CustomNMEAClient;
 import nmea.server.utils.HTTPServer;
 
+import nmea.server.utils.Utils;
+
 import nmea.ui.NMEAInternalFrame;
 import nmea.ui.viewer.elements.AWDisplay;
 
@@ -2052,6 +2054,11 @@ public class DesktopFrame
             System.out.println("Unmanaged (for now) channel [" + channel + "]");
           }
           
+          Utils.readNMEAParameters(); // default calibration values, nmea-prms.properties
+          // Init dev curve
+          String deviationFileName = (String) NMEAContext.getInstance().getCache().get(NMEADataCache.DEVIATION_FILE);
+          NMEAContext.getInstance().setDeviation(Utils.loadDeviationCurve(deviationFileName));
+
           nmeaReader = new DesktopNMEAReader("true".equals(System.getProperty("verbose", "false")),  // Verbose
                                              comPort,                                                // Serial Port
                                              Integer.parseInt(brate),                                // Baud Rate
@@ -2379,7 +2386,7 @@ public class DesktopFrame
     dataGrabber.start();
   }
 
-  public String getNMEA_EOS()
+  public static String getNMEA_EOS()
   {
     return NMEA_EOS;
   }

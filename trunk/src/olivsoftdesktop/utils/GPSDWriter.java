@@ -17,7 +17,10 @@ import java.net.SocketException;
 
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
+
+import java.util.List;
 
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
@@ -32,7 +35,8 @@ import ocss.nmea.parser.UTCDate;
 public class GPSDWriter
 {
   private int tcpPort               = 2947;
-  private Socket tcpSocket          = null;
+  private List<Socket> clientSocketlist = new ArrayList<Socket>(1);
+//private Socket tcpSocket          = null;
   private ServerSocket serverSocket = null;
   
   private boolean protocolEstablished = false;
@@ -61,76 +65,75 @@ public class GPSDWriter
   
   protected void setSocket(Socket skt)
   {
-    this.tcpSocket = skt;
+//  this.tcpSocket = skt;
+    this.clientSocketlist.add(skt);
+    System.out.println("- " + clientSocketlist.size() + " TCP/GPSd Client socket(s)");
   }
   
   public void write(byte[] message)
   {
     if ("true".equals(System.getProperty("verbose", "false")))
       System.out.println("TCP write on port " + tcpPort + " [" + new String(message) + "]");
-    try
+    synchronized (clientSocketlist)
     {
-      if (tcpSocket != null && protocolEstablished)
+      List<Socket> toRemove = new ArrayList<Socket>();
+      for (Socket tcpSocket : clientSocketlist)
       {
-        String mess = new String(message);
-//      System.out.println("Rebroadcasting [" + mess + "] on GPSd");
-        // Parse appropriate strings...
-        if ("GLL".equals(mess.substring(3, 6)) ||
-            "RMC".equals(mess.substring(3, 6)))
+        try
         {
-          NMEADataCache ndc = NMEAContext.getInstance().getCache();
-          if (ndc != null)
+          if (tcpSocket != null && protocolEstablished)
           {
-            UTCDate utcDate = (UTCDate)(NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true));
-            GeoPos gp = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true));
-            double cog = 0d, sog = 0d;
-            try { sog = ((Speed)ndc.get(NMEADataCache.SOG)).getValue(); } catch (Exception ex) {}
-            try { cog = ((Angle360)ndc.get(NMEADataCache.COG)).getValue(); } catch (Exception ex) {}
-            if (utcDate != null && gp != null)
+            String mess = new String(message);
+    //      System.out.println("Rebroadcasting [" + mess + "] on GPSd");
+            // Parse appropriate strings...
+            if ("GLL".equals(mess.substring(3, 6)) ||
+                "RMC".equals(mess.substring(3, 6)))
             {
-              String responseSentence = GPSdUtils.produceTPV(utcDate.getValue(), gp, cog, sog);
-              responseSentence += "\n";
-              outToClient.writeBytes(responseSentence);
-              outToClient.flush();
+              NMEADataCache ndc = NMEAContext.getInstance().getCache();
+              if (ndc != null)
+              {
+                UTCDate utcDate = (UTCDate)(NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true));
+                GeoPos gp = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true));
+                double cog = 0d, sog = 0d;
+                try { sog = ((Speed)ndc.get(NMEADataCache.SOG)).getValue(); } catch (Exception ex) {}
+                try { cog = ((Angle360)ndc.get(NMEADataCache.COG)).getValue(); } catch (Exception ex) {}
+                if (utcDate != null && gp != null)
+                {
+                  String responseSentence = GPSdUtils.produceTPV(utcDate.getValue(), gp, cog, sog);
+                  responseSentence += "\n";
+                  outToClient.writeBytes(responseSentence);
+                  outToClient.flush();
+                }
+              }
             }
           }
         }
-      }
-    }
-    catch (SocketException se)
-    {
-      System.err.println("SocketException:[" + se.getMessage() + "]");
-      if (se.getMessage().indexOf("Connection reset by peer") > -1 || 
-          se.getMessage().indexOf("Software caused connection abort: socket write error") > -1) // TODO Maybe catch more errors
-      {
-        // Reconnect
-        System.out.println("...Reconnecting server socket port " + tcpPort);
-        try { tcpSocket.close(); } catch (Exception ex) {}  
-        setSocket(null);
-        protocolEstablished = false;
-        try
+        catch (SocketException se)
         {
-          Thread socketThread = new SocketThread();
-          socketThread.start();      
+          protocolEstablished = false;
+          toRemove.add(tcpSocket);
         }
         catch (Exception ex)
         {
+          System.err.println("TCPWriter.write:" + ex.getLocalizedMessage());
           ex.printStackTrace();
         }
+        if (toRemove.size() > 0)
+        {
+          for (Socket skt : toRemove)
+          {
+            this.clientSocketlist.remove(skt);
+            System.out.println("- " + clientSocketlist.size() + " TCP/GPSd Client socket(s)");
+          }
+        }
       }
-      else
-        se.printStackTrace();
-    }
-    catch (Exception ex)
-    {
-      System.err.println("TCPWriter.write:" + ex.getLocalizedMessage());
-      ex.printStackTrace();
     }
   }
   
   public void close() throws Exception
   {
-    tcpSocket.close();  
+    for (Socket tcpSocket : clientSocketlist)
+      tcpSocket.close();  
   }
 
   private class SocketThread extends Thread
@@ -163,7 +166,7 @@ public class GPSDWriter
             else if (clientSentence.startsWith(GPSdUtils.WATCH))
             {
               System.out.println("WATCH command received.");
-              responseSentence = GPSdUtils.produceDevices(new String[] { "COM10" }, 
+              responseSentence = GPSdUtils.produceDevices(new String[] { "COM15" }, 
                                                           new Date[] { new Date() }, 
                                                           new int[] { 4800 }, 
                                                           new String[] { "N" }, 
