@@ -67,6 +67,8 @@ import javax.swing.event.HyperlinkEvent;
 
 import javax.swing.event.HyperlinkListener;
 
+import javax.swing.plaf.FontUIResource;
+
 import nmea.event.NMEAReaderListener;
 
 import nmea.server.ctx.NMEAContext;
@@ -106,6 +108,18 @@ public class OlivSoftDesktop
   public OlivSoftDesktop()
   {
     ParamPanel.setUserValues();
+    Font defaultFont = null;
+    try 
+    { 
+      defaultFont = ((Font) ParamPanel.getData()[ParamData.DEFAULT_FONT][ParamPanel.PRM_VALUE]); 
+      if (defaultFont == null)
+        defaultFont = new Font("Arial", Font.PLAIN, 12);
+      setUIFont(new FontUIResource(defaultFont));
+    }
+    catch (Exception ex) 
+    {
+      System.err.println("No value for DEFAULT_FONT");
+    }
 
     frame = new DesktopFrame();
     try { frame.setIconImage(new ImageIcon(this.getClass().getResource("camel.gif")).getImage()); } catch (Exception ignore) {}
@@ -829,5 +843,17 @@ public class OlivSoftDesktop
       output =outputList.toArray(output);
     }
     return output;
+  }
+
+  public static void setUIFont(javax.swing.plaf.FontUIResource f)
+  {
+    java.util.Enumeration keys = UIManager.getDefaults().keys();
+    while (keys.hasMoreElements())
+    {
+      Object key = keys.nextElement();
+      Object value = UIManager.get(key);
+      if (value != null && value instanceof javax.swing.plaf.FontUIResource)
+        UIManager.put(key, f);
+    }
   }
 }
