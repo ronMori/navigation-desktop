@@ -45,6 +45,8 @@ import olivsoftdesktop.param.widget.ColorPickerCellEditor;
 import olivsoftdesktop.param.widget.FieldAndButtonCellEditor;
 import olivsoftdesktop.param.widget.FieldPlusFinder;
 
+import olivsoftdesktop.param.widget.FieldPlusFontPicker;
+
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.SerialPortList;
 
@@ -213,6 +215,15 @@ public final class ParamPanel
         break;
       case ParamData.MAX_ANALOG_TWS:
         it = new Double(50);
+      case ParamData.DEFAULT_FONT:
+        it = new Font("Arial", Font.PLAIN, 12)
+          {
+            @Override
+            public String toString()
+            {
+              return FontPanel.fontToString(this);
+            }
+          }; 
         break;
       default:
         break;
@@ -288,6 +299,8 @@ public final class ParamPanel
               data[i][PRM_VALUE] = new ParamColor(DesktopUtilities.buildColor(s), "");
             else if (i == ParamData.MAX_TIDE_RECENT_STATIONS) 
               data[i][PRM_VALUE] = new Integer(s);
+            else if (i == ParamData.DEFAULT_FONT) 
+              data[i][PRM_VALUE] = FontPanel.stringToFont(s);
             else 
               data[i][PRM_VALUE] = s; // All the string fall in this bucket
           }
@@ -324,7 +337,8 @@ public final class ParamPanel
       ParamData.NMEA_DATA_STREAM,
       ParamData.PLAY_SOUNDS,
       ParamData.BG_WIN_FONT_COLOR,
-      ParamData.FOREGROUND_FONT_COLOR
+      ParamData.FOREGROUND_FONT_COLOR,
+      ParamData.DEFAULT_FONT
     },
     new int[] // NMEA
     { 
@@ -490,6 +504,8 @@ public final class ParamPanel
       {
         String before = (data[((int[])categoryIndexes[currentCategoryIndex])[i]][PRM_VALUE]).toString();
         String after = localData[i][PRM_VALUE].toString();
+        if (i == ParamData.DEFAULT_FONT)
+          after = FontPanel.fontToString((Font)localData[i][PRM_VALUE]);
         if (verbose) 
           System.out.println("Comparing [" + after + "] to [" + before + "]");
         if (!before.equals(after))
@@ -971,6 +987,7 @@ public final class ParamPanel
     FieldAndButtonCellEditor img    = new FieldAndButtonCellEditor(FieldPlusFinder.IMG_TYPE);
     FieldAndButtonCellEditor prop   = new FieldAndButtonCellEditor(FieldPlusFinder.PROPERTIES_TYPE);
     FieldAndButtonCellEditor ldd    = new FieldAndButtonCellEditor(FieldPlusFinder.DIRECTORY_TYPE);
+    FieldPlusFontPicker      ffp    = null; // new FieldPlusFontPicker(null);
 
     public ParamEditor()
     {
@@ -1088,6 +1105,12 @@ public final class ParamPanel
         componentToApply = ldd;
         ldd.setText(((LoggedDataDirectory)value).toString());
       }
+      else if (column == 1 && value instanceof Font)
+      {
+        ffp = new FieldPlusFontPicker((Font)value);
+        componentToApply = ffp;
+        ffp.setText(FontPanel.fontToString((Font)value));
+      }
       else if (column == 1)
       {
         System.out.println(">> Default renderer for Colunm:" + column  + ", row:" + row + ", value is a " + value.getClass().getName() + ":" + value.toString());
@@ -1128,6 +1151,25 @@ public final class ParamPanel
           return new PropertiesFile((String)nmea.getCellEditorValue());
         else if (componentToApply.equals(ldd))
           return new LoggedDataDirectory((String)ldd.getCellEditorValue());
+      }
+      else if (componentToApply instanceof FieldPlusFontPicker)
+      {
+        Object obj = ((FieldPlusFontPicker)componentToApply).getCellEditorValue();        
+        if (obj instanceof Font) // FIXME Fix that shit...
+          return (Font)obj;
+        else if (obj instanceof String)
+        {
+          String font = (String)((FieldPlusFontPicker)componentToApply).getCellEditorValue();
+          if (font != null)
+            return FontPanel.stringToFont(font);
+          else
+            return null;
+        }
+        else 
+        {
+      //  System.out.println("Original Value is a " + originalValue.getClass().getName());
+          return (Font)originalValue;
+        }
       }
       else if (componentToApply instanceof ColorPickerCellEditor)
       {
@@ -1246,7 +1288,12 @@ public final class ParamPanel
       Text val = doc.createTextNode("text#");
       Object valueObject = data[i][PRM_VALUE];
       if (valueObject != null)
-        val.setNodeValue(valueObject.toString());
+      {
+        if (valueObject instanceof Font)
+          val.setNodeValue(FontPanel.fontToString((Font)valueObject));
+        else
+          val.setNodeValue(valueObject.toString());
+      }
       else
         JOptionPane.showMessageDialog(null, "Null value in line " + i);
       param.appendChild(val);

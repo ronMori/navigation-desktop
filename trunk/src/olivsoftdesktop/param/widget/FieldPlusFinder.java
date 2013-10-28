@@ -22,6 +22,7 @@ public class FieldPlusFinder
   public final static int IMG_TYPE        = 2;
   public final static int PROPERTIES_TYPE = 3;
   public final static int NMEA_TYPE       = 4;
+  public final static int FONT_TYPE       = 5;
   
   BorderLayout borderLayout1 = new BorderLayout();
   JButton finderButton = new JButton();
