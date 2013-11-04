@@ -1786,7 +1786,7 @@ public class DesktopFrame
                     System.out.println("Rebroadcasting on TCP Port " + TCPPort + ": [" + str + "]");
                   if (tcpWriter != null)
                   {
-                    tcpWriter.write((str + getNMEA_EOS()).getBytes());
+                    tcpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                     prefix += (" => TCP " + TCPPort);
                   }
                 }
@@ -1794,14 +1794,14 @@ public class DesktopFrame
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
-                  udpWriter.write((str + getNMEA_EOS()).getBytes());
+                  udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                   prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
                 }
                 if (GPSDPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
                     System.out.println("Rebroadcasting on GPSD Port " + GPSDPort + ":" + str);
-                  gpsdWriter.write(str.getBytes());
+                  gpsdWriter.write(DesktopUtilities.superTrim(str).getBytes());
                   prefix += (" => GPSD " + GPSDPort);
                 }
                 if (HTTPPort != -1 && str != null)
@@ -1979,7 +1979,7 @@ public class DesktopFrame
                   System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
                 if (tcpWriter != null)
                 {
-                  tcpWriter.write((str + getNMEA_EOS()).getBytes());
+                  tcpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                   prefix += (" => TCP " + TCPPort);
                 }
               }
@@ -1987,7 +1987,7 @@ public class DesktopFrame
               {
                 if (rebroadcastVerbose)
                   System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
-                udpWriter.write((str + getNMEA_EOS()).getBytes());
+                udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                 prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
               }
               if (GPSDPort != -1)
@@ -1996,7 +1996,7 @@ public class DesktopFrame
                   System.out.println("Rebroadcasting on GPSd Port " + GPSDPort + ":" + str);
                 if (gpsdWriter != null)
                 {
-                  gpsdWriter.write((str + "\n").getBytes());
+                  gpsdWriter.write((DesktopUtilities.superTrim(str) + "\n").getBytes());
                   prefix += (" => GPSd " + GPSDPort);
                 }
               }

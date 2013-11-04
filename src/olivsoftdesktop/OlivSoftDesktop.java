@@ -749,12 +749,12 @@ public class OlivSoftDesktop
             {
               super.manageNMEAString(nmeaString);
               if (_udpWriter != null)
-                _udpWriter.write((nmeaString + NMEA_EOS).getBytes());
+                _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
               if (_tcpWriter != null)
-                _tcpWriter.write((nmeaString + NMEA_EOS).getBytes());
+                _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
               if (_logFile != null)
               {
-                try { _logFile.write(nmeaString + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
+                try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
               }
             }
           });
