@@ -53,9 +53,10 @@ public class TCPWriter
     if ("true".equals(System.getProperty("verbose", "false")))
     {
       System.out.println("TCP write on port " + tcpPort + " [" + new String(message, 0, message.length - 2) + "]");
+      System.out.print("[");
       for (byte b : message)
         System.out.print(formatByteHexa(b) + " ");
-      System.out.println();
+      System.out.println("]");
     }
     synchronized (clientSocketlist)
     {

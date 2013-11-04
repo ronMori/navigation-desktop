@@ -192,6 +192,14 @@ public class DesktopUtilities
     String s = Integer.toString(c.getRed()) + ";" + Integer.toString(c.getGreen()) + ";" + Integer.toString(c.getBlue());
     return s;
   }
+  
+  public static String superTrim(String str)
+  {
+    String s = str.trim();
+    while (s.endsWith("\n") || s.endsWith("\r"))
+      s = s.substring(0, s.length() - 1);
+    return s;
+  }
 
   public static class ToolFileFilter
     extends FileFilter
@@ -323,4 +331,11 @@ public class DesktopUtilities
     }
   }
 
+  public static void main(String[] args)
+  {
+    byte[] ba = { 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x0d, 0x0a };
+    String s = new String(ba);
+    System.out.println("Old Length:" + s.length());
+    System.out.println("New Length:" + superTrim(s).length());
+  }
 }
