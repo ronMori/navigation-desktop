@@ -57,7 +57,10 @@ public class UDPWriter
     }
     catch (Exception ex)
     {
-      ex.printStackTrace();
+      if ("No such device".equals(ex.getMessage()))
+        System.out.println("No such devide [" + address + "] (from " + this.getClass().getName() + ")");
+      else
+        ex.printStackTrace();
     }
   }
 }
