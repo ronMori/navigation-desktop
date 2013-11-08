@@ -64,7 +64,7 @@ public final class ParamPanel
   @SuppressWarnings("compatibility:-7630492256577044663")
   private final static long serialVersionUID = 1L;
   
-  private static boolean verbose = true;
+  private static boolean verbose = "true".equals(System.getProperty("verbose", "false"));
   
   private BorderLayout borderLayout1 = new BorderLayout();
   private JPanel topPanel = new JPanel();
@@ -306,7 +306,8 @@ public final class ParamPanel
           }
           catch (Exception ex)
           {
-            System.out.println("ParamPanel:" + ex.toString() + " for [" + ParamData.getLabels()[i] + "]");
+            if (verbose)
+              System.out.println("ParamPanel:" + ex.toString() + " for [" + ParamData.getLabels()[i] + "]");
             data[i][PRM_VALUE] = oneFactorySetting(i);
           }
 //        System.out.println("** setUserValue: i=" + Integer.toString(i) + " : [" + data[i][PRM_VALUE].toString() + "], a [" + data[i][PRM_VALUE].getClass().getName() + "] for [" + ParamData.labels[i] + "].");
