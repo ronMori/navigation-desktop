@@ -156,7 +156,7 @@ import olivsoftdesktop.param.RebroadcastPanel;
 import olivsoftdesktop.utils.BackgroundWindow;
 import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
-import olivsoftdesktop.utils.GPSDWriter;
+// import olivsoftdesktop.utils.GPSDWriter;
 import olivsoftdesktop.utils.HTTPClient;
 import olivsoftdesktop.utils.TCPWriter;
 import olivsoftdesktop.utils.UDPWriter;
@@ -404,10 +404,10 @@ public class DesktopFrame
   private int UDPPort  = -1;
   private int HTTPPort = -1;
   private int RMIPort  = -1;
-  private int GPSDPort = -1;
+//private int GPSDPort = -1;
   private transient UDPWriter udpWriter   = null;
   private transient TCPWriter tcpWriter   = null;
-  private transient GPSDWriter gpsdWriter = null;
+//private transient GPSDWriter gpsdWriter = null;
   private RebroadcastPanel rebroadcastPanel = null;
   private boolean rebroadcastVerbose = "true".equals(System.getProperty("verbose", "false"));
 
@@ -1797,13 +1797,13 @@ public class DesktopFrame
                   udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                   prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
                 }
-                if (GPSDPort != -1 && str != null)
-                {
-                  if (rebroadcastVerbose)
-                    System.out.println("Rebroadcasting on GPSD Port " + GPSDPort + ":" + str);
-                  gpsdWriter.write(DesktopUtilities.superTrim(str).getBytes());
-                  prefix += (" => GPSD " + GPSDPort);
-                }
+//                if (GPSDPort != -1 && str != null)
+//                {
+//                  if (rebroadcastVerbose)
+//                    System.out.println("Rebroadcasting on GPSD Port " + GPSDPort + ":" + str);
+//                  gpsdWriter.write(DesktopUtilities.superTrim(str).getBytes());
+//                  prefix += (" => GPSD " + GPSDPort);
+//                }
                 if (HTTPPort != -1 && str != null)
                 {
                   if (rebroadcastVerbose)
@@ -1990,16 +1990,16 @@ public class DesktopFrame
                 udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                 prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
               }
-              if (GPSDPort != -1)
-              {
-                if (rebroadcastVerbose)
-                  System.out.println("Rebroadcasting on GPSd Port " + GPSDPort + ":" + str);
-                if (gpsdWriter != null)
-                {
-                  gpsdWriter.write((DesktopUtilities.superTrim(str) + "\n").getBytes());
-                  prefix += (" => GPSd " + GPSDPort);
-                }
-              }
+//              if (GPSDPort != -1)
+//              {
+//                if (rebroadcastVerbose)
+//                  System.out.println("Rebroadcasting on GPSd Port " + GPSDPort + ":" + str);
+//                if (gpsdWriter != null)
+//                {
+//                  gpsdWriter.write((DesktopUtilities.superTrim(str) + "\n").getBytes());
+//                  prefix += (" => GPSd " + GPSDPort);
+//                }
+//              }
               if (HTTPPort != -1)
               {
                 if (rebroadcastVerbose)
@@ -2945,19 +2945,19 @@ public class DesktopFrame
             catch (Exception ex) { System.err.println(ex.getLocalizedMessage()); }
           }
           
-          if (rebroadcastPanel.isGPSDSelected() && GPSDPort == -1)
-          {
-//          JOptionPane.showMessageDialog(this, "Implemented soon", "GPSd", JOptionPane.INFORMATION_MESSAGE);
-            GPSDPort = rebroadcastPanel.getGPSDPort();
-            System.out.println("Creating GPSD writer on port " + GPSDPort);
-            gpsdWriter = new GPSDWriter(GPSDPort); // , rebroadcastPanel.tcpHost()); 
-          }
-          else if (!rebroadcastPanel.isGPSDSelected() && GPSDPort != -1)
-          {
-            GPSDPort = -1;
-            try { gpsdWriter.close(); }
-            catch (Exception ex) { System.err.println(ex.getLocalizedMessage()); }
-          }
+//          if (rebroadcastPanel.isGPSDSelected() && GPSDPort == -1)
+//          {
+////          JOptionPane.showMessageDialog(this, "Implemented soon", "GPSd", JOptionPane.INFORMATION_MESSAGE);
+//            GPSDPort = rebroadcastPanel.getGPSDPort();
+//            System.out.println("Creating GPSD writer on port " + GPSDPort);
+//            gpsdWriter = new GPSDWriter(GPSDPort); // , rebroadcastPanel.tcpHost()); 
+//          }
+//          else if (!rebroadcastPanel.isGPSDSelected() && GPSDPort != -1)
+//          {
+//            GPSDPort = -1;
+//            try { gpsdWriter.close(); }
+//            catch (Exception ex) { System.err.println(ex.getLocalizedMessage()); }
+//          }
 
           if (rebroadcastPanel.isRMISelected() && RMIPort == -1)
           {
