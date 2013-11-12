@@ -84,6 +84,8 @@ import ocss.nmea.api.NMEAListener;
 
 import olivsoftdesktop.ctx.DesktopContext;
 
+import olivsoftdesktop.param.HeadlessGUIPanel;
+import olivsoftdesktop.param.InputChannelPanel;
 import olivsoftdesktop.param.ParamData;
 import olivsoftdesktop.param.ParamPanel;
 
@@ -581,6 +583,7 @@ public class OlivSoftDesktop
         System.out.println("-------------------------------------------------------------------");
         System.out.println("Available parameters (system variables) are:");
         System.out.println("  -Dheadless=yes|no");
+        System.out.println("  -Dheadless.gui=yes|no");
         System.out.println("  -Dverbose=true|false");
         System.out.println("If headless=yes :");
         System.out.println("To replay logged data, use :");
@@ -647,6 +650,76 @@ public class OlivSoftDesktop
       // Init dev curve
       String deviationFileName = (String) NMEAContext.getInstance().getCache().get(NMEADataCache.DEVIATION_FILE);
       NMEAContext.getInstance().setDeviation(Utils.loadDeviationCurve(deviationFileName));
+    
+      if ("yes".equals(System.getProperty("headless.gui", "no")))
+      {
+        /*
+         * Display GUI and read parameters:
+         * - verbose
+         * 
+         * Input
+         * =====
+         * - netPort 
+         * - netOption
+         * - hostname
+         * - dataFile
+         * 
+         * Output
+         * ======
+         * - http - port
+         * - tcp  - port
+         * - udp  - address + port
+         * - logfile - file name
+         */
+        System.out.println("Displaying Headless GUI here.");
+        HeadlessGUIPanel guiPanel = new HeadlessGUIPanel();
+        int resp = JOptionPane.showConfirmDialog(null, guiPanel, "Input-Output", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (resp == JOptionPane.OK_OPTION)
+        {
+          // Input
+          netOption = -1;
+          netPort = null;
+          serialPort = null;
+          dataFile = null;
+          // Set the parameters
+          int channel = guiPanel.getChannel();
+          if (channel == InputChannelPanel.SERIAL)
+            serialPort = guiPanel.getSerialport();
+          else if (channel == InputChannelPanel.TCP)
+          {
+            netOption = CustomNMEAClient.TCP_OPTION;
+            netPort = guiPanel.getTcpPort();
+          }
+          else if (channel == InputChannelPanel.UDP)
+          {
+            netOption = CustomNMEAClient.UDP_OPTION;
+            netPort = guiPanel.getUdpPort();
+            hostname = guiPanel.getUdpMachine();
+          }
+          else if (channel == InputChannelPanel.LOGGED_DATA)
+            dataFile = guiPanel.getDataFileName();
+          
+          // Output, like -output=HTTP:9999 -output=TCP:7001, -output=UDP:230.0.0.1:8001
+          List<String> newArgs = new ArrayList<String>();
+          if (guiPanel.isHTTPSelected())
+            newArgs.add("-output=HTTP:" + guiPanel.getHTTPPort());
+          if (guiPanel.isTCPSelected())
+            newArgs.add("-output=TCP:" + guiPanel.getTCPPort());
+          if (guiPanel.isUDPSelected())
+            newArgs.add("-output=UDP:" + guiPanel.getUDPMachine() + ":" + guiPanel.getTCPPort());
+          if (guiPanel.isLogFileSelected())
+            newArgs.add("-output=FILE:" + guiPanel.getLogFileName());
+          
+          String[] _args = new String[newArgs.size()];
+          _args = newArgs.toArray(_args);
+          // Swap
+          args = _args;
+          
+          System.out.println("New output args:");
+          for (String s: args)
+            System.out.println(s);
+        }
+      }
     
       // Input channel
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 

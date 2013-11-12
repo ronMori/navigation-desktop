@@ -11,8 +11,10 @@ import java.awt.event.ActionListener;
 
 import java.text.DecimalFormat;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -39,13 +41,25 @@ public class RebroadcastPanel
   private JCheckBox RMICheckBox = new JCheckBox();
   private JLabel rmiPortLabel = new JLabel();
   private JFormattedTextField rmiPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
-  private JCheckBox GPSDCheckBox = new JCheckBox();
-  private JLabel gpsdPortLabel = new JLabel();
-  private JFormattedTextField gpsdPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
+//private JCheckBox GPSDCheckBox = new JCheckBox();
+//private JLabel gpsdPortLabel = new JLabel();
+//private JFormattedTextField gpsdPortFormattedTextField = new JFormattedTextField(new DecimalFormat("#####0"));
   private GridBagLayout gridBagLayout2 = new GridBagLayout();
+  private JCheckBox logDataCheckBox = new JCheckBox();
+  private JTextField logFileTextField = new JTextField();
+  private JButton logFileButton = new JButton();
+  
+  private boolean withLogFile = false;
+  private boolean withRMI     = true;
 
   public RebroadcastPanel()
   {
+    this(true, false);
+  }
+  public RebroadcastPanel(boolean withRMI, boolean withLogFile)
+  {
+    this.withRMI = withRMI;
+    this.withLogFile = withLogFile;
     try
     {
       jbInit();
@@ -109,10 +123,10 @@ public class RebroadcastPanel
     udpHostNameTextField.setPreferredSize(new Dimension(70, 19));
     udpHostNameTextField.setMinimumSize(new Dimension(50, 19));
 
-    gpsdPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
-    gpsdPortFormattedTextField.setPreferredSize(new Dimension(50, 19));
-    gpsdPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
-    gpsdPortFormattedTextField.setText("2947");
+//    gpsdPortFormattedTextField.setMinimumSize(new Dimension(50, 19));
+//    gpsdPortFormattedTextField.setPreferredSize(new Dimension(50, 19));
+//    gpsdPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
+//    gpsdPortFormattedTextField.setText("2947");
 
     this.add(httpPanel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 5), 0, 0));
@@ -137,18 +151,44 @@ public class RebroadcastPanel
     this.add(udpHostNameTextField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
           new Insets(0, 10, 0, 0), 0, 0));
     
-    this.add(RMICheckBox, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(rmiPortLabel, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(rmiPortFormattedTextField, new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(GPSDCheckBox, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(gpsdPortLabel, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(gpsdPortFormattedTextField, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
+    if (withRMI)
+    {
+      this.add(RMICheckBox, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0), 0, 0));
+      this.add(rmiPortLabel, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0), 0, 0));
+      this.add(rmiPortFormattedTextField, new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0), 0, 0));
+    }
+//    this.add(GPSDCheckBox, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+//          new Insets(0, 0, 0, 0), 0, 0));
+//    this.add(gpsdPortLabel, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+//          new Insets(0, 0, 0, 0), 0, 0));
+//    this.add(gpsdPortFormattedTextField, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+//          new Insets(0, 0, 0, 0), 0, 0));
+    if (withLogFile)
+    {
+      this.add(logDataCheckBox, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+            new Insets(0, 0, 0, 0), 0, 0));
+      this.add(logFileTextField, new GridBagConstraints(1, 4, 3, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
+            new Insets(0, 0, 0, 0), 0, 0));
+      this.add(logFileButton, new GridBagConstraints(4, 4, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+            new Insets(0, 2, 0, 0), 0, 0));
+      logFileButton.addActionListener(new ActionListener()
+        {
+          public void actionPerformed(ActionEvent e)
+          {
+            String df = coreutilities.Utilities.chooseFile(JFileChooser.FILES_ONLY,
+                                                           "nmea",
+                                                           "NMEA Data",
+                                                           "Log NMEA Data",
+                                                           "Log");
+            if (df != null && df.trim().length() > 0)
+              logFileTextField.setText(df);
+          }
+        });
+      
+    }
     httpPortLabel.setEnabled(false);
     httpPortFormattedTextField.setEnabled(false);
     verboseCheckBox.setEnabled(false);
@@ -159,6 +199,10 @@ public class RebroadcastPanel
 
     rmiPortLabel.setEnabled(false);
     rmiPortFormattedTextField.setEnabled(false);
+    
+    logFileTextField.setEnabled(false);
+    logFileButton.setEnabled(false);
+
     RMICheckBox.addActionListener(new ActionListener()
       {
         public void actionPerformed(ActionEvent e)
@@ -174,20 +218,30 @@ public class RebroadcastPanel
     rmiPortFormattedTextField.setText("1099");
     rmiPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
 
-    GPSDCheckBox.setText("GPSd");
-    gpsdPortLabel.setText("port");
-    gpsdPortLabel.setEnabled(false);
-    
-    gpsdPortFormattedTextField.setEnabled(false);
-    GPSDCheckBox.setEnabled(true);
-    GPSDCheckBox.addActionListener(new ActionListener()
+//    GPSDCheckBox.setText("GPSd");
+//    gpsdPortLabel.setText("port");
+//    gpsdPortLabel.setEnabled(false);
+//    
+//    gpsdPortFormattedTextField.setEnabled(false);
+//    GPSDCheckBox.setEnabled(true);
+//    GPSDCheckBox.addActionListener(new ActionListener()
+//      {
+//        public void actionPerformed(ActionEvent e)
+//        {
+//          GPSDCheckBox_actionPerformed(e);
+//        }
+//      });
+
+    logDataCheckBox.setText("Log Data in");
+    logDataCheckBox.addActionListener(new ActionListener()
       {
         public void actionPerformed(ActionEvent e)
         {
-          GPSDCheckBox_actionPerformed(e);
+          logDataCheckBox_actionPerformed(e);
         }
       });
-    
+    logFileTextField.setHorizontalAlignment(JTextField.RIGHT);
+    logFileButton.setText("...");
     tcpPortLabel.setEnabled(false);
     
     tcpPortFormattedTextField.setEnabled(false);
@@ -199,7 +253,6 @@ public class RebroadcastPanel
           TCPCheckBox_actionPerformed(e);
         }
       });
-
   }
 
   private void HTTPCheckBox_actionPerformed(ActionEvent e)
@@ -228,11 +281,11 @@ public class RebroadcastPanel
     udpHostNameTextField.setEnabled(UDPCheckBox.isSelected());
   }
     
-  private void GPSDCheckBox_actionPerformed(ActionEvent e)
-  {
-    gpsdPortLabel.setEnabled(GPSDCheckBox.isSelected());
-    gpsdPortFormattedTextField.setEnabled(GPSDCheckBox.isSelected());
-  }
+//  private void GPSDCheckBox_actionPerformed(ActionEvent e)
+//  {
+//    gpsdPortLabel.setEnabled(GPSDCheckBox.isSelected());
+//    gpsdPortFormattedTextField.setEnabled(GPSDCheckBox.isSelected());
+//  }
   
   public boolean isHTTPSelected()
   {
@@ -254,10 +307,10 @@ public class RebroadcastPanel
     return TCPCheckBox.isSelected();
   }
   
-  public boolean isGPSDSelected()
-  {
-    return GPSDCheckBox.isSelected();
-  }
+//  public boolean isGPSDSelected()
+//  {
+//    return GPSDCheckBox.isSelected();
+//  }
   
   public boolean isRMISelected()
   {
@@ -285,12 +338,12 @@ public class RebroadcastPanel
     return port;                                                                                                     
   }
   
-  public int getGPSDPort()
-  {
-    int port = -1;
-    try { port = Integer.parseInt(gpsdPortFormattedTextField.getText()); } catch (Exception nfe) { nfe.printStackTrace(); }
-    return port;                                                                                                     
-  }
+//  public int getGPSDPort()
+//  {
+//    int port = -1;
+//    try { port = Integer.parseInt(gpsdPortFormattedTextField.getText()); } catch (Exception nfe) { nfe.printStackTrace(); }
+//    return port;                                                                                                     
+//  }
   
   public int getRMIPort()
   {
@@ -307,5 +360,21 @@ public class RebroadcastPanel
   public String udpHost()
   {
     return udpHostNameTextField.getText();
+  }
+
+  private void logDataCheckBox_actionPerformed(ActionEvent e)
+  {
+    logFileTextField.setEnabled(logDataCheckBox.isSelected());
+    logFileButton.setEnabled(logDataCheckBox.isSelected());
+  }
+  
+  public boolean isLogSelected()
+  {
+    return logDataCheckBox.isSelected();
+  }
+  
+  public String getLogFileName()
+  {
+    return logFileTextField.getText();
   }
 }
