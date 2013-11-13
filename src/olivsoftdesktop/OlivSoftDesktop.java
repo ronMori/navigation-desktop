@@ -555,25 +555,24 @@ public class OlivSoftDesktop
 
   public static void main(String[] args)
   {
+    String lnf = System.getProperty("swing.defaultlaf");
+    if (lnf == null) // Let the -Dswing.defaultlaf do the job.
+    {
+      try
+      {
+        if (System.getProperty("swing.defaultlaf") == null)
+          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+      }
+      catch(Exception e)
+      {
+        e.printStackTrace();
+      }
+    }
+
     boolean headless = "yes".equals(System.getProperty("headless", "no"));
-    
     if (!headless)
     {
-      String lnf = System.getProperty("swing.defaultlaf");
-      if (lnf == null) // Let the -Dswing.defaultlaf do the job.
-      {
-        try
-        {
-          if (System.getProperty("swing.defaultlaf") == null)
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch(Exception e)
-        {
-          e.printStackTrace();
-        }
-      }
       JFrame.setDefaultLookAndFeelDecorated(true); // L&F at the main frame level.
-      
       new OlivSoftDesktop();
     }
     else // Headless Console.
@@ -676,6 +675,7 @@ public class OlivSoftDesktop
         int resp = JOptionPane.showConfirmDialog(null, guiPanel, "Input-Output", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (resp == JOptionPane.OK_OPTION)
         {
+          verbose = guiPanel.isVerbose();
           // Input
           netOption = -1;
           netPort = null;
@@ -792,9 +792,14 @@ public class OlivSoftDesktop
           try
           {
             String fName = out.substring(FILE.length());
+            File f = new File(fName);
+            if (f.exists())
+              System.out.println("------------------------------------------------------------\n" + 
+                                 "  [" + fName + "] already exists. Data will be append to it.\n" +
+                                 "------------------------------------------------------------");
             try
             {
-              logFile = new BufferedWriter(new FileWriter(fName));
+              logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
             }
             catch (Exception ex)
             {

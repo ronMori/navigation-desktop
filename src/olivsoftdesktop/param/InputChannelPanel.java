@@ -28,9 +28,9 @@ public class InputChannelPanel
   extends JPanel
 {
   public final static int SERIAL      = 0;
-  public final static int TCP         = 0;
-  public final static int UDP         = 0;
-  public final static int LOGGED_DATA = 0;  
+  public final static int TCP         = 1;
+  public final static int UDP         = 2;
+  public final static int LOGGED_DATA = 3;  
   
   private GridBagLayout gridBagLayout1 = new GridBagLayout();
   private JRadioButton serialRadioButton = new JRadioButton();
