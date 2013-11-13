@@ -23,62 +23,69 @@ public class JTableFocusChangeListener
 
   public void propertyChange(PropertyChangeEvent evt)
   {
-    Component oldComp = (Component) evt.getOldValue();
-    Component newComp = (Component) evt.getNewValue();
-
-    if ("focusOwner".equals(evt.getPropertyName()))
+    try
     {
-      Window windowFocusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusedWindow();
-      if (originalWindowFocusOwner == null)
+      Component oldComp = (Component) evt.getOldValue();
+      Component newComp = (Component) evt.getNewValue();
+  
+      if ("focusOwner".equals(evt.getPropertyName()))
       {
-//        if (windowFocusOwner instanceof JFrame)
-//          System.out.println("... Checkin if table is part of [" + ((JFrame)windowFocusOwner).getTitle() + "]");
-//        else if (windowFocusOwner instanceof JDialog)
-//          System.out.println("... Checkin if table is part of [" + ((JDialog)windowFocusOwner).getTitle() + "]");
-//        else
-//        {
-//          System.out.println("... Window is a " + windowFocusOwner.getClass().getName());
-//        }
-        if (windowFocusOwner.equals(getFirstOwnerWindow(jTable)))
+        Window windowFocusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusedWindow();
+        if (originalWindowFocusOwner == null)
         {
-//        System.out.println("......Yes!");
-          originalWindowFocusOwner = windowFocusOwner;        
-        }
-//      else
-//        System.out.println(".....No.");
-      }
-      if (originalWindowFocusOwner != null && originalWindowFocusOwner.equals(windowFocusOwner)) // No stopCellEditing needed when new dialog pops up
-      {
-        if (oldComp == null)
-        {
-          boolean b = isChildOf(newComp, jTable);
-          // the newComp component gained the focus
-          if (!b)
+  //        if (windowFocusOwner instanceof JFrame)
+  //          System.out.println("... Checkin if table is part of [" + ((JFrame)windowFocusOwner).getTitle() + "]");
+  //        else if (windowFocusOwner instanceof JDialog)
+  //          System.out.println("... Checkin if table is part of [" + ((JDialog)windowFocusOwner).getTitle() + "]");
+  //        else
+  //        {
+  //          System.out.println("... Window is a " + windowFocusOwner.getClass().getName());
+  //        }
+          if (windowFocusOwner.equals(getFirstOwnerWindow(jTable)))
           {
-//          System.out.println("New component (" + newComp.getClass().getName() + ") is NOT part of the thing, gained focus (was-in:" + wasIn +")");
-            if (wasIn && jTable.isEditing())
-            {
-//            System.out.println("Stopping Cell Editing");
-              jTable.getCellEditor().stopCellEditing();
-            }
+  //        System.out.println("......Yes!");
+            originalWindowFocusOwner = windowFocusOwner;        
           }
-//          else
-//            System.out.println("New component (" + newComp.getClass().getName() + ") is part of the thing, gained focus");
+  //      else
+  //        System.out.println(".....No.");
         }
-        else
+        if (originalWindowFocusOwner != null && originalWindowFocusOwner.equals(windowFocusOwner)) // No stopCellEditing needed when new dialog pops up
         {
-          boolean b = isChildOf(oldComp, jTable);
-          // the oldComp component lost the focus
-//          if (b)
-//            System.out.println("Old component (" + oldComp.getClass().getName() + ") was part of the thing, lost focus");
-//          else
-//            System.out.println("Old component (" + oldComp.getClass().getName() + ") was NOT part of the thing, lost focus");
-          wasIn = b;
+          if (oldComp == null)
+          {
+            boolean b = isChildOf(newComp, jTable);
+            // the newComp component gained the focus
+            if (!b)
+            {
+  //          System.out.println("New component (" + newComp.getClass().getName() + ") is NOT part of the thing, gained focus (was-in:" + wasIn +")");
+              if (wasIn && jTable.isEditing())
+              {
+  //            System.out.println("Stopping Cell Editing");
+                jTable.getCellEditor().stopCellEditing();
+              }
+            }
+  //          else
+  //            System.out.println("New component (" + newComp.getClass().getName() + ") is part of the thing, gained focus");
+          }
+          else
+          {
+            boolean b = isChildOf(oldComp, jTable);
+            // the oldComp component lost the focus
+  //          if (b)
+  //            System.out.println("Old component (" + oldComp.getClass().getName() + ") was part of the thing, lost focus");
+  //          else
+  //            System.out.println("Old component (" + oldComp.getClass().getName() + ") was NOT part of the thing, lost focus");
+            wasIn = b;
+          }
         }
       }
+  //    else
+  //      System.out.println("Property " + evt.getPropertyName());
     }
-//    else
-//      System.out.println("Property " + evt.getPropertyName());
+    catch (Exception ex)
+    {
+      System.err.println("In " + this.getClass().getName() + ":" + ex.getMessage());
+    }
   }
 
   private Window getFirstOwnerWindow(Component comp)

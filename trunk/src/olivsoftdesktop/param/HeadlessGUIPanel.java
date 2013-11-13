@@ -39,6 +39,11 @@ public class HeadlessGUIPanel
           new Insets(10, 0, 0, 0), 0, 0));
   }
   
+  public boolean isVerbose()
+  {
+    return outputPanel.httpVerbose();
+  }
+  
   public int getChannel()
   {
     return inputPanel.getInputChannel();
