@@ -70,7 +70,7 @@ java ${JAVA_OPTIONS} -classpath ${CP} olivsoftdesktop.OlivSoftDesktop ${CONSOLE_
 This way, you can visualize your data in the Swing Console (the regular graphical one), see the data live in a browser on a tablet (connected on the boat's ad-hoc network) and have the boat position displayed in OpenCPN simultaneously (if you've set the input connection to TCP, port 7001 in this case).
 <br/>
 
-*It runs on a Raspberry PI*
+====It runs on a Raspberry PI====
 The headless console has actually been designed to run on a Raspberry PI. The Raspberry PI can read the NMEA Port (usually a Serial port), and the rebroadcast the data on HTTP, UDP, or TCP. This way, several devices _and_ programs can access the NMEA data simultaneously.
 <br/>
 It has been successfully tested. See [http://donpedrodalfaroubeira.blogspot.com/2013/11/multiple-access-for-real.html this post], and the earlier ones.
