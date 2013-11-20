@@ -210,7 +210,7 @@ public class OlivSoftDesktop
       });    
 //  frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     frame.setVisible(true);
-    checkForUpdate(frame);
+    checkForUpdate(frame, null);
     Date compiledDate = null;
     String lastModified = "";
     String fullPath2Class = this.getClass().getName();
@@ -342,7 +342,7 @@ public class OlivSoftDesktop
 
   private static boolean proceed = false;
   
-  public static void checkForUpdate(final JFrame parent)
+  public static void checkForUpdate(final JFrame parent, final Thread caller)
   {
     // Checking for update
     proceed = true; // TODO A parameter...
@@ -363,13 +363,38 @@ public class OlivSoftDesktop
            for (String s : fList)
              downloadMess += (s + "\n");
            // Display file list
-           UpdatePanel updatePanel = new UpdatePanel();
-           if (proceed)
-             updatePanel.setTopLabel("Following file(s) updated");
+           if (parent != null)
+           {
+             UpdatePanel updatePanel = new UpdatePanel();
+             if (proceed)
+               updatePanel.setTopLabel("Following file(s) updated");
+             else
+               updatePanel.setTopLabel("Available update(s):");
+             updatePanel.setFileList(downloadMess);
+             JOptionPane.showMessageDialog(parent, updatePanel, "Automatic updates", JOptionPane.INFORMATION_MESSAGE);
+           }
            else
-             updatePanel.setTopLabel("Available update(s):");
-           updatePanel.setFileList(downloadMess);
-           JOptionPane.showMessageDialog(parent, updatePanel, "Automatic updates", JOptionPane.INFORMATION_MESSAGE);
+           {
+             if (caller != null)
+             {
+               synchronized (caller) 
+               {
+                 caller.notify();
+               }
+             }
+             System.out.println("Updated:\n" + downloadMess);
+           }
+         }
+         else
+         {
+           if (caller != null)
+           {
+             synchronized (caller) 
+             {
+               caller.notify();
+             }
+           }
+           System.out.println("No Update");
          }
          // TODO Remove CoreContext listener
        }
@@ -603,6 +628,17 @@ public class OlivSoftDesktop
         System.out.println("  -output=FILE:path/to/logfile   Data will be logged as they are, in this file");
         System.exit(0);        
       }
+      else if (args.length > 0 && args[0].equalsIgnoreCase("--check-update")) 
+      {
+        Thread me = Thread.currentThread();
+        checkForUpdate(null, me);
+        synchronized (me)
+        {
+          try { me.wait(); } catch (InterruptedException ie) { ie.printStackTrace(); }
+        }
+        System.out.println("Update process completed.");
+        System.exit(0);
+      }
       // Configuration parameters
       ParamPanel pp = new ParamPanel();
       pp.setGnlPrm();
@@ -616,6 +652,7 @@ public class OlivSoftDesktop
 
       System.out.println("+-------------------------------------------+");
       System.out.println("| Hit Ctrl+C here to exit the headless mode |");
+      System.out.println("| or send the process a SIGTERM signal      |");
       System.out.println("+-------------------------------------------+");
       
       String serialPort = null; // "COM15";
@@ -656,15 +693,15 @@ public class OlivSoftDesktop
          * Display GUI and read parameters:
          * - verbose
          * 
-         * Input
-         * =====
+         * Input, exclusive
+         * ================
          * - netPort 
          * - netOption
          * - hostname
          * - dataFile
          * 
-         * Output
-         * ======
+         * Output, inclusive
+         * =================
          * - http - port
          * - tcp  - port
          * - udp  - address + port
@@ -709,6 +746,7 @@ public class OlivSoftDesktop
             newArgs.add("-output=UDP:" + guiPanel.getUDPMachine() + ":" + guiPanel.getTCPPort());
           if (guiPanel.isLogFileSelected())
             newArgs.add("-output=FILE:" + guiPanel.getLogFileName());
+          // TODO WebSocket
           
           String[] _args = new String[newArgs.size()];
           _args = newArgs.toArray(_args);

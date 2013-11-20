@@ -118,7 +118,7 @@ public class HeadlessGUIPanel
   {
     return Integer.toString(outputPanel.getRMIPort());
   }
-  // TODO Data File Options
+
   public boolean isLogFileSelected()
   {
     return outputPanel.isLogSelected();
