@@ -74,3 +74,11 @@ This way, you can visualize your data in the Swing Console (the regular graphica
 The headless console has actually been designed to run on a Raspberry PI. The Raspberry PI can read the NMEA Port (usually a Serial port), and the rebroadcast the data on HTTP, UDP, or TCP. This way, several devices _and_ programs can access the NMEA data simultaneously. And the Raspberry PI only draws 700 mA.
 <br/>
 It has been successfully tested. See [http://donpedrodalfaroubeira.blogspot.com/2013/11/multiple-access-for-real.html this post], and the earlier ones.
+
+====Headless Update====
+For the Raspberry PI too, there is an option to check for software updates, without GUI.
+{{{
+java -Dheadless=yes olivsoftdesktop.OlivSoftDesktop --check-update
+}}}
+Make sure the classpath is set correctly.
+Make sure the proxy settings are OK (if needed)...
