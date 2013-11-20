@@ -72,7 +72,7 @@ public class DesktopNMEAReader
       {
         read(new File(data));
       }
-      else if (serial != null & serial.trim().length() > 0)
+      else if (serial != null && serial.trim().length() > 0)
       {
         read(serial, br);
       }
