@@ -607,12 +607,16 @@ public class BackgroundWindow
   private Font loadDigiFont()
   {
     Font f = null;
-    try { f = tryToLoadFont("ds-digi.ttf"); }
-    catch (Exception ex) { System.err.println(ex.getMessage()); }
-    if (f == null)
-      f = new Font("Courier New", Font.BOLD, 12);
-    else
-      f = f.deriveFont(Font.BOLD, 12);
+//  f = new Font("Source Code Pro", Font.PLAIN, 12);
+    if (true)
+    {
+      try { f = tryToLoadFont("ds-digi.ttf"); }
+      catch (Exception ex) { System.err.println(ex.getMessage()); }
+      if (f == null)
+        f = new Font("Courier New", Font.BOLD, 12);
+      else
+        f = f.deriveFont(Font.BOLD, 12);
+    }
     return f;
   }
 

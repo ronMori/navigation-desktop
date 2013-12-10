@@ -346,11 +346,14 @@ public class OlivSoftDesktop
   {
     // Checking for update
     proceed = true; // TODO A parameter...
-    Thread checkForUpdate = // new CheckForUpdateThread("weather_assistant");
+    Thread checkForUpdate = 
       new CheckForUpdateThread(DesktopContext.PRODUCT_ID, 
                                new DOMParser(), 
                                DesktopContext.STRUCTURE_FILE_NAME, 
-                               proceed);
+                               proceed,
+                               "true".equals(System.getProperty("verbose", "false")),
+                               (caller == null), // If caller is null, ask for a confirmation. Do not otherwise (headless update).
+                               false); // force
     // Add listener
     CoreContext.getInstance().addApplicationListener(new CoreEventListener()
      {
@@ -743,10 +746,10 @@ public class OlivSoftDesktop
           if (guiPanel.isTCPSelected())
             newArgs.add("-output=TCP:" + guiPanel.getTCPPort());
           if (guiPanel.isUDPSelected())
-            newArgs.add("-output=UDP:" + guiPanel.getUDPMachine() + ":" + guiPanel.getTCPPort());
+            newArgs.add("-output=UDP:" + guiPanel.getUDPMachine() + ":" + guiPanel.getUDPPort());
           if (guiPanel.isLogFileSelected())
             newArgs.add("-output=FILE:" + guiPanel.getLogFileName());
-          // TODO WebSocket
+          // TODO WebSocket...
           
           String[] _args = new String[newArgs.size()];
           _args = newArgs.toArray(_args);
