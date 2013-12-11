@@ -5,7 +5,6 @@ import coreutilities.NotificationCheck;
 import coreutilities.Utilities;
 
 import coreutilities.ctx.CoreContext;
-
 import coreutilities.ctx.CoreEventListener;
 
 import java.awt.BorderLayout;
@@ -17,18 +16,14 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
-
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.io.BufferedWriter;
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-
-import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.JarURLConnection;
@@ -46,9 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import java.util.TimeZone;
-
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -60,13 +53,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
-
-//import nmea.rmiserver.NMEAServer;
-
 import javax.swing.event.HyperlinkEvent;
-
 import javax.swing.event.HyperlinkListener;
-
 import javax.swing.plaf.FontUIResource;
 
 import nmea.event.NMEAReaderListener;
@@ -74,13 +62,8 @@ import nmea.event.NMEAReaderListener;
 import nmea.server.ctx.NMEAContext;
 import nmea.server.ctx.NMEADataCache;
 import nmea.server.datareader.CustomNMEAClient;
-
 import nmea.server.utils.HTTPServer;
-
 import nmea.server.utils.Utils;
-
-import ocss.nmea.api.NMEAEvent;
-import ocss.nmea.api.NMEAListener;
 
 import olivsoftdesktop.ctx.DesktopContext;
 
@@ -91,7 +74,6 @@ import olivsoftdesktop.param.ParamPanel;
 
 import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
-
 import olivsoftdesktop.utils.TCPWriter;
 import olivsoftdesktop.utils.UDPWriter;
 import olivsoftdesktop.utils.gui.UpdatePanel;
@@ -99,6 +81,7 @@ import olivsoftdesktop.utils.gui.UpdatePanel;
 import oracle.xml.parser.v2.DOMParser;
 import oracle.xml.parser.v2.XMLDocument;
 import oracle.xml.parser.v2.XMLElement;
+//import nmea.rmiserver.NMEAServer;
 
 public class OlivSoftDesktop
 {
