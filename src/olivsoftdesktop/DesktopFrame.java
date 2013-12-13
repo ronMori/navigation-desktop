@@ -414,9 +414,15 @@ public class DesktopFrame
   private static String NMEA_EOS = new String(new char[] {0x0A, 0x0D});
   
   private RebroadcastPopup popup = null;
+  private List<DesktopUserExitInterface> userExitList = null;
   
   public DesktopFrame()
   {
+    this(null);
+  }
+  public DesktopFrame(List<DesktopUserExitInterface> userExitList)
+  {
+    this.userExitList = userExitList;
 //  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.STANDARD_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
     try
     {
@@ -2181,6 +2187,18 @@ public class DesktopFrame
 
   private void this_windowClosing(WindowEvent e)
   {
+    // Close user exits
+    if (userExitList != null)
+    {
+      if (userExitList != null && userExitList.size() > 0)
+      {
+        for (DesktopUserExitInterface ue : userExitList)
+        {
+          System.out.println("Stopping userExit " + ue.getClass().getName());
+          ue.stop();
+        }
+      }
+    }
     URL sound = this.getClass().getResource("vista.wav");
     DesktopUtilities.doOnExit(sound);
   }

@@ -90,6 +90,8 @@ public class OlivSoftDesktop
   private OlivSoftDesktop instance = this;
   private JFrame frame = null;
   
+  private static List<DesktopUserExitInterface> userExitList = null;
+  
   public OlivSoftDesktop()
   {
     ParamPanel.setUserValues();
@@ -106,7 +108,7 @@ public class OlivSoftDesktop
       System.err.println("No value for DEFAULT_FONT");
     }
 
-    frame = new DesktopFrame();
+    frame = new DesktopFrame(userExitList);
     try { frame.setIconImage(new ImageIcon(this.getClass().getResource("camel.gif")).getImage()); } catch (Exception ignore) {}
     File desktopPos = new File("desktop.xml");
     boolean dataOk = true;
@@ -580,6 +582,51 @@ public class OlivSoftDesktop
       }
     }
 
+    // User exits?
+    if (args.length > 0)
+    {
+      for (int i=0; i<args.length; i++)
+      {
+        if (args[i].startsWith("-ue:"))
+        {
+          String ueClassName = args[i].substring("-ue:".length());
+          try
+          {
+            Class ue = Class.forName(ueClassName);
+            Object ueObj = ue.newInstance();
+            if (ueObj instanceof DesktopUserExitInterface)
+            {
+              if (userExitList == null)
+                userExitList = new ArrayList<DesktopUserExitInterface>();
+              userExitList.add((DesktopUserExitInterface)ueObj);
+            }
+            else
+              System.err.println("Bad user Exit:" + ue.getName());
+          }
+          catch (ClassNotFoundException cnfe)
+          {
+            System.err.println(cnfe.getMessage());
+          }
+          catch (IllegalAccessException iae)
+          {
+            System.err.println(iae.getMessage());
+          }
+          catch (InstantiationException ie)
+          {
+            System.err.println((ie.getMessage()));
+          }
+        }
+      }
+      if (userExitList != null && userExitList.size() > 0)
+      {
+        for (DesktopUserExitInterface ue : userExitList)
+        {
+          System.out.println("Starting userExit " + ue.getClass().getName());
+          ue.start();
+        }
+      }
+    }
+
     boolean headless = "yes".equals(System.getProperty("headless", "no"));
     if (!headless)
     {
@@ -868,6 +915,16 @@ public class OlivSoftDesktop
         public void run() 
         { 
           System.out.println("Shutting down");
+          // Shutdown Userexits
+          if (userExitList != null && userExitList.size() > 0)
+          {
+            for (DesktopUserExitInterface ue : userExitList)
+            {
+              System.out.println("Stopping userExit " + ue.getClass().getName());
+              ue.stop();
+            }
+          }
+          
           try { nmeaReader.stopReader(); }
           catch (Exception ex)
           {
