@@ -615,6 +615,10 @@ public class OlivSoftDesktop
           {
             System.err.println((ie.getMessage()));
           }
+          catch (Exception ex)
+          {
+            System.err.println(ex.getMessage());
+          }
         }
       }
       if (userExitList != null && userExitList.size() > 0)

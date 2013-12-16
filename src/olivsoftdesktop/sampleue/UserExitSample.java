@@ -1,14 +1,10 @@
 package olivsoftdesktop.sampleue;
 
 import nmea.event.NMEAReaderListener;
-
 import nmea.server.ctx.NMEAContext;
-
 import nmea.server.ctx.NMEADataCache;
-
 import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.Speed;
-
 import olivsoftdesktop.DesktopUserExitInterface;
 
 public class UserExitSample
