@@ -1,6 +1,8 @@
 #summary News.
 #labels Featured
-
+== 16-DEC-2013 ==
+=== Console User-Exit ===
+See [http://donpedrodalfaroubeira.blogspot.com/2013/12/introducing-console-user-exits.html this link].
 == 24-OCT-2013 ==
 === Headless Console ===
 There is now a "headless console" for the NMEA Data read from the station.
