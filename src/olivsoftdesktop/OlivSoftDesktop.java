@@ -819,144 +819,147 @@ public class OlivSoftDesktop
       final String FILE = "FILE:";
       
       String[] output = getOutputChannels(args);
-      for (String out : output)
+      if (output != null)
       {
-        if (out.startsWith(HTTP))
+        for (String out : output)
         {
-          try
+          if (out.startsWith(HTTP))
           {
-            String port = out.substring(HTTP.length());
-            System.setProperty("http.port", port);
-            httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
-          }
-          catch (Exception ex)
-          {
-            ex.printStackTrace();
-          }
-        }
-        else if (out.startsWith(TCP))
-        {
-          try
-          {
-            String port = out.substring(TCP.length());
-            int tcpPort = Integer.parseInt(port);
-            tcpWriter = new TCPWriter(tcpPort);
-          }
-          catch (Exception ex)
-          {
-            
-            ex.printStackTrace();
-          }
-        }
-        else if (out.startsWith(UDP))
-        {
-          try
-          {
-            String port =     out.substring(out.indexOf(":", UDP.length() + 1) + 1);
-            String address =  out.substring(UDP.length(), out.indexOf(":", UDP.length() + 1));
-            int udpPort = Integer.parseInt(port);
-            udpWriter = new UDPWriter(udpPort, address); 
-          }
-          catch (Exception ex)
-          {
-            ex.printStackTrace();
-          }
-        }
-        else if (out.startsWith(FILE))
-        {
-          try
-          {
-            String fName = out.substring(FILE.length());
-            File f = new File(fName);
-            if (f.exists())
-              System.out.println("------------------------------------------------------------\n" + 
-                                 "  [" + fName + "] already exists. Data will be append to it.\n" +
-                                 "------------------------------------------------------------");
             try
             {
-              logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
+              String port = out.substring(HTTP.length());
+              System.setProperty("http.port", port);
+              httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
             }
             catch (Exception ex)
             {
               ex.printStackTrace();
             }
           }
-          catch (Exception ex)
+          else if (out.startsWith(TCP))
           {
-            ex.printStackTrace();
-          }
-        }
-      }
-      final HTTPServer _httpServer  = httpServer;
-      final UDPWriter _udpWriter    = udpWriter;
-      final TCPWriter _tcpWriter    = tcpWriter;
-      final BufferedWriter _logFile = logFile;
-      
-      // Create NMEAListener to re-broadcast appropriately
-      if (udpWriter != null | tcpWriter != null || logFile != null)
-      {
-        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
-        {
-            @Override
-            public void manageNMEAString(String nmeaString)
+            try
             {
-              super.manageNMEAString(nmeaString);
-              if (_udpWriter != null)
-                _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
-              if (_tcpWriter != null)
-                _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
-              if (_logFile != null)
+              String port = out.substring(TCP.length());
+              int tcpPort = Integer.parseInt(port);
+              tcpWriter = new TCPWriter(tcpPort);
+            }
+            catch (Exception ex)
+            {
+              
+              ex.printStackTrace();
+            }
+          }
+          else if (out.startsWith(UDP))
+          {
+            try
+            {
+              String port =     out.substring(out.indexOf(":", UDP.length() + 1) + 1);
+              String address =  out.substring(UDP.length(), out.indexOf(":", UDP.length() + 1));
+              int udpPort = Integer.parseInt(port);
+              udpWriter = new UDPWriter(udpPort, address); 
+            }
+            catch (Exception ex)
+            {
+              ex.printStackTrace();
+            }
+          }
+          else if (out.startsWith(FILE))
+          {
+            try
+            {
+              String fName = out.substring(FILE.length());
+              File f = new File(fName);
+              if (f.exists())
+                System.out.println("------------------------------------------------------------\n" + 
+                                   "  [" + fName + "] already exists. Data will be append to it.\n" +
+                                   "------------------------------------------------------------");
+              try
               {
-                try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
+                logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
+              }
+              catch (Exception ex)
+              {
+                ex.printStackTrace();
               }
             }
-          });
-      }
-      System.out.println("Rebroadcast in flight:" + formatOutput(output));
-
-      Runtime.getRuntime().addShutdownHook(new Thread() 
-      {
-        public void run() 
-        { 
-          System.out.println("Shutting down");
-          // Shutdown Userexits
-          if (userExitList != null && userExitList.size() > 0)
-          {
-            for (DesktopUserExitInterface ue : userExitList)
+            catch (Exception ex)
             {
-              System.out.println("Stopping userExit " + ue.getClass().getName());
-              ue.stop();
+              ex.printStackTrace();
             }
           }
-          
-          try { nmeaReader.stopReader(); }
-          catch (Exception ex)
-          {
-            System.err.println("Stopping:");
-            ex.printStackTrace();
-          }       
-          if (_httpServer != null)
-          {
-            System.out.println("Stop HTTP...");
-            shutDownHTTPserver("http://localhost:" + System.getProperty("http.port") + "/exit");
-          }
-          if (_tcpWriter != null)
-          {
-            System.out.println("Stop TCP...");
-            try { _tcpWriter.close(); } catch (Exception ex) {}
-          }
-          if (_udpWriter != null)
-          {
-            System.out.println("Stop UDP...");
-//          try { _udpWriter.close(); } catch (Exception ex) {}
-          }
-          if (_logFile != null)
-          {
-            System.out.println("Stop logging...");
-            try { _logFile.flush(); _logFile.close(); } catch (Exception ex) {}
-          }
         }
-      });
+        final HTTPServer _httpServer  = httpServer;
+        final UDPWriter _udpWriter    = udpWriter;
+        final TCPWriter _tcpWriter    = tcpWriter;
+        final BufferedWriter _logFile = logFile;
+        
+        // Create NMEAListener to re-broadcast appropriately
+        if (udpWriter != null | tcpWriter != null || logFile != null)
+        {
+          NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+          {
+              @Override
+              public void manageNMEAString(String nmeaString)
+              {
+                super.manageNMEAString(nmeaString);
+                if (_udpWriter != null)
+                  _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
+                if (_tcpWriter != null)
+                  _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
+                if (_logFile != null)
+                {
+                  try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
+                }
+              }
+            });
+        }
+        System.out.println("Rebroadcast in flight:" + formatOutput(output));
+  
+        Runtime.getRuntime().addShutdownHook(new Thread() 
+        {
+          public void run() 
+          { 
+            System.out.println("Shutting down");
+            // Shutdown Userexits
+            if (userExitList != null && userExitList.size() > 0)
+            {
+              for (DesktopUserExitInterface ue : userExitList)
+              {
+                System.out.println("Stopping userExit " + ue.getClass().getName());
+                ue.stop();
+              }
+            }
+            
+            try { nmeaReader.stopReader(); }
+            catch (Exception ex)
+            {
+              System.err.println("Stopping:");
+              ex.printStackTrace();
+            }       
+            if (_httpServer != null)
+            {
+              System.out.println("Stop HTTP...");
+              shutDownHTTPserver("http://localhost:" + System.getProperty("http.port") + "/exit");
+            }
+            if (_tcpWriter != null)
+            {
+              System.out.println("Stop TCP...");
+              try { _tcpWriter.close(); } catch (Exception ex) {}
+            }
+            if (_udpWriter != null)
+            {
+              System.out.println("Stop UDP...");
+  //          try { _udpWriter.close(); } catch (Exception ex) {}
+            }
+            if (_logFile != null)
+            {
+              System.out.println("Stop logging...");
+              try { _logFile.flush(); _logFile.close(); } catch (Exception ex) {}
+            }
+          }
+        });
+      }
     }
   }
   
