@@ -590,34 +590,40 @@ public class OlivSoftDesktop
         if (args[i].startsWith("-ue:"))
         {
           String ueClassName = args[i].substring("-ue:".length());
+          System.out.println(" -- Suspecting user-exit " + ueClassName + "...");
           try
           {
             Class ue = Class.forName(ueClassName);
             Object ueObj = ue.newInstance();
             if (ueObj instanceof DesktopUserExitInterface)
             {
+              System.out.println(" -- Enqueing user-exit " + ueClassName);
               if (userExitList == null)
                 userExitList = new ArrayList<DesktopUserExitInterface>();
               userExitList.add((DesktopUserExitInterface)ueObj);
             }
             else
-              System.err.println("Bad user Exit:" + ue.getName());
+              System.err.println(" !! Bad user Exit:" + ue.getName());
           }
           catch (ClassNotFoundException cnfe)
           {
-            System.err.println(cnfe.getMessage());
+            System.err.println("Loading User-Exit - 1 :" + cnfe.getMessage());
+            cnfe.printStackTrace();
           }
           catch (IllegalAccessException iae)
           {
-            System.err.println(iae.getMessage());
+            System.err.println("Loading User-Exit - 2 :" + iae.getMessage());
+            iae.printStackTrace();
           }
           catch (InstantiationException ie)
           {
-            System.err.println((ie.getMessage()));
+            System.err.println("Loading User-Exit - 3 :" + ie.getMessage());
+            ie.printStackTrace();
           }
           catch (Exception ex)
           {
-            System.err.println(ex.getMessage());
+            System.err.println("Loading User-Exit - 4 :" + ex.getMessage());
+            ex.printStackTrace();
           }
         }
       }
