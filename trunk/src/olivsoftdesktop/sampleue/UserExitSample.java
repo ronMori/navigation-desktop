@@ -42,4 +42,10 @@ public class UserExitSample
   {
     System.out.println("Terminating User exit");
   }
+
+  @Override
+  public void describe()
+  {
+    System.out.println("This is a simple user-exit example that shows how to register an NMEAReaderListener from your code.");
+  }
 }

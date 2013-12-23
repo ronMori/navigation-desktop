@@ -196,7 +196,10 @@ public class DesktopNMEAReader
       String displ = payload;
       while ((displ.endsWith("\r") || displ.endsWith("\n")) && displ.length() >= 0)
         displ = displ.substring(0, displ.length() - 1);
-      System.out.println(this.getClass().getName() + ": Read from NMEA :[" + displ + "]");
+      if ("yes".equals(System.getProperty("headless", "no")))
+        System.out.println(displ);
+      else
+        System.out.println(this.getClass().getName() + ": Read from NMEA :[" + displ + "]");
     }
     
     try

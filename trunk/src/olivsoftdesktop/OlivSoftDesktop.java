@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 
+import java.lang.reflect.Method;
+
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -581,6 +583,7 @@ public class OlivSoftDesktop
         e.printStackTrace();
       }
     }
+    String baudRate = System.getProperty("baud.rate", "4800");
 
     // User exits?
     if (args.length > 0)
@@ -601,6 +604,11 @@ public class OlivSoftDesktop
               if (userExitList == null)
                 userExitList = new ArrayList<DesktopUserExitInterface>();
               userExitList.add((DesktopUserExitInterface)ueObj);
+              // Invoke the describe method on the user exit:
+              Method desc = ue.getMethod("describe", null);
+              System.out.println("-- Description for [" + ueClassName + "] --");
+              desc.invoke(ueObj, null);
+              System.out.println("-------------------------------------------");
             }
             else
               System.err.println(" !! Bad user Exit:" + ue.getName());
@@ -655,7 +663,7 @@ public class OlivSoftDesktop
         System.out.println("If headless=yes :");
         System.out.println("To replay logged data, use :");
         System.out.println("  -Dlogged.nmea.data=path/to/logged-data-file");
-        System.out.println("To read the serial port (Baud Rate 4800), use :");
+        System.out.println("To read the serial port (Baud Rate " + baudRate + "), use :");
         System.out.println("  -Dserial.port=COM15");
         System.out.println("To read the TCP, UDP or RMI port, use :");
         System.out.println("  -Dnet.port=7001");
@@ -699,7 +707,7 @@ public class OlivSoftDesktop
       System.out.println("+-------------------------------------------+");
       
       String serialPort = null; // "COM15";
-      int br            = 4800;
+      int br            = Integer.parseInt(baudRate);
       String netPort    = null; // "7001";
       int netOption     = -1;   // Input channel
       String hostname   = "localhost";
