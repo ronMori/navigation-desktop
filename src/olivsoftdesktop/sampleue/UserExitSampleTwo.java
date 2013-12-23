@@ -75,4 +75,11 @@ public class UserExitSampleTwo
       watcher.notify();
     }
   }
+
+  @Override
+  public void describe()
+  {
+    System.out.println("This is a simple user-exit example.");
+    System.out.println("It checks the NMEA cache every 10 seconds, and displays a message if the TWS is above 10 knots.");
+  }
 }
