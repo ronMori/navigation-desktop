@@ -21,6 +21,7 @@ import app.starfinder.SkyInternalFrame;
 import app.starfinder.ctx.SFContext;
 import app.starfinder.ctx.StarFinderEventListener;
 
+import calculation.AstroComputer;
 import calculation.SightReductionUtil;
 
 import chartlib.ctx.ChartLibContext;
@@ -81,6 +82,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -197,11 +199,15 @@ public class DesktopFrame
   
   private final static SimpleDateFormat SDF  = new SimpleDateFormat("dd MMM yyyy '\n'HH:mm:ss 'UTC'");
   static { SDF.setTimeZone(TimeZone.getTimeZone("Etc/UTC")); }
+  private final static SimpleDateFormat SUN_RISE_SET_SDF = new SimpleDateFormat("E dd-MMM-yyyy HH:mm (z)");
   private final static SimpleDateFormat SDF2 = new SimpleDateFormat("'Solar Time:' HH:mm:ss");
   static { SDF2.setTimeZone(TimeZone.getTimeZone("Etc/UTC")); }
+  private final static SimpleDateFormat SDF3 = new SimpleDateFormat("'Solar Time:' HH:mm");
+  static { SDF3.setTimeZone(TimeZone.getTimeZone("Etc/UTC")); }
 //private final static SimpleDateFormat SDF3 = new SimpleDateFormat("HH:mm:ss 'UTC'");
   private final static DecimalFormat DF2     = new DecimalFormat("00");
   private final static DecimalFormat DF22    = new DecimalFormat("00.00");
+  private final static DecimalFormat DF3     = new DecimalFormat("##0");
   
   private BorderLayout layoutMain = new BorderLayout();
   private JMenuBar menuBar = new JMenuBar();
@@ -1297,7 +1303,7 @@ public class DesktopFrame
     ((BasicInternalFrameUI)ifu).setNorthPane(null);   // Remove the title bar   
 
     specialInternalFrame.setLocation(10, 10);
-    specialInternalFrame.setSize(250, 200);
+    specialInternalFrame.setSize(500, 400);
     specialInternalFrame.setOpaque(false);
     specialInternalFrame.setBorder(null);    // Remove the border
     Color bg = new Color(0, 0, 0, 0); // This color is transparent black
@@ -1318,7 +1324,9 @@ public class DesktopFrame
                                                     ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                                                                      RenderingHints.VALUE_ANTIALIAS_ON);      
                                                     this.setOpaque(false);
-  
+                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
+                                                    g.drawRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
+                                                    
                                                     // Display the dynamic data here
                                                     boolean displayRose = false;
                                                     
@@ -1341,18 +1349,30 @@ public class DesktopFrame
                                                     }
                                                     g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
                                                  // g.setFont(g.getFont().deriveFont(Font.BOLD));
-                                                    Font digiFont = null;
-                                                    try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
-                                                    catch (Exception ex) { System.err.println(ex.getMessage()); }
+                                                    Font digiFont = null; // TODO Preference!!@!@@!
+                                                    if (false)
+                                                    {
+                                                      try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
+                                                      catch (Exception ex) { System.err.println(ex.getMessage()); }
+                                                    }
+                                                    else
+                                                    {
+                                                      try { digiFont = new Font("Source Code Pro", 10, Font.PLAIN); }
+                                                      catch (Exception ex) { System.err.println(ex.getMessage()); }
+                                                    }
                                                     if (digiFont != null)
                                                       g.setFont(digiFont.deriveFont(Font.BOLD, 16f));
                                                     else
                                                       g.setFont(g.getFont().deriveFont(Font.BOLD));
                                                     int y = 20;
-                                                    for (String s : grabbedData)
+                                                    synchronized (grabbedData)
                                                     {
-                                                      g.drawString(s, 5, y);
-                                                      y += (g.getFont().getSize() + 2);
+                                                      List<String> data = new ArrayList<String>(grabbedData); // Clone
+                                                      for (String s : data)
+                                                      {
+                                                        g.drawString(s, 5, y);
+                                                        y += (g.getFont().getSize() + 2);
+                                                      }
                                                     }
                                                   }
                                                 }                                                
@@ -2123,7 +2143,7 @@ public class DesktopFrame
         System.setProperty("display.sun.moon.data", ((Boolean)(ParamPanel.getData()[ParamData.COMPUTE_SUN_MOON_DATA][ParamPanel.PRM_VALUE])).toString());
         System.setProperty("max.recent.stations", ((Integer)(ParamPanel.getData()[ParamData.MAX_TIDE_RECENT_STATIONS][ParamPanel.PRM_VALUE])).toString());
         System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
-        tideengineimplementation.utils.AstroComputer.setDeltaT(((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue());
+        calculation.AstroComputer.setDeltaT(((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue());
 //      System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
         Thread tideThread = new Thread()
           {
@@ -2284,126 +2304,260 @@ public class DesktopFrame
       {
         public void run()
         {
-          String degSymbol = " "; // "\272"; 
-          while (foregroundData.booleanValue())
+          String degSymbol = "\272"; // " "; // 
+          synchronized (grabbedData)
           {
-            grabbedData = new ArrayList<String>();
-            // Time
-            Date ut = new Date(); // TimeUtil.getGMT();
-            grabbedData.add("System:" + SDF.format(ut));
-            double offset = TimeUtil.getGMTOffset();
-            String strOffset = Integer.toString((int)offset);
-            if (offset > 0) strOffset = "+" + strOffset;
-            grabbedData.add("UTC Offset:" + strOffset);
-            // NMEA Data
-            String str = "";
-            try 
-            { 
-              str += ("L:" + GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS));
-            } 
-            catch (Exception ex) 
-            { 
-              System.err.println(ex.getLocalizedMessage());
-              str += "-"; 
-            }
-            grabbedData.add(str);            
-            str = "";
-            double g = 0;
-            try 
-            { 
-              g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
-              str += ("G:" + GeomUtil.decToSex(g, GeomUtil.NO_DEG, GeomUtil.EW)); 
-            } 
-            catch (Exception ex) 
-            { 
-              System.out.println(ex.getLocalizedMessage());
-              str += "-"; 
-            }
-            grabbedData.add(str);            
-            str = "COG:";
-            try 
-            { 
-              str += Integer.toString((int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG, true)).getValue()); 
-            } 
-            catch (Exception ex) 
-            { 
-              System.err.println("COG in Cache:" + ex.getLocalizedMessage()); 
-              str += "-"; 
-            }
-            str += (degSymbol + " SOG:");
-            try 
-            { 
-              str += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
-            } 
-            catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
-            str += " kts";
-            grabbedData.add(str);            
-            
-            str = "xx:xx:xx";            
-            try 
-            { 
-              try 
-              { 
-                UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                str = SDF.format(utcDate.getValue());
-                grabbedData.add(str);            
-              } 
-              catch (Exception ignore) 
-              {
-                System.err.println(ignore.getLocalizedMessage());
-              }
-              long time = 0L;
-              try 
-              { 
-                time = ((UTCTime)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); 
-              } 
-              catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
-              catch (Exception oops) { oops.printStackTrace(); }
-            //          System.out.println("[time:" + time + ", g:" + g + "]");
-              offset = (g / 15d) * 3600d * 1000d; // in milliseconds
-              time += offset;
-              str = SDF2.format(new Date(time));
-              grabbedData.add(str);            
-            }
-            catch (Exception ex)
+            while (foregroundData.booleanValue())
             {
-              ex.printStackTrace();
-            }
+              grabbedData = new ArrayList<String>();
+              // Time
+              Date ut = new Date(); // TimeUtil.getGMT();
+              grabbedData.add("System:" + SDF.format(ut));
+              double offset = TimeUtil.getGMTOffset();
+              String strOffset = Integer.toString((int)offset);
+              if (offset > 0) strOffset = "+" + strOffset;
+              grabbedData.add("UTC Offset:" + strOffset);
+              // NMEA Data
+              String str = "";
+              try 
+              { 
+                str += ("L:" + lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.SWING, GeomUtil.NS), " ", 12));
+              } 
+              catch (Exception ex) 
+              { 
+                System.err.println(ex.getLocalizedMessage());
+                str += "-"; 
+              }
+              grabbedData.add(str);            
+              str = "";
+              double g = 0;
+              try 
+              { 
+                g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
+                str += ("G:" + lpad(GeomUtil.decToSex(g, GeomUtil.SWING, GeomUtil.EW), " " , 12)); 
+              } 
+              catch (Exception ex) 
+              { 
+                System.out.println(ex.getLocalizedMessage());
+                str += "-"; 
+              }
+              grabbedData.add(str);            
+              str = "COG:";
+              try 
+              { 
+                str += Integer.toString((int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG, true)).getValue()); 
+              } 
+              catch (Exception ex) 
+              { 
+                System.err.println("COG in Cache:" + ex.getLocalizedMessage()); 
+                str += "-"; 
+              }
+              str += (degSymbol + " SOG:");
+              try 
+              { 
+                str += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
+              } 
+              catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
+              str += " kts";
+              grabbedData.add(str);            
+              
+              str = "xx:xx:xx";            
+              try 
+              { 
+                try 
+                { 
+                  UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                  str = SDF.format(utcDate.getValue());
+                  grabbedData.add(str);            
+                } 
+                catch (Exception ignore) 
+                {
+                  System.err.println(ignore.getLocalizedMessage());
+                }
+                long time = 0L;
+                try 
+                { 
+                  time = ((UTCTime)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); 
+                } 
+                catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
+                catch (Exception oops) { oops.printStackTrace(); }
+              //          System.out.println("[time:" + time + ", g:" + g + "]");
+                offset = (g / 15d) * 3600d * 1000d; // in milliseconds
+                time += offset;
+                str = "  " + SDF2.format(new Date(time));
+                grabbedData.add(str);         
+                str = "Solar Offset:" + decimalHoursToHMS(offset / (3600 * 1000));                
+                grabbedData.add(str);         
+                if (g != 0)
+                {
+                  // Try sun rise & set from current position
+                  try 
+                  {
+                    double l = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat; 
+                    g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
+                    
+                    // Get dayligh duration the day before
+                    UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                    Calendar dayBefore = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                    dayBefore.setTimeInMillis(utcDate.getValue().getTime());
+                    dayBefore.add(Calendar.DATE, -1);
+                    AstroComputer.setDateTime(dayBefore.get(Calendar.YEAR), 
+                                              dayBefore.get(Calendar.MONTH) + 1, 
+                                              dayBefore.get(Calendar.DAY_OF_MONTH), 
+                                              dayBefore.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
+                                              dayBefore.get(Calendar.MINUTE), 
+                                              dayBefore.get(Calendar.SECOND));
+                    AstroComputer.calculate();
+                    double[] rsSunYesterday  = AstroComputer.sunRiseAndSet(l, g);
+                    double daylightYesterday = (rsSunYesterday[AstroComputer.UTC_SET_IDX] - rsSunYesterday[AstroComputer.UTC_RISE_IDX]);
+  
+                    Calendar today = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                    today.setTimeInMillis(utcDate.getValue().getTime());
+                    AstroComputer.setDateTime(today.get(Calendar.YEAR), 
+                                              today.get(Calendar.MONTH) + 1, 
+                                              today.get(Calendar.DAY_OF_MONTH), 
+                                              today.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
+                                              today.get(Calendar.MINUTE), 
+                                              today.get(Calendar.SECOND));
+                    AstroComputer.calculate();
+                    double sunD = AstroComputer.getSunDecl();
+                    double[] rsSunToday  = AstroComputer.sunRiseAndSet(l, g);
+                    double daylightToday = (rsSunToday[AstroComputer.UTC_SET_IDX] - rsSunToday[AstroComputer.UTC_RISE_IDX]);
+                    double deltaDaylight = daylightToday - daylightYesterday;           
+                    SDF.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                    Calendar sunRise = null;
+                    Calendar sunSet = null;
+                    Calendar now = GregorianCalendar.getInstance();
+                    now.setTimeInMillis(utcDate.getValue().getTime()); // From the GPS
 
-            double aws = 0d;
-            try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
-            int awa    = 0;
-            try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
-            double bsp = 0d;
-            try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
-            int hdg    = 0;
-            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
-            
-            double bl = 0d;
-            try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
-            double sl = 0d;
-            try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
-            double depth = 0d;
-            try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
-            double temp  = 0d;
-            try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
-            
-            grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
-            grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
-            grabbedData.add("HDG:" + Integer.toString(hdg));
-            grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
-            grabbedData.add("DBT: " + DF22.format(depth) + " m");
-            grabbedData.add("Water Temp:" + DF22.format(temp) + degSymbol + "C");
-            
-            specialInternalFrame.repaint();
-            try { Thread.sleep(1000L); } catch (Exception ex) {} 
+                    sunRise = new GregorianCalendar();
+                    sunRise.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                    sunRise.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                    sunRise.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                    sunRise.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
+                    sunRise.set(Calendar.SECOND, 0);
+                                  
+                    double r = rsSunToday[AstroComputer.UTC_RISE_IDX] /* + Utils.daylightOffset(sunRise) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC" /*ts.getTimeZone()*/), sunRise.getTime());
+                    int min = (int)((r - ((int)r)) * 60);
+                    sunRise.set(Calendar.MINUTE, min);
+                    sunRise.set(Calendar.HOUR_OF_DAY, (int)r);
+                    
+                    sunSet = new GregorianCalendar();
+                    sunSet.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                    sunSet.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                    sunSet.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                    sunSet.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
+                    sunSet.set(Calendar.SECOND, 0);
+                    r = rsSunToday[AstroComputer.UTC_SET_IDX] /* + Utils.daylightOffset(sunSet) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC"/*ts.getTimeZone()*/), sunSet.getTime());
+                    min = (int)((r - ((int)r)) * 60);
+                    sunSet.set(Calendar.MINUTE, min);
+                    sunSet.set(Calendar.HOUR_OF_DAY, (int)r);
+
+                    long daylight = (sunSet.getTimeInMillis() - sunRise.getTimeInMillis()) / 1000L;
+  
+                    if (!Double.isNaN(rsSunToday[AstroComputer.UTC_RISE_IDX]))
+                    {
+                      double solarOffset = (g / 15d) * 3600d * 1000d; // in milliseconds
+                      time += solarOffset;
+                      SDF2.format(new Date(time));
+
+                      str = "Sun Rise    : " + SUN_RISE_SET_SDF.format(sunRise.getTime()) + " Z:" + DF3.format(rsSunToday[AstroComputer.RISE_Z_IDX]) + degSymbol;
+                      grabbedData.add(str);           
+//                    System.out.println("Added:[" + str + "]");
+                      str = "  " + SDF3.format(new Date(sunRise.getTime().getTime() + (long)solarOffset));
+                      grabbedData.add(str);           
+//                    System.out.println("Added:[" + str + "]");
+
+                      str = "Sun Set     : " + SUN_RISE_SET_SDF.format(sunSet.getTime()) + " Z:" + DF3.format(rsSunToday[AstroComputer.SET_Z_IDX]) + degSymbol;
+                      grabbedData.add(str);           
+//                    System.out.println("Added:[" + str + "]");
+                      str = "  " + SDF3.format(new Date(sunSet.getTime().getTime() + (long)solarOffset));
+                      grabbedData.add(str);           
+//                    System.out.println("Added:[" + str + "]");
+                      if (daylightToday > 0)
+                      {
+//                      System.out.println("Daylight:" + daylightToday);
+                        str = "Daylight    : " + DF2.format(daylight / 3600) + "h " + DF2.format((daylight % 3600) / 60L) + "m";
+                        grabbedData.add(str);           
+//                      System.out.println("Added:[" + str + "]");
+                        str = " Delta      : " + decimalHoursToHMS(deltaDaylight);
+                        grabbedData.add(str);           
+//                      System.out.println("Added:[" + str + "]");
+                        double dz = Math.abs(l - sunD);
+                        double maxSunAlt = (90 - dz);
+                        str = "Sun Max Alt : " + ((int)maxSunAlt) + degSymbol + DF2.format((maxSunAlt - ((int)maxSunAlt)) * 60) + "'";
+                        grabbedData.add(str);           
+                      }
+                    }
+                  } 
+                  catch (Exception ex) 
+                  { 
+                    System.err.println(ex.getLocalizedMessage());
+                    str += "-"; 
+                    grabbedData.add(str);            
+                  }
+                }
+              }
+              catch (Exception ex)
+              {
+                ex.printStackTrace();
+              }
+  
+              double aws = 0d;
+              try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+              int awa    = 0;
+              try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+              double bsp = 0d;
+              try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+              int hdg    = 0;
+              try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+              
+              double bl = 0d;
+              try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
+              double sl = 0d;
+              try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
+              double depth = 0d;
+              try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
+              double temp  = 0d;
+              try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
+              
+              grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
+              grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
+              grabbedData.add("HDG:" + Integer.toString(hdg % 360) + degSymbol);
+              grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
+              grabbedData.add("DBT: " + DF22.format(depth) + " m");
+              grabbedData.add("Water Temp:" + DF22.format(temp) + degSymbol + "C");
+              
+              specialInternalFrame.repaint();
+              try { Thread.sleep(1000L); } catch (Exception ex) {} 
+            }
           }
        // System.out.println("DataGrabber thread terminated.");
         }
       };
     dataGrabber.start();
   }
-
+  
+  private String decimalHoursToHMS(double diff)
+  {
+    double dh = Math.abs(diff);
+    String s = "";
+    if (dh >= 1)
+      s += (DF2.format((int)dh) + "h ");
+    double remainder = dh - ((int)dh);
+    double minutes = remainder * 60;
+    if (s.trim().length() > 0 || minutes >= 1)
+      s += (DF2.format((int)minutes) + "m ");
+    remainder = minutes - (int)minutes;
+    double seconds = remainder * 60;
+    s += (DF2.format((int)seconds) + "s");
+    if (diff < 0)
+      s = "- " + s;
+    else
+      s = "+ " + s;
+    return s.trim();
+  }
+  
   public static String getNMEA_EOS()
   {
     return NMEA_EOS;
@@ -2514,7 +2668,7 @@ public class DesktopFrame
 //          System.out.println("[time:" + time + ", g:" + g + "]");
             double offset = (g / 15d) * 3600d * 1000d; // in milliseconds
             time += offset;
-            solarTime = "\n" + SDF2.format(new Date(time));
+            solarTime = "\n" + SDF2.format(new Date(time)) + "\nSolar Offset:" + decimalHoursToHMS(offset / (3600 * 1000));
           }
           catch (Exception ex)
           {
@@ -2699,6 +2853,13 @@ public class DesktopFrame
     }
   }
   
+  public static String lpad(String str, String with, int len)
+  {
+    while (str.length() < len)
+      str = with + str;
+    return str;
+  }
+  
   private class HTTPNMEAReaderThread extends Thread
   {
     private final String nmeaServerURL = "http://" +  
@@ -2794,7 +2955,9 @@ public class DesktopFrame
               long time = cal.getTimeInMillis();              
               double offset = (g / 15d) * 3600d * 1000d; // in milliseconds
               time += offset;
-              solarTime = "\n" + SDF2.format(new Date(time));
+//            solarTime = "\n" + SDF2.format(new Date(time));
+              solarTime = "\n" + SDF2.format(new Date(time)) + "\nSolar Offset:" + decimalHoursToHMS(offset / (3600 * 1000));
+
             }
             
             nmeaString = gpsTimeString + "\n" + 
