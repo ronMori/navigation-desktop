@@ -136,6 +136,12 @@ import nmea.server.utils.Utils;
 import nmea.ui.NMEAInternalFrame;
 import nmea.ui.viewer.elements.AWDisplay;
 
+import nmea.ui.viewer.spot.SPOTInternalFrame;
+
+import nmea.ui.viewer.spot.ctx.SpotCtx;
+
+import nmea.ui.viewer.spot.ctx.SpotEventListener;
+
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.Depth;
@@ -222,6 +228,7 @@ public class DesktopFrame
   private JMenuItem replayNmeaMenuItem  = new JMenuItem();
   private JMenuItem starFinderMenuItem  = new JMenuItem();
   private JMenuItem d2102StarFinderMenuItem  = new JMenuItem();
+  private JMenuItem spotMenuItem        = new JMenuItem();
   private JMenuItem sailFaxMenuItem     = new JMenuItem();
   private JMenuItem lunarMenuItem       = new JMenuItem();
   private JMenuItem srMenuItem          = new JMenuItem();
@@ -392,6 +399,7 @@ public class DesktopFrame
   private static List<BackgroundWindow> bgwal = new ArrayList<BackgroundWindow>(1);
   
   private JInternalFrame sailfaxFrame    = null;
+  private JInternalFrame spotFrame       = null;
   private JInternalFrame nmeaDataFrame   = null;
   private JInternalFrame starFinder      = null;
   private JInternalFrame skyMap          = null;
@@ -454,6 +462,7 @@ public class DesktopFrame
   private final static int TIDES                = 11;
   private final static int STARFINDER_2012D     = 12;
   private final static int REAL_TIME_ALMANAC    = 13;
+  private final static int SPOT                 = 14;
 
   private final static String TIME_BG_WINDOW_TITLE       = "UTC";
   private final static String GPS_SIGNAL_BG_WINDOW_TITLE = "GPS Signal";
@@ -832,6 +841,7 @@ public class DesktopFrame
     nmeaMenuItem.setText("NMEA Data");
     nmeaConsoleMenuItem.setText("NMEA Console");
     replayNmeaMenuItem.setText("Replay NMEA Data");
+    spotMenuItem.setText("SPOT Bulletins");
     starFinderMenuItem.setText("Planetarium");
     d2102StarFinderMenuItem.setText("Star Finder (2102-D)");
     sailFaxMenuItem.setText("SailFax");
@@ -894,6 +904,7 @@ public class DesktopFrame
     starFinderMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(STARFINDER); } } );
     d2102StarFinderMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(STARFINDER_2012D); } } );
     sailFaxMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(SAILFAX); } } );
+    spotMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(SPOT); } } );
     lunarMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(LUNAR); } } );
     srMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(SR); } } );
     realTimeAlmanacMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(REAL_TIME_ALMANAC); } } );
@@ -983,6 +994,13 @@ public class DesktopFrame
       nbMenuItem++;
       menuFile.add(new JSeparator());
       separatorIsLast = true;
+    }
+    if (((Boolean)(ParamPanel.getData()[ParamData.USE_SPOT_APP][ParamPanel.PRM_VALUE])).booleanValue())
+    {
+      menuFile.add(spotMenuItem);
+      nbMenuItem++;
+//    menuFile.add(new JSeparator());
+      separatorIsLast = false;
     }
     if (((Boolean)(ParamPanel.getData()[ParamData.USE_NMEA_APP][ParamPanel.PRM_VALUE])).booleanValue())
     {
@@ -1423,6 +1441,14 @@ public class DesktopFrame
          starFinderMenuItem.setEnabled(true);
        }
      });
+    SpotCtx.getInstance().addApplicationListener(new SpotEventListener()
+      {
+       public void internalFrameClosed() 
+       {
+         spotFrame.setVisible(false);
+         spotMenuItem.setEnabled(true);
+       }
+     });
     SkyMapContext.getInstance().addApplicationListener(new SkyMapEventListener()
        {
          public void internalFrameClosed() 
@@ -1677,6 +1703,24 @@ public class DesktopFrame
         catch (NoClassDefFoundError ncdfe)
         {
           System.out.println("No TransmissionSelectorInternalFrame");
+        }
+        break;
+      case SPOT:
+        try
+        {
+          spotFrame = new SPOTInternalFrame(); 
+          spotFrame.setIconifiable(true);
+          spotFrame.setClosable(true);
+          spotFrame.setMaximizable(true);
+          spotFrame.setResizable(true);
+          desktop.add(spotFrame);
+          spotFrame.setVisible(true);
+          spotMenuItem.setEnabled(false);
+          centerFrame(masterDim, spotFrame);
+        }
+        catch (NoClassDefFoundError ncdfe)
+        {
+          System.out.println("No SPOTInternalFrame");
         }
         break;
       case CHARTLIB:
@@ -2269,7 +2313,13 @@ public class DesktopFrame
         }
       }
     }
-    else
+//    else if (fr instanceof SPOTInternalFrame)
+//    {
+//      Dimension consoleDim = new Dimension(950, 650);
+//      fr.setSize(consoleDim);
+//      fr.setLocation(x, y);
+//    }
+    else  
       fr.setLocation(x, y);    
   }
   

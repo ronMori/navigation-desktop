@@ -196,6 +196,7 @@ public final class ParamPanel
       case ParamData.USE_PUBLISHER_APP:
       case ParamData.USE_GOOGLE_APP:
       case ParamData.USE_TIDES_APP:
+      case ParamData.USE_SPOT_APP:
         it = Boolean.valueOf(true);
         break;
       case ParamData.NMEA_RMI_PORT:
@@ -292,7 +293,8 @@ public final class ParamPanel
                      i == ParamData.USE_SIGHT_RED_APP || 
                      i == ParamData.USE_PUBLISHER_APP || 
                      i == ParamData.USE_GOOGLE_APP || 
-                     i == ParamData.USE_TIDES_APP)
+                     i == ParamData.USE_TIDES_APP ||
+                     i == ParamData.USE_SPOT_APP)
               data[i][PRM_VALUE] = new Boolean(s);
             else if (i == ParamData.BG_WIN_FONT_COLOR ||
                      i == ParamData.FOREGROUND_FONT_COLOR)
@@ -389,7 +391,8 @@ public final class ParamPanel
       ParamData.USE_SIGHT_RED_APP,
       ParamData.USE_PUBLISHER_APP,
       ParamData.USE_GOOGLE_APP,
-      ParamData.USE_TIDES_APP      
+      ParamData.USE_TIDES_APP,
+      ParamData.USE_SPOT_APP      
     }
   };
   
