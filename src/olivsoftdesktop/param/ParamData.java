@@ -39,9 +39,10 @@ public class ParamData
   public final static int BOAT_ID                      = 32;
   public final static int MAX_ANALOG_BSP               = 33;
   public final static int MAX_ANALOG_TWS               = 34;
-  public final static int DEFAULT_FONT               = 35;
+  public final static int DEFAULT_FONT                 = 35;
+  public final static int USE_SPOT_APP                 = 36;
 
-  public final static int NB_PARAMETERS                = 36;
+  public final static int NB_PARAMETERS                = 37;
 
   private final static String[] LABELS =
   {
@@ -84,7 +85,9 @@ public class ParamData
     //
     "Max value for BSP Analog Display",                                        // 33
     "Max value for TWS Analog Display",                                        // 34
-    "Default Swing font"                                                       // 35
+    "Default Swing font",                                                      // 35
+    // More App
+    "SPOT Bulletins"                                                           // 36 
   };
   
   public final static String[] getLabels()
@@ -130,7 +133,8 @@ public class ParamData
     /* 32 */ "Boat ID used by the Google Locator to retrieve your boat name. You can request a boat ID by going to http://donpedro.lediouris.net/php/locator/idform.html or by sending an email to olivier@lediouris.net",
     /* 33 */ "Maximum value for the boat speed analog display",
     /* 34 */ "Maximum value for the true wind speed analog display",
-    /* 35 */ "Default Swing font. Maybe increased or decreased for certain Look & Feels. Negative values will be ignored. Restart required after modification."  
+    /* 35 */ "Default Swing font. Maybe increased or decreased for certain Look & Feels. Negative values will be ignored. Restart required after modification.",
+    /* 36 */ "Spot Bulletins"             
   };
   
   public final static String[] getHelpText()
