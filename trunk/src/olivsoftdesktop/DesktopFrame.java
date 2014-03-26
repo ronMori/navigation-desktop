@@ -1680,7 +1680,7 @@ public class DesktopFrame
   {
     final String channel = (ParamPanel.getData()[ParamData.NMEA_CHANNEL][ParamPanel.PRM_VALUE]).toString();
 
-    final Dimension masterDim = this.getSize();
+    final Dimension masterDim = desktop.getSize(); // this.getSize();
     System.setProperty("play.sounds", (ParamPanel.getData()[ParamData.PLAY_SOUNDS][ParamPanel.PRM_VALUE]).toString());
     switch (app)
     {
