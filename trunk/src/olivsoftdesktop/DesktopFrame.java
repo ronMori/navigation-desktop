@@ -1,6 +1,7 @@
 package olivsoftdesktop;
 
 
+import app.almanac.AlmanacComputer;
 import app.almanac.ctx.APContext;
 import app.almanac.ctx.APEventListener;
 import app.almanac.gui.AlmanacPublisherInternalFrame;
@@ -20,6 +21,8 @@ import app.sightreduction.ctx.SREventListener;
 import app.starfinder.SkyInternalFrame;
 import app.starfinder.ctx.SFContext;
 import app.starfinder.ctx.StarFinderEventListener;
+
+import astro.calc.GeoPoint;
 
 import calculation.AstroComputer;
 import calculation.SightReductionUtil;
@@ -1321,7 +1324,7 @@ public class DesktopFrame
     ((BasicInternalFrameUI)ifu).setNorthPane(null);   // Remove the title bar   
 
     specialInternalFrame.setLocation(10, 10);
-    specialInternalFrame.setSize(500, 400);
+    specialInternalFrame.setSize(500, 450);
     specialInternalFrame.setOpaque(false);
     specialInternalFrame.setBorder(null);    // Remove the border
     Color bg = new Color(0, 0, 0, 0); // This color is transparent black
@@ -2417,7 +2420,7 @@ public class DesktopFrame
                 try 
                 { 
                   UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                  str = SDF.format(utcDate.getValue());
+                  str = "GPS Time: " + SDF.format(utcDate.getValue());
                   grabbedData.add(str);            
                 } 
                 catch (Exception ignore) 
@@ -2552,7 +2555,77 @@ public class DesktopFrame
               {
                 ex.printStackTrace();
               }
-  
+              // Sun & Moon Altitude & Azimuth
+              if (true) // TODO Option
+              {
+                // Second prm: use damping
+                UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, false);
+                GeoPos gpsPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false); 
+                if (utcDate != null && gpsPos != null)
+                {
+                  Date date = utcDate.getValue();
+                
+                  double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
+                  GeoPoint gp = new GeoPoint(gpsPos.lat, gpsPos.lng);
+
+                  Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                  cal.setTime(date);
+                  
+                  AlmanacComputer.calculate(cal.get(Calendar.YEAR), 
+                                            cal.get(Calendar.MONTH) + 1, 
+                                            cal.get(Calendar.DAY_OF_MONTH), 
+                                            cal.get(Calendar.HOUR_OF_DAY), 
+                                            cal.get(Calendar.MINUTE), 
+                                            cal.get(Calendar.SECOND), 
+                                            deltaT);
+                  SightReductionUtil sru = new SightReductionUtil();
+                  
+                  sru.setL(gp.getL());
+                  sru.setG(gp.getG());
+                  
+                  double ghaSun = 0d, ghaMoon = 0d;
+                  double decSun = 0d, decMoon = 0d;
+                  
+                  ghaSun = Context.GHAsun;
+                  decSun = Context.DECsun;
+
+                  ghaMoon = Context.GHAmoon;
+                  decMoon = Context.DECmoon;
+                  
+                  sru.setAHG(ghaSun);
+                  sru.setD(decSun);    
+                  sru.calculate();     
+                  
+                  Double heSun = sru.getHe();
+                  Double zSun  = sru.getZ();
+                  
+                  sru.setAHG(ghaMoon);
+                  sru.setD(decMoon);    
+                  sru.calculate();     
+                  
+                  Double heMoon = sru.getHe();
+                  Double zMoon  = sru.getZ();
+                  
+//                printout("GHA:" + GeomUtil.decToSex(ghaSun, GeomUtil.SWING, GeomUtil.NONE));
+//                printout("Dec:" + GeomUtil.decToSex(decSun, GeomUtil.SWING, GeomUtil.NS));
+
+                  if (heSun.doubleValue() > 0)
+                  {
+                    grabbedData.add("Sun Alt:" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE) + " (" + heSun + ")");
+                    grabbedData.add("Sun Z  :" + GeomUtil.decToSex(zSun, GeomUtil.SWING, GeomUtil.NONE));
+                  }
+                  else
+                    grabbedData.add("Sun under the horizon (" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE) + ")");            
+                  
+                  if (heMoon.doubleValue() > 0)
+                  {
+                    grabbedData.add("Moon Alt:" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE) + " (" + heMoon + ")");
+                    grabbedData.add("Moon Z  :" + GeomUtil.decToSex(zMoon, GeomUtil.SWING, GeomUtil.NONE));
+                  }
+                  else
+                    grabbedData.add("Moon under the horizon (" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE) + ")");            
+                }
+              }
               double aws = 0d;
               try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
               int awa    = 0;
