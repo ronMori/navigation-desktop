@@ -77,6 +77,8 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.awt.geom.AffineTransform;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -308,6 +310,9 @@ public class DesktopFrame
       private final int HEADING_PANEL_WIDTH  = 380;
       private final int HEADING_PANEL_HEIGHT =  60;
       
+      private JumboDisplay bspJumbo;
+      private DecimalFormat df22 = new DecimalFormat("00.00");
+      
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
 
@@ -359,6 +364,15 @@ public class DesktopFrame
         headingPanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
         headingPanel.setWithNumber(true);
         this.add(headingPanel); 
+        
+        bspJumbo = new JumboDisplay("BSP", "00.00", "Boat Speed", 24);
+        bspJumbo.setCustomBGColor(new Color(0f, 0f, 0f, 0f));
+        bspJumbo.setWithGlossyBG(false);
+        bspJumbo.setDisplayColor(Color.cyan);
+        bspJumbo.setGridColor(Color.cyan);
+        bspJumbo.setVisible(false);        
+        bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
+        this.add(bspJumbo); 
       }
       
       private void drawGlossyRectangularDisplay(Graphics2D g2d, Point topLeft, Point bottomRight, Color lightColor, Color darkColor, float transparency)
@@ -386,6 +400,17 @@ public class DesktopFrame
         int arcRadius = 5;
         g2d.fillRoundRect(topLeft.x + offset, topLeft.y + offset, (width - (2 * offset)), (height - (2 * offset)), 2 * arcRadius, 2 * arcRadius); 
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+      }
+
+      private void setBSP(double d)
+      {
+        if (d != -Double.MAX_VALUE)
+        {
+          if (bspJumbo.isVisible())
+          {
+            bspJumbo.setValue(df22.format(d));
+          }
+        }
       }
 
       public void paintComponent(Graphics gr)
@@ -455,6 +480,8 @@ public class DesktopFrame
           }
           // Some drawing...
           boolean displayRose = true;
+          int twd    = 0;
+          int hdg    = 0;
           if (displayRose)
           {
             Dimension dim = this.getSize();
@@ -471,8 +498,44 @@ public class DesktopFrame
               int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
               gr.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
             }
-            // Heading? Wind?
-            // TODO Draw arrow here
+            // Draw arrows here
+            // TWD
+            try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+            twd += 90;
+            int x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(twd)));  
+            int y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(twd)));  
+            int x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(twd)));  
+            int y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(twd)));  
+            Point from = new Point(x1, y1), to = new Point(x2, y2);
+            Graphics2D g2 = (Graphics2D)gr;
+            Utils.drawHollowArrow(g2, from, to, Color.cyan);
+            AffineTransform oldTx = g2.getTransform();
+
+            g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
+            g2.transform(AffineTransform.getRotateInstance(Math.toRadians(twd - 90)));  
+            String str = "TWD";
+            int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+            g2.setTransform(oldTx);
+            // HDG (true)
+            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+            x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
+            y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
+            x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
+            y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
+            from = new Point(x1, y1); 
+            to = new Point(x2, y2);
+            Utils.drawHollowArrow(g2, from, to, Color.cyan);
+        //  AffineTransform oldTx = g2.getTransform();
+
+            g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
+            g2.transform(AffineTransform.getRotateInstance(Math.toRadians(hdg)));  
+            str = "HDG";
+            strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+            g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+            g2.setTransform(oldTx);
           }
           // Position on a globe?
           currentPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false);
@@ -486,9 +549,13 @@ public class DesktopFrame
             
             headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
             headingPanel.setVisible(true);
-            int hdg    = 0;
-            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
             headingPanel.setHdg(hdg);
+            
+            bspJumbo.setVisible(true);        
+            bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
+            double bsp = 0d;
+            try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+            setBSP(bsp);
           }
         }
         else
