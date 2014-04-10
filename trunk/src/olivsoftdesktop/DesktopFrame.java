@@ -27,12 +27,21 @@ import astro.calc.GeoPoint;
 import calculation.AstroComputer;
 import calculation.SightReductionUtil;
 
+import chart.components.ui.ChartPanel;
+
+import chart.components.ui.ChartPanelInterface;
+
+import chart.components.ui.ChartPanelParentInterface;
+
+import chart.components.util.World;
+
 import chartlib.ctx.ChartLibContext;
 
 import chartlib.event.ChartLibListener;
 
 import coreutilities.Utilities;
 
+import coreutilities.gui.HeadingPanel;
 import coreutilities.gui.JumboDisplay;
 
 import coreutilities.sql.SQLUtil;
@@ -85,6 +94,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EventObject;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +117,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
+import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.plaf.InternalFrameUI;
@@ -282,11 +293,74 @@ public class DesktopFrame
   private transient Thread nmeaDataThread = null;
   private transient DesktopNMEAReader nmeaReader = null;
 
-  private JDesktopPane desktop = new JDesktopPane()
+  private Boolean foregroundData = Boolean.valueOf(false);
+  private JInternalFrame specialInternalFrame = new JInternalFrame(); // ForeGround window, transparent
+  private List<String> grabbedData = new ArrayList<String>();
+
+  private class ChartPanelDesktopPane extends JDesktopPane implements ChartPanelParentInterface
     {
+      private ChartPanel chartPanel; 
+      private final int CHART_PANEL_WIDTH  = 400;
+      private final int CHART_PANEL_HEIGHT = 400;
+      private GeoPos currentPos = null;
+      
+      private HeadingPanel headingPanel;
+      private final int HEADING_PANEL_WIDTH  = 380;
+      private final int HEADING_PANEL_HEIGHT =  60;
+      
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
 
+      public ChartPanelDesktopPane()
+      {
+        super();
+        chartPanel = new ChartPanel(this, CHART_PANEL_WIDTH, CHART_PANEL_HEIGHT);
+        chartPanel.setProjection(ChartPanelInterface.GLOBE_VIEW);
+        double nLat  =   90D;
+        double sLat  =  -90D;
+        double wLong = -180.0D;
+        double eLong =  180.0D; // chartPanel.calculateEastG(nLat, sLat, wLong);
+        
+        chartPanel.setPositionToolTipEnabled(false);
+        
+        chartPanel.setGlobeViewLngOffset(0);
+        chartPanel.setGlobeViewRightLeftRotation(23.0);  // Tilt
+        chartPanel.setGlobeViewForeAftRotation(0);
+        
+        chartPanel.setTransparentGlobe(false);
+        
+        chartPanel.setEastG(eLong);
+        chartPanel.setWestG(wLong);
+        chartPanel.setNorthL(nLat);
+        chartPanel.setSouthL(sLat);
+        chartPanel.setHorizontalGridInterval(10D);
+        chartPanel.setVerticalGridInterval(10D);
+        chartPanel.setWithScale(false);
+        chartPanel.setChartColor(Color.cyan);
+        chartPanel.setGridColor(Color.cyan);
+        chartPanel.setOpaque(false);
+        chartPanel.setCleanFirst(true);
+        chartPanel.setChartBackGround(new Color(0f, 0f, 0f, 0f));
+        chartPanel.setPostitBGColor(new Color(0f, 0f, 0f, 0.5f));
+        chartPanel.setBounds((this.getWidth() - CHART_PANEL_WIDTH) / 2, (this.getHeight() - CHART_PANEL_HEIGHT) / 2, CHART_PANEL_WIDTH, CHART_PANEL_HEIGHT);
+        this.add(chartPanel); 
+        chartPanel.setVisible(false);
+        
+        headingPanel = new HeadingPanel(false);
+        headingPanel.setPreferredSize(new Dimension(HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT));
+        headingPanel.setSize(new Dimension(HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT));
+        headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
+        headingPanel.setVisible(false);
+        headingPanel.setDraggable(false);
+        headingPanel.setWithColorGradient(false);
+        headingPanel.setWithCustomColors(true);
+        headingPanel.setBgColor(new Color(0f, 0f, 0f, 0f));
+        headingPanel.setTickColor(Color.cyan);
+        headingPanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
+        headingPanel.setWithNumber(true);
+        this.add(headingPanel); 
+      }
+      
       private void drawGlossyRectangularDisplay(Graphics2D g2d, Point topLeft, Point bottomRight, Color lightColor, Color darkColor, float transparency)
       {
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency));
@@ -311,6 +385,7 @@ public class DesktopFrame
         int offset = 1; //(int)(width * 0.025);
         int arcRadius = 5;
         g2d.fillRoundRect(topLeft.x + offset, topLeft.y + offset, (width - (2 * offset)), (height - (2 * offset)), 2 * arcRadius, 2 * arcRadius); 
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
       }
 
       public void paintComponent(Graphics gr)
@@ -325,48 +400,131 @@ public class DesktopFrame
         ((Graphics2D)gr).setPaint(gradient);
         gr.fillRect(0, 0, this.getWidth(), this.getHeight());
         
-//      gr.setColor(Color.LIGHT_GRAY);
-        gr.setColor(Color.GREEN);
-        Font f = gr.getFont();
-        gr.setFont(f.deriveFont(Font.PLAIN, 32f));
-        String s = (ParamPanel.getData()[ParamData.DESKTOP_MESSAGE][ParamPanel.PRM_VALUE]).toString();
-        String[] line = s.split("\\\\n"); // Regexp
-        int fontSize = gr.getFont().getSize();
-        int strY = (this.getHeight() / 2) - ((line.length - 1) * fontSize) - (fontSize / 2);
-        for (int i=0; i<line.length; i++)
+        if (foregroundData.booleanValue())
         {
-          int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(line[i].trim());
-          gr.drawString(line[i].trim(), (this.getWidth() / 2) - (strWidth / 2), strY);
-          strY += fontSize;
-        }
-        gr.setFont(f);
-        
-        if (false) // Glossy effect
-        {
-          startColor = new Color(255, 255, 255);
-          endColor   = new Color(102, 102, 102);
-          drawGlossyRectangularDisplay((Graphics2D)gr, 
-                                   new Point(10, 10), 
-                                   new Point(this.getWidth() - 10, this.getHeight() - 10), 
-                                   endColor, 
-                                   startColor, 
-                                   0.25f);
-        }
-        // Reset Transparency
-        float alphaForEveryone = ((Float)ParamPanel.getData()[ParamData.INTERNAL_FRAMES_TRANSPARENCY][ParamPanel.PRM_VALUE]).floatValue();
-        ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaForEveryone));
+      //  System.out.println("Displaying live wall paper.");
+          if (true) // Glossy effect
+          {
+            startColor = new Color(255, 255, 255);
+            endColor   = new Color(102, 102, 102);
+            drawGlossyRectangularDisplay((Graphics2D)gr, 
+                                     new Point(10, 10), 
+                                     new Point(this.getWidth() - 10, this.getHeight() - 10), 
+                                     endColor, 
+                                     startColor, 
+                                     0.25f);
+          }
+          // Live Wallpaper, data grabber
+          Font digiFont = null; 
+       // Font jumboFont   = JumboDisplay.tryToLoadFont("TRANA___.TTF", null);
+       // Font bgJumboFont = JumboDisplay.tryToLoadFont("TRANGA__.TTF", null);
 
-        if (bgImage != null)
+          if (false)
+          {
+            try { digiFont = JumboDisplay.tryToLoadFont("ds-digi.ttf", null); }
+            catch (Exception ex) { System.err.println(ex.getMessage()); }
+          }
+          else
+          {
+            try { digiFont = new Font("Source Code Pro", 10, Font.PLAIN); }
+            catch (Exception ex) { System.err.println(ex.getMessage()); }
+          }
+          if (digiFont != null)
+            gr.setFont(digiFont.deriveFont(Font.BOLD, 20f));
+          else
+            gr.setFont(gr.getFont().deriveFont(Font.BOLD));
+
+  //        gr.setColor(Color.lightGray);
+          gr.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
+
+          int y = 40;
+          synchronized (grabbedData)
+          {
+            List<String> data = new ArrayList<String>(grabbedData); // Clone
+            for (String s : data)
+            {
+              String displayString = s; // .replace('\272', ' ').replace('\260', ' ');
+  //            gr.setFont(bgJumboFont.deriveFont(Font.BOLD, 20f));
+  //            gr.setColor(Color.darkGray);
+  //            gr.drawString(displayString, 15, y);
+  //            gr.setFont(jumboFont.deriveFont(Font.BOLD, 20f));
+  //            gr.setColor(Color.lightGray);
+              gr.drawString(displayString, 25, y);
+              y += (gr.getFont().getSize() + 2);
+            }
+          }
+          // Some drawing...
+          boolean displayRose = true;
+          if (displayRose)
+          {
+            Dimension dim = this.getSize();
+            double radius = (Math.min(dim.width, dim.height) * 0.9) / 2d;
+            // Rose
+         // gr.setColor(Color.cyan); // was darkGray. TODO Preference
+            int graphicXOffset = 0;
+            int graphicYOffset = 0;
+            for (int i=0; i<360; i+= 5)
+            {
+              int x1 = (dim.width / 2) + (int)((radius - (i%45==0?20:10)) * Math.cos(Math.toRadians(i)));  
+              int y1 = (dim.height / 2) + (int)((radius - (i%45==0?20:10)) * Math.sin(Math.toRadians(i)));  
+              int x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
+              int y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
+              gr.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
+            }
+            // Heading? Wind?
+            // TODO Draw arrow here
+          }
+          // Position on a globe?
+          currentPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false);
+          if (currentPos != null)
+          {
+            chartPanel.setVisible(true);
+            chartPanel.setGlobeViewLngOffset(currentPos.lng);
+//          chartPanel.setGlobeViewRightLeftRotation(23.0);  // Tilt
+            chartPanel.setGlobeViewForeAftRotation(currentPos.lat);
+            chartPanel.setBounds((this.getWidth() - CHART_PANEL_WIDTH) / 2, (this.getHeight() - CHART_PANEL_HEIGHT) / 2, CHART_PANEL_WIDTH, CHART_PANEL_HEIGHT);
+            
+            headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
+            headingPanel.setVisible(true);
+            int hdg    = 0;
+            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+            headingPanel.setHdg(hdg);
+          }
+        }
+        else
         {
-          Dimension mfSize = desktop.getSize();
-          int bgW = bgImage.getIconWidth();
-          int bgH = bgImage.getIconHeight();
-          int x = (mfSize.width / 2) - (bgW / 2);
-          int y = (mfSize.height / 2) - (bgH / 2);
-          if (x < 0) x = 0;
-          if (y < 0) y = 0;
-          bgLabel.setBounds(x, y, bgImage.getIconWidth(), bgImage.getIconHeight());    
-          gr.drawImage(bgImage.getImage(), x, y, null); // , bgImage.getIconWidth(), bgImage.getIconHeight());    
+  //      gr.setColor(Color.LIGHT_GRAY);
+          gr.setColor(Color.GREEN);
+          Font f = gr.getFont();
+          gr.setFont(f.deriveFont(Font.PLAIN, 32f));
+          String s = (ParamPanel.getData()[ParamData.DESKTOP_MESSAGE][ParamPanel.PRM_VALUE]).toString();
+          String[] line = s.split("\\\\n"); // Regexp
+          int fontSize = gr.getFont().getSize();
+          int strY = (this.getHeight() / 2) - ((line.length - 1) * fontSize) - (fontSize / 2);
+          for (int i=0; i<line.length; i++)
+          {
+            int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(line[i].trim());
+            gr.drawString(line[i].trim(), (this.getWidth() / 2) - (strWidth / 2), strY);
+            strY += fontSize;
+          }
+          gr.setFont(f);
+          
+          // Reset Transparency
+          float alphaForEveryone = ((Float)ParamPanel.getData()[ParamData.INTERNAL_FRAMES_TRANSPARENCY][ParamPanel.PRM_VALUE]).floatValue();
+          ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaForEveryone));
+  
+          if (bgImage != null)
+          {
+            Dimension mfSize = desktop.getSize();
+            int bgW = bgImage.getIconWidth();
+            int bgH = bgImage.getIconHeight();
+            int x = (mfSize.width / 2) - (bgW / 2);
+            int y = (mfSize.height / 2) - (bgH / 2);
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            bgLabel.setBounds(x, y, bgImage.getIconWidth(), bgImage.getIconHeight());    
+            gr.drawImage(bgImage.getImage(), x, y, null); // , bgImage.getIconWidth(), bgImage.getIconHeight());    
+          }
         }
         for (BackgroundWindow bgw : bgwal)
         {
@@ -390,14 +548,97 @@ public class DesktopFrame
               bgw.paintBackgroundWindow(gr);
           }
         }
-        if (foregroundData.booleanValue())
-          specialInternalFrame.moveToFront();
-      }      
-    };
+  //      if (foregroundData.booleanValue())
+  //        specialInternalFrame.moveToFront();
+      }
 
-  private Boolean foregroundData = Boolean.valueOf(false);
-  private JInternalFrame specialInternalFrame = new JInternalFrame(); // ForeGround window, transparent
-  private List<String> grabbedData = new ArrayList<String>();
+    @Override
+    public void chartPanelPaintComponent(Graphics gr)
+    {
+      if (foregroundData.booleanValue() && currentPos != null)
+      {
+        chartPanel.setVisible(true);
+        Graphics2D g2d = null;
+        if (gr instanceof Graphics2D)
+          g2d = (Graphics2D)gr;
+//      Color c = gr.getColor();
+//      gr.setColor(chartPanel.getChartBackGround());
+//      gr.fillRect(0, 0, this.getWidth(), this.getHeight());
+//      gr.setColor(c);
+        World.drawChart(chartPanel, gr);
+        // Plot current pos
+        double ls = currentPos.lat;
+        double gs = currentPos.lng;
+        Point gp = chartPanel.getPanelPoint(ls, gs);
+        if (isVisible(ls, gs))
+        {
+          gr.setColor(Color.red);
+          gr.fillOval(gp.x - 2, gp.y - 2, 4, 4);
+          chartPanel.postit(gr, "GPS Position", gp.x, gp.y, Color.yellow);
+        }
+      }
+      else
+        chartPanel.setVisible(false);
+    }
+
+    private boolean isVisible(double l, double g)
+    {
+      boolean plot = true;
+      if (chartPanel.getProjection() == ChartPanelInterface.GLOBE_VIEW)
+      {
+        if (!chartPanel.isTransparentGlobe() && chartPanel.isBehind(l, g - chartPanel.getGlobeViewLngOffset()))
+          plot = false;
+      }
+      return plot;
+    }
+    
+    @Override
+    public boolean onEvent(EventObject eventObject, int i)
+    {
+      // TODO Implement this method
+      return false;
+    }
+
+    @Override
+    public String getMessForTooltip()
+    {
+      // TODO Implement this method
+      return null;
+    }
+
+    @Override
+    public boolean replaceMessForTooltip()
+    {
+      // TODO Implement this method
+      return false;
+    }
+
+    @Override
+    public void videoCompleted()
+    {
+      // TODO Implement this method
+    }
+
+    @Override
+    public void videoFrameCompleted(Graphics graphics, Point point)
+    {
+      // TODO Implement this method
+    }
+
+    @Override
+    public void zoomFactorHasChanged(double d)
+    {
+      // TODO Implement this method
+    }
+
+    @Override
+    public void chartDDZ(double d, double d2, double d3, double d4)
+    {
+      // TODO Implement this method
+    }
+  };
+
+  private JDesktopPane desktop = new ChartPanelDesktopPane();
   
   private static List<BackgroundWindow> bgwal = new ArrayList<BackgroundWindow>(1);
   
@@ -866,8 +1107,8 @@ public class DesktopFrame
 //  backGroundNMEAServer.setToolTipText("<html>RMI NMEA Server<br>For remote access</html>");
 //  backGroundNMEAServer.setSelected(false);
     
-    foregroundDataMenuItem.setText("Show foreground data");
-    foregroundDataMenuItem.setToolTipText("<html>Shows current data <br><b>on top</b> of all windows.</html>");
+    foregroundDataMenuItem.setText("Show live wallpaper"); // "Show foreground data");
+//  foregroundDataMenuItem.setToolTipText("<html>Shows current data <br><b>on top</b> of all windows.</html>");
     foregroundDataMenuItem.setSelected(foregroundData.booleanValue());
     
     chartLibMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(CHARTLIB); } } );
@@ -923,7 +1164,7 @@ public class DesktopFrame
       public void actionPerformed( ActionEvent ae ) 
       { 
         foregroundData = Boolean.valueOf(foregroundDataMenuItem.isSelected());
-        specialInternalFrame.setVisible(foregroundData.booleanValue());   
+//      specialInternalFrame.setVisible(foregroundData.booleanValue());   
         if (foregroundData.booleanValue())
           startDataGrabber();
         repaint();
@@ -1079,7 +1320,7 @@ public class DesktopFrame
     menuTools.add(menuToolsFullScreen);
     menuToolsFullScreen.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { fullScreen(); } } );
     // Temp
-    menuToolsFullScreen.setEnabled(false);
+//  menuToolsFullScreen.setEnabled(false);
     
     menuTools.add(foregroundDataMenuItem);
     menuTools.add(new JSeparator());        
@@ -1324,7 +1565,7 @@ public class DesktopFrame
     ((BasicInternalFrameUI)ifu).setNorthPane(null);   // Remove the title bar   
 
     specialInternalFrame.setLocation(10, 10);
-    specialInternalFrame.setSize(500, 450);
+    specialInternalFrame.setSize(500, 500);
     specialInternalFrame.setOpaque(false);
     specialInternalFrame.setBorder(null);    // Remove the border
     Color bg = new Color(0, 0, 0, 0); // This color is transparent black
@@ -1399,8 +1640,8 @@ public class DesktopFrame
                                                 }                                                
                                               }, 
                                               BorderLayout.CENTER);    
-    specialInternalFrame.setVisible(foregroundData.booleanValue());
-    desktop.add(specialInternalFrame);
+//  specialInternalFrame.setVisible(foregroundData.booleanValue());
+//  desktop.add(specialInternalFrame);
     
     DesktopContext.getInstance().addApplicationListener(new DesktopEventListener()
       {
@@ -1597,30 +1838,51 @@ public class DesktopFrame
       try
       {
         this.setVisible(false);
+        this.dispose(); // Mandatory!!!
         this.setUndecorated(false);
         this.setVisible(true);
       }
       catch (Exception ex)
       {
+        ex.printStackTrace();
         this.setVisible(true);
       }
       menuToolsFullScreen.setText("Full Screen");
     }
     else
     {
-      int state = this.getExtendedState();
-      state |= Frame.MAXIMIZED_BOTH;
-      this.setExtendedState(state);      
       fullscreen = true;
       try
       {
-        this.setVisible(false);
-        this.setUndecorated(true);
-        this.setVisible(true);
+        final JFrame instance = this;
+        SwingUtilities.invokeLater(new Runnable()
+         {
+           public void run()
+           {
+             try
+             {
+               instance.setVisible(false);   
+               instance.dispose(); // Important and Mandatory!
+               int state = instance.getExtendedState();
+               state |= Frame.MAXIMIZED_BOTH;
+               instance.setExtendedState(state);      
+               instance.setUndecorated(true);
+//             instance.pack();
+               instance.setVisible(true);
+             }
+             catch (Exception ex)
+             {
+               ex.printStackTrace();
+               instance.setVisible(true);
+             }
+                                         
+           }
+         });
         menuToolsFullScreen.setText("Normal Screen");
       }
       catch (Exception ex)
       {
+        ex.printStackTrace();
         this.setVisible(true);
       }
     }
@@ -2357,7 +2619,7 @@ public class DesktopFrame
       {
         public void run()
         {
-          String degSymbol = "\272"; // " "; // 
+          String degSymbol = "\272"; // " "
           synchronized (grabbedData)
           {
             while (foregroundData.booleanValue())
@@ -2651,7 +2913,8 @@ public class DesktopFrame
               grabbedData.add("DBT: " + DF22.format(depth) + " m");
               grabbedData.add("Water Temp:" + DF22.format(temp) + degSymbol + "C");
               
-              specialInternalFrame.repaint();
+//            specialInternalFrame.repaint();
+              desktop.repaint();
               try { Thread.sleep(1000L); } catch (Exception ex) {} 
             }
           }
@@ -3154,6 +3417,10 @@ public class DesktopFrame
     String[] line = str.split(pattern);
     for (int i=0; i<line.length; i++)
       System.out.println(line[i]);
+    
+    String string = "123\27245.67'";
+    System.out.println(string);
+    System.out.println(string.replace('\272', ' '));
   }
   
   private class RebroadcastPopup extends JPopupMenu
