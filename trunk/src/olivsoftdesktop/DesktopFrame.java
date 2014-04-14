@@ -62,6 +62,7 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -95,16 +96,22 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EventObject;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TimeZone;
 
+import java.util.TreeSet;
+
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
@@ -119,6 +126,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -298,6 +306,9 @@ public class DesktopFrame
   private Boolean foregroundData = Boolean.valueOf(false);
   private JInternalFrame specialInternalFrame = new JInternalFrame(); // ForeGround window, transparent
   private List<String> grabbedData = new ArrayList<String>();
+  
+  double sunAlt = 0, sunZ = 0, moonAlt = 0, moonZ = 0;
+  double sunGHA = 0, sunD = 0;
 
   private class ChartPanelDesktopPane extends JDesktopPane implements ChartPanelParentInterface
     {
@@ -312,6 +323,10 @@ public class DesktopFrame
       
       private JumboDisplay bspJumbo;
       private DecimalFormat df22 = new DecimalFormat("00.00");
+      
+      private JCheckBox sunDayLightCheckBox;
+      private JCheckBox sunAzimuthCheckBox;
+      private JCheckBox moonAzimuthCheckBox;
       
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
@@ -329,7 +344,7 @@ public class DesktopFrame
         chartPanel.setPositionToolTipEnabled(false);
         
         chartPanel.setGlobeViewLngOffset(0);
-        chartPanel.setGlobeViewRightLeftRotation(23.0);  // Tilt
+        chartPanel.setGlobeViewRightLeftRotation(23.4);  // Tilt
         chartPanel.setGlobeViewForeAftRotation(0);
         
         chartPanel.setTransparentGlobe(false);
@@ -341,8 +356,9 @@ public class DesktopFrame
         chartPanel.setHorizontalGridInterval(10D);
         chartPanel.setVerticalGridInterval(10D);
         chartPanel.setWithScale(false);
-        chartPanel.setChartColor(Color.cyan);
-        chartPanel.setGridColor(Color.cyan);
+        Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+        chartPanel.setChartColor(wpFontColor);
+        chartPanel.setGridColor(wpFontColor);
         chartPanel.setOpaque(false);
         chartPanel.setCleanFirst(true);
         chartPanel.setChartBackGround(new Color(0f, 0f, 0f, 0f));
@@ -360,7 +376,7 @@ public class DesktopFrame
         headingPanel.setWithColorGradient(false);
         headingPanel.setWithCustomColors(true);
         headingPanel.setBgColor(new Color(0f, 0f, 0f, 0f));
-        headingPanel.setTickColor(Color.cyan);
+        headingPanel.setTickColor(wpFontColor);
         headingPanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
         headingPanel.setWithNumber(true);
         this.add(headingPanel); 
@@ -368,11 +384,73 @@ public class DesktopFrame
         bspJumbo = new JumboDisplay("BSP", "00.00", "Boat Speed", 24);
         bspJumbo.setCustomBGColor(new Color(0f, 0f, 0f, 0f));
         bspJumbo.setWithGlossyBG(false);
-        bspJumbo.setDisplayColor(Color.cyan);
-        bspJumbo.setGridColor(Color.cyan);
+        bspJumbo.setDisplayColor(wpFontColor);
+        bspJumbo.setGridColor(wpFontColor);
         bspJumbo.setVisible(false);        
         bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
         this.add(bspJumbo); 
+        
+        sunDayLightCheckBox = new JCheckBox("Show daylight");
+        sunDayLightCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        sunDayLightCheckBox.setForeground(wpFontColor);
+        sunDayLightCheckBox.setSelected(false);
+        sunDayLightCheckBox.setOpaque(false);
+        sunDayLightCheckBox.setVisible(false);
+        sunDayLightCheckBox.setBounds(this.getWidth() - (sunDayLightCheckBox.getSize().width + 30), 
+                                30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+                                sunDayLightCheckBox.getSize().width, 
+                                sunDayLightCheckBox.getSize().height);
+        this.add(sunDayLightCheckBox);
+        sunDayLightCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
+
+        sunAzimuthCheckBox = new JCheckBox("Sun Azimuth");
+        sunAzimuthCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        sunAzimuthCheckBox.setForeground(wpFontColor);
+        sunAzimuthCheckBox.setSelected(true);
+        sunAzimuthCheckBox.setOpaque(false);
+        sunAzimuthCheckBox.setVisible(false);
+        sunAzimuthCheckBox.setBounds(this.getWidth() - (sunAzimuthCheckBox.getSize().width + 30), 
+                                30 + 5 + HEADING_PANEL_HEIGHT + 
+                                     5 + bspJumbo.getSize().height + 
+                                     5 + sunDayLightCheckBox.getSize().height, 
+                                sunAzimuthCheckBox.getSize().width, 
+                                sunAzimuthCheckBox.getSize().height);
+        this.add(sunAzimuthCheckBox);
+        sunAzimuthCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
+
+        moonAzimuthCheckBox = new JCheckBox("Moon Azimuth");
+        moonAzimuthCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        moonAzimuthCheckBox.setForeground(wpFontColor);
+        moonAzimuthCheckBox.setSelected(true);
+        moonAzimuthCheckBox.setOpaque(false);
+        moonAzimuthCheckBox.setVisible(false);
+        moonAzimuthCheckBox.setBounds(this.getWidth() - (moonAzimuthCheckBox.getSize().width + 30), 
+                                30 + 5 + HEADING_PANEL_HEIGHT + 
+                                     5 + bspJumbo.getSize().height + 
+                                     5 + sunDayLightCheckBox.getSize().height + 
+                                     5 + sunAzimuthCheckBox.getSize().height, 
+                                moonAzimuthCheckBox.getSize().width, 
+                                moonAzimuthCheckBox.getSize().height);
+        this.add(moonAzimuthCheckBox);
+        moonAzimuthCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
       }
       
       private void drawGlossyRectangularDisplay(Graphics2D g2d, Point topLeft, Point bottomRight, Color lightColor, Color darkColor, float transparency)
@@ -428,6 +506,12 @@ public class DesktopFrame
         if (foregroundData.booleanValue())
         {
       //  System.out.println("Displaying live wall paper.");
+          Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+          bspJumbo.setDisplayColor(wpFontColor);
+          headingPanel.setTickColor(wpFontColor);
+          sunDayLightCheckBox.setForeground(wpFontColor);
+          sunAzimuthCheckBox.setForeground(wpFontColor);
+          moonAzimuthCheckBox.setForeground(wpFontColor);
           if (true) // Glossy effect
           {
             startColor = new Color(255, 255, 255);
@@ -460,7 +544,7 @@ public class DesktopFrame
             gr.setFont(gr.getFont().deriveFont(Font.BOLD));
 
   //        gr.setColor(Color.lightGray);
-          gr.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
+          gr.setColor(wpFontColor);
 
           int y = 40;
           synchronized (grabbedData)
@@ -501,21 +585,23 @@ public class DesktopFrame
             // Draw arrows here
             // TWD
             try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
-            twd += 90;
-            int x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(twd)));  
-            int y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(twd)));  
-            int x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(twd)));  
-            int y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(twd)));  
+            int x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
+            int y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(twd + 90)));  
+            int x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
+            int y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(twd + 90)));  
             Point from = new Point(x1, y1), to = new Point(x2, y2);
             Graphics2D g2 = (Graphics2D)gr;
-            Utils.drawHollowArrow(g2, from, to, Color.cyan);
+            Utils.drawHollowArrow(g2, from, to, wpFontColor);
             AffineTransform oldTx = g2.getTransform();
 
             g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
-            g2.transform(AffineTransform.getRotateInstance(Math.toRadians(twd - 90)));  
+            g2.transform(AffineTransform.getRotateInstance(Math.toRadians(twd)));  
             String str = "TWD";
-            int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
+            int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75) - 20);        
+            str = Integer.toString(twd % 360) + "\272";
+            strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
             g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
             g2.setTransform(oldTx);
             // HDG (true)
@@ -526,22 +612,69 @@ public class DesktopFrame
             y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
             from = new Point(x1, y1); 
             to = new Point(x2, y2);
-            Utils.drawHollowArrow(g2, from, to, Color.cyan);
+            Utils.drawHollowArrow(g2, from, to, wpFontColor);
         //  AffineTransform oldTx = g2.getTransform();
 
             g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
             g2.transform(AffineTransform.getRotateInstance(Math.toRadians(hdg)));  
             str = "HDG";
-            strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
+            strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75) - 20);        
+            str = Integer.toString(hdg % 360) + "\272";
+            strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
             g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
             g2.setTransform(oldTx);
+            
+            // Sun & Moon
+            if (sunAlt >= 0 && sunAzimuthCheckBox.isSelected())
+            {
+              x1 = (dim.width / 2);  
+              y1 = (dim.height / 2);  
+              x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(sunZ + 90)));  
+              y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(sunZ + 90)));  
+              from = new Point(x1, y1); 
+              to = new Point(x2, y2);
+              Utils.drawArrow(g2, from, to, wpFontColor);
+              g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
+              g2.transform(AffineTransform.getRotateInstance(Math.toRadians(sunZ)));  
+              str = "Sun";
+              g2.setFont(g2.getFont().deriveFont(Font.BOLD, 16f));
+              strWidth = gr.getFontMetrics(g2.getFont()).stringWidth(str.trim());
+              g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+              str = GeomUtil.decToSex(sunAlt, GeomUtil.SWING, GeomUtil.NONE);
+              strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+              g2.drawString(str, -strWidth / 2, ((int)((dim.height / 2) * -0.75)) - 18);        
+              g2.setTransform(oldTx);
+            }
+            if (moonAlt >= 0 && moonAzimuthCheckBox.isSelected())
+            {
+              x1 = (dim.width / 2);  
+              y1 = (dim.height / 2);  
+              x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(moonZ + 90)));  
+              y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(moonZ + 90)));  
+              from = new Point(x1, y1); 
+              to = new Point(x2, y2);
+              Utils.drawArrow(g2, from, to, wpFontColor);
+              g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
+              g2.transform(AffineTransform.getRotateInstance(Math.toRadians(moonZ)));  
+              str = "Moon";
+              g2.setFont(g2.getFont().deriveFont(Font.BOLD, 16f));
+              strWidth = gr.getFontMetrics(g2.getFont()).stringWidth(str.trim());
+              g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+              str = GeomUtil.decToSex(moonAlt, GeomUtil.SWING, GeomUtil.NONE);
+              strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
+              g2.drawString(str, -strWidth / 2, ((int)((dim.height / 2) * -0.75)) - 18);        
+              g2.setTransform(oldTx);
+            }
           }
           // Position on a globe?
           currentPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false);
           if (currentPos != null)
           {
             chartPanel.setVisible(true);
+            chartPanel.setChartColor(wpFontColor);
+            chartPanel.setGridColor(wpFontColor);
             chartPanel.setGlobeViewLngOffset(currentPos.lng);
 //          chartPanel.setGlobeViewRightLeftRotation(23.0);  // Tilt
             chartPanel.setGlobeViewForeAftRotation(currentPos.lat);
@@ -549,17 +682,49 @@ public class DesktopFrame
             
             headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
             headingPanel.setVisible(true);
+            gr.drawRoundRect(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT, 10, 10);
             headingPanel.setHdg(hdg);
             
-            bspJumbo.setVisible(true);        
+            bspJumbo.setVisible(true);   
             bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
+            gr.drawRoundRect(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height, 5, 5);
             double bsp = 0d;
             try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
             setBSP(bsp);
+            
+            sunDayLightCheckBox.setVisible(true);
+            sunDayLightCheckBox.setBounds(this.getWidth() - (sunDayLightCheckBox.getSize().width + 30), 
+                                    30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+                                    sunDayLightCheckBox.getPreferredSize().width, 
+                                    sunDayLightCheckBox.getPreferredSize().height);
+            
+            sunAzimuthCheckBox.setVisible(true);
+            sunAzimuthCheckBox.setEnabled(sunAlt >= 0);
+            sunAzimuthCheckBox.setBounds(this.getWidth() - (sunAzimuthCheckBox.getSize().width + 30), 
+                                    30 + 5 + HEADING_PANEL_HEIGHT + 
+                                         5 + bspJumbo.getSize().height + 
+                                         5 + sunDayLightCheckBox.getPreferredSize().height, 
+                                    sunAzimuthCheckBox.getPreferredSize().width, 
+                                    sunAzimuthCheckBox.getPreferredSize().height);
+            
+            moonAzimuthCheckBox.setVisible(true);
+            moonAzimuthCheckBox.setEnabled(moonAlt >= 0);
+            moonAzimuthCheckBox.setBounds(this.getWidth() - (moonAzimuthCheckBox.getSize().width + 30), 
+                                    30 + 5 + HEADING_PANEL_HEIGHT + 
+                                         5 + bspJumbo.getSize().height + 
+                                         5 + sunDayLightCheckBox.getPreferredSize().height +
+                                         5 + sunAzimuthCheckBox.getPreferredSize().height, 
+                                    moonAzimuthCheckBox.getPreferredSize().width, 
+                                    moonAzimuthCheckBox.getPreferredSize().height);
           }
         }
         else
         {
+          bspJumbo.setVisible(false);        
+          sunDayLightCheckBox.setVisible(false);
+          sunAzimuthCheckBox.setVisible(false);
+          moonAzimuthCheckBox.setVisible(false);
+          headingPanel.setVisible(false);
   //      gr.setColor(Color.LIGHT_GRAY);
           gr.setColor(Color.GREEN);
           Font f = gr.getFont();
@@ -628,24 +793,195 @@ public class DesktopFrame
         Graphics2D g2d = null;
         if (gr instanceof Graphics2D)
           g2d = (Graphics2D)gr;
-//      Color c = gr.getColor();
-//      gr.setColor(chartPanel.getChartBackGround());
-//      gr.fillRect(0, 0, this.getWidth(), this.getHeight());
-//      gr.setColor(c);
         World.drawChart(chartPanel, gr);
         // Plot current pos
         double ls = currentPos.lat;
         double gs = currentPos.lng;
+        GeoPoint currPos = new GeoPoint(currentPos.lat, currentPos.lng);
         Point gp = chartPanel.getPanelPoint(ls, gs);
         if (isVisible(ls, gs))
         {
           gr.setColor(Color.red);
-          gr.fillOval(gp.x - 2, gp.y - 2, 4, 4);
-          chartPanel.postit(gr, "GPS Position", gp.x, gp.y, Color.yellow);
+          gr.fillOval(gp.x - 3, gp.y - 3, 6, 6);
+          chartPanel.postit(gr, "GPS Position", gp.x + 2, gp.y - 2, Color.yellow);
+        }
+        if (sunDayLightCheckBox.isSelected())
+        {
+          boolean debug = false;
+          // Day light
+          double dayCenterLongitude = 0;
+          double dayCenterLatitude = 0;
+          if (sunGHA < 180)
+            dayCenterLongitude = -sunGHA;
+          if (sunGHA >= 180)
+            dayCenterLongitude = 360 - sunGHA;
+          dayCenterLatitude = sunD;
+          
+          GeoPoint sunPos = new GeoPoint(dayCenterLatitude, dayCenterLongitude);
+    //    System.out.println("Sun Position:" + sunPos.toString());
+          Map<Double, Double> nightMap = new HashMap<Double, Double>();
+
+          // the border of the night
+          for (int i=0; i<360; i++)
+          {
+            GeoPoint nightGp = deadReckoning(sunPos, 90 * 60, i);
+            double lng = nightGp.getG();
+            if (lng < -180)
+              lng += 360;
+            if (lng > 180)
+              lng -= 360;
+            if (debug)
+            {
+              Point pp = chartPanel.getPanelPoint(nightGp);
+              gr.setColor(Color.green);
+              gr.fillOval(pp.x - 1, pp.y - 1, 2, 2);
+            }
+            if (isVisible(nightGp.getL(), lng))
+              nightMap.put(lng, nightGp.getL());
+          }
+  
+          // Sort the points of the night, and then the points of the limb.
+          // Store the Points (graphical). Sort on y, top to bottom
+          Map<Integer, Integer> nightBorderMap = new HashMap<Integer, Integer>();
+          
+          Set<Double> lngSet = nightMap.keySet();
+          for (Double lng : lngSet)
+          {
+            Double lat = nightMap.get(lng);
+            Point pp = chartPanel.getPanelPoint(new GeoPoint(lat, lng));
+            nightBorderMap.put(pp.y, pp.x);
+          }
+          SortedSet<Integer> sortedNightBorder = new TreeSet<Integer>(nightBorderMap.keySet());
+          Polygon night = new Polygon();
+          Point previous = null;
+          int nb = 1;
+          if (debug)
+          {
+            gr.setColor(Color.yellow);
+            gr.setFont(gr.getFont().deriveFont(14f));
+          }
+          
+          // Night
+          Point firstPoint = null, lastPoint = null;
+          for (Integer y : sortedNightBorder)
+          {
+            int x = nightBorderMap.get(y).intValue();
+            Point pp = new Point(x, y);
+            if (firstPoint == null)
+              firstPoint = pp;
+            lastPoint = pp;
+            night.addPoint(pp.x, pp.y);
+            if (debug)
+            {
+//            System.out.println("Nigh:" + pp);
+              if (previous != null)
+              {
+                gr.drawLine(previous.x, previous.y, pp.x, pp.y);
+                if ((nb - 1) % 10 == 0)
+                  gr.drawString(Integer.toString(nb), pp.x, pp.y);
+                nb++;
+              }
+              previous = pp;
+            }
+          }
+          // We are at the bottom
+          Point center = chartPanel.getPanelPoint(currPos);
+          double startAngle   = GeomUtil.getDir(lastPoint.x - center.x,  center.y - lastPoint.y), 
+                 arrivalAngle = GeomUtil.getDir(firstPoint.x - center.x, center.y - firstPoint.y);
+          if (debug)
+          {
+            gr.setColor(Color.yellow);
+            gr.drawString("Start (" + (int)startAngle + "\272)", lastPoint.x, lastPoint.y);
+            gr.drawString("Finish (" + (int)arrivalAngle + "\272)", firstPoint.x, firstPoint.y);
+          }
+          int incr = 0, firstBoundary = 0, lastBoundary = 0;
+          // For the direction (esat/west), see LHA, instead sunAlt
+          double lhaSun = sunGHA + currPos.getG();
+          while (lhaSun < 0)
+            lhaSun += 360;
+          while (lhaSun > 360)
+            lhaSun -= 360;
+          if (debug)
+            System.out.println("Sun LHA:" + lhaSun);
+      //  if (sunAlt > 0) // Daylight, follow the limb, from the bottom toward the west (clockwise)
+          if (lhaSun > 180)
+          {
+            if (debug)
+              System.out.println("From " + startAngle + " to " + arrivalAngle + ", going West");
+            incr = 1;
+            firstBoundary = (int)Math.ceil(startAngle);
+            lastBoundary = (int)Math.floor(arrivalAngle);
+            while (lastBoundary < firstBoundary)
+              lastBoundary += 360;
+          }
+          else            // Night, follow the limb, from the bottom toward the east (counter-clockwise)
+          {
+            if (debug)
+              System.out.println("From " + startAngle + " to " + arrivalAngle + ", going East");
+            incr = -1;
+            firstBoundary = (int)Math.floor(startAngle);
+            lastBoundary = (int)Math.ceil(arrivalAngle);
+            while (lastBoundary > firstBoundary)
+              firstBoundary += 360;
+          }
+          for (int i=firstBoundary; (incr>0 && i<=lastBoundary) || (incr<0 && i>=lastBoundary); i+=incr)
+          {
+            GeoPoint earthCirc = deadReckoning(currPos, 90 * 60, i);
+//            double lng = earthCirc.getG();
+//            if (lng < -180)
+//              lng += 360;
+//            if (lng > 180)
+//              lng -= 360;
+            Point limbPt = chartPanel.getPanelPoint(earthCirc);
+            night.addPoint(limbPt.x, limbPt.y);
+            if (debug)
+            {
+//            System.out.println("Limb:" + limbPt);
+              if (previous != null)
+              {
+                gr.drawLine(previous.x, previous.y, limbPt.x, limbPt.y);
+                if ((nb - 1) % 10 == 0)
+                  gr.drawString(Integer.toString(nb), limbPt.x, limbPt.y);
+                nb++;
+              }
+              previous = limbPt;
+            }
+          }
+          // Fill the night polygon
+          if (true)
+          {
+            gr.setColor(Color.darkGray);
+            ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+             gr.fillPolygon(night);
+            ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));        
+          }
         }
       }
       else
         chartPanel.setVisible(false);
+    }
+
+    /**
+     * Spherical Model used here
+     *
+     * @param start in degrees
+     * @param dist in nautical miles
+     * @param bearing in degrees
+     * @return
+     */
+    private GeoPoint deadReckoning(GeoPoint start, double dist, double bearing)
+    {
+      GeoPoint reached = null;
+      double radianDistance = Math.toRadians(dist / 60d);
+      double finalLat = (Math.asin((Math.sin(Math.toRadians(start.getL())) * Math.cos(radianDistance)) +
+                                    (Math.cos(Math.toRadians(start.getL())) * Math.sin(radianDistance) * Math.cos(Math.toRadians(bearing))))); 
+      double finalLng = Math.toRadians(start.getG()) + Math.atan2(Math.sin(Math.toRadians(bearing)) * Math.sin(radianDistance) * Math.cos(Math.toRadians(start.getL())), 
+                                                                  Math.cos(radianDistance) - Math.sin(Math.toRadians(start.getL())) * Math.sin(finalLat));
+      finalLat = Math.toDegrees(finalLat);
+      finalLng = Math.toDegrees(finalLng);
+      
+      reached = new GeoPoint(finalLat, finalLng);
+      return reached;
     }
 
     private boolean isVisible(double l, double g)
@@ -2843,14 +3179,18 @@ public class DesktopFrame
                       time += solarOffset;
                       SDF2.format(new Date(time));
 
-                      str = "Sun Rise    : " + SUN_RISE_SET_SDF.format(sunRise.getTime()) + " Z:" + DF3.format(rsSunToday[AstroComputer.RISE_Z_IDX]) + degSymbol;
+                      str = "Sun Rise    : " + SUN_RISE_SET_SDF.format(sunRise.getTime());
+                      grabbedData.add(str);           
+                      str = "              Z:" + DF3.format(rsSunToday[AstroComputer.RISE_Z_IDX]) + degSymbol;
                       grabbedData.add(str);           
 //                    System.out.println("Added:[" + str + "]");
                       str = "  " + SDF3.format(new Date(sunRise.getTime().getTime() + (long)solarOffset));
                       grabbedData.add(str);           
 //                    System.out.println("Added:[" + str + "]");
 
-                      str = "Sun Set     : " + SUN_RISE_SET_SDF.format(sunSet.getTime()) + " Z:" + DF3.format(rsSunToday[AstroComputer.SET_Z_IDX]) + degSymbol;
+                      str = "Sun Set     : " + SUN_RISE_SET_SDF.format(sunSet.getTime());
+                      grabbedData.add(str);           
+                      str = "              Z:" + DF3.format(rsSunToday[AstroComputer.SET_Z_IDX]) + degSymbol;
                       grabbedData.add(str);           
 //                    System.out.println("Added:[" + str + "]");
                       str = "  " + SDF3.format(new Date(sunSet.getTime().getTime() + (long)solarOffset));
@@ -2917,6 +3257,9 @@ public class DesktopFrame
                   
                   ghaSun = Context.GHAsun;
                   decSun = Context.DECsun;
+                  
+                  sunGHA = ghaSun;
+                  sunD = decSun;
 
                   ghaMoon = Context.GHAmoon;
                   decMoon = Context.DECmoon;
@@ -2927,6 +3270,8 @@ public class DesktopFrame
                   
                   Double heSun = sru.getHe();
                   Double zSun  = sru.getZ();
+                  sunAlt = heSun.doubleValue();
+                  sunZ = zSun.doubleValue();
                   
                   sru.setAHG(ghaMoon);
                   sru.setD(decMoon);    
@@ -2934,13 +3279,15 @@ public class DesktopFrame
                   
                   Double heMoon = sru.getHe();
                   Double zMoon  = sru.getZ();
+                  moonAlt = heMoon.doubleValue();
+                  moonZ = zMoon.doubleValue();
                   
 //                printout("GHA:" + GeomUtil.decToSex(ghaSun, GeomUtil.SWING, GeomUtil.NONE));
 //                printout("Dec:" + GeomUtil.decToSex(decSun, GeomUtil.SWING, GeomUtil.NS));
 
                   if (heSun.doubleValue() > 0)
                   {
-                    grabbedData.add("Sun Alt:" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE) + " (" + heSun + ")");
+                    grabbedData.add("Sun Alt:" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heSun + ")");
                     grabbedData.add("Sun Z  :" + GeomUtil.decToSex(zSun, GeomUtil.SWING, GeomUtil.NONE));
                   }
                   else
@@ -2948,7 +3295,7 @@ public class DesktopFrame
                   
                   if (heMoon.doubleValue() > 0)
                   {
-                    grabbedData.add("Moon Alt:" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE) + " (" + heMoon + ")");
+                    grabbedData.add("Moon Alt:" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heMoon + ")");
                     grabbedData.add("Moon Z  :" + GeomUtil.decToSex(zMoon, GeomUtil.SWING, GeomUtil.NONE));
                   }
                   else
@@ -3637,5 +3984,44 @@ public class DesktopFrame
     public void popupMenuCanceled(PopupMenuEvent e)
     {
     }
+  }
+  
+  private static class VisibleCircumference
+  {
+    private double lat, lng;
+
+    public double getLat()
+    {
+      return lat;
+    }
+
+    public double getLng()
+    {
+      return lng;
+    }
+
+    public VisibleCircumference(double l, double g)
+    {
+      this.lat = l;
+      this.lng = g;
+    }    
+  }
+  
+  private static boolean isEastOf(double reference, double toCompare)
+  {
+    return (Math.sin(Math.toRadians(toCompare - reference)) > 0);
+  }
+  
+  private static boolean isWestOf(double reference, double toCompare)
+  {
+    return (Math.sin(Math.toRadians(toCompare - reference)) < 0);
+  }
+  
+  public static void main_(String[] args)
+  {
+    System.out.println("3 is " + (isEastOf(-122, 3)?"":"NOT ") + "at the east of -122");
+    System.out.println("-123 is " + (isEastOf(-122, -123)?"":"NOT ") + "at the east of -122");
+    System.out.println("-123 is " + (isWestOf(-122, -123)?"":"NOT ") + "at the west of -122");
+    System.out.println("60 is " + (isWestOf(-122, 60)?"":"NOT ") + "at the west of -122");
   }
 }
