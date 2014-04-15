@@ -56,6 +56,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GradientPaint;
@@ -86,6 +87,8 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import java.lang.reflect.Constructor;
+
+import java.lang.reflect.InvocationTargetException;
 
 import java.net.URL;
 
@@ -162,6 +165,7 @@ import nmea.ui.viewer.elements.AWDisplay;
 
 import nmea.ui.viewer.spot.SPOTInternalFrame;
 
+import nmea.ui.viewer.spot.WindGaugePanel;
 import nmea.ui.viewer.spot.ctx.SpotCtx;
 
 import nmea.ui.viewer.spot.ctx.SpotEventListener;
@@ -176,6 +180,8 @@ import ocss.nmea.parser.Speed;
 import ocss.nmea.parser.Temperature;
 import ocss.nmea.parser.UTCDate;
 import ocss.nmea.parser.UTCTime;
+
+import ocss.nmea.utils.WindUtils;
 
 import olivsoftdesktop.ctx.DesktopContext;
 import olivsoftdesktop.ctx.DesktopEventListener;
@@ -319,14 +325,28 @@ public class DesktopFrame
       
       private HeadingPanel headingPanel;
       private final int HEADING_PANEL_WIDTH  = 380;
-      private final int HEADING_PANEL_HEIGHT =  60;
+      private final int HEADING_PANEL_HEIGHT =  40;
       
       private JumboDisplay bspJumbo;
       private DecimalFormat df22 = new DecimalFormat("00.00");
       
+      private JumboDisplay beaufortJumbo;
+    
+      private WindGaugePanel windGaugePanel;
+      private final int WINDGAUGE_PANEL_WIDTH  =  50;
+      private final int WINDGAUGE_PANEL_HEIGHT = 100;
+      
       private JCheckBox sunDayLightCheckBox;
       private JCheckBox sunAzimuthCheckBox;
       private JCheckBox moonAzimuthCheckBox;
+      
+      private JCheckBox globeCheckBox;
+      private JCheckBox roseCheckBox;
+      
+      private boolean withMarquee = false;
+      private MarqueePanel miscDataPanel;
+      private final int MISC_DATA_PANEL_WIDTH  = 250;
+      private final int MISC_DATA_PANEL_HEIGHT = 200;
       
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
@@ -356,7 +376,7 @@ public class DesktopFrame
         chartPanel.setHorizontalGridInterval(10D);
         chartPanel.setVerticalGridInterval(10D);
         chartPanel.setWithScale(false);
-        Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+        Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
         chartPanel.setChartColor(wpFontColor);
         chartPanel.setGridColor(wpFontColor);
         chartPanel.setOpaque(false);
@@ -368,6 +388,7 @@ public class DesktopFrame
         chartPanel.setVisible(false);
         
         headingPanel = new HeadingPanel(false);
+        headingPanel.setTtPrefix("True heading ");
         headingPanel.setPreferredSize(new Dimension(HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT));
         headingPanel.setSize(new Dimension(HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT));
         headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
@@ -390,16 +411,63 @@ public class DesktopFrame
         bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
         this.add(bspJumbo); 
         
+        beaufortJumbo = new JumboDisplay("BEAUFORT", "F 0", "True Wind", 24);
+        beaufortJumbo.setCustomBGColor(new Color(0f, 0f, 0f, 0f));
+        beaufortJumbo.setWithGlossyBG(false);
+        beaufortJumbo.setDisplayColor(wpFontColor);
+        beaufortJumbo.setGridColor(wpFontColor);
+        beaufortJumbo.setVisible(false);        
+//      beaufortJumbo.setBounds(this.getWidth() - 2 * (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
+        this.add(beaufortJumbo); 
+        
+        globeCheckBox = new JCheckBox("Boat Position");
+        globeCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        globeCheckBox.setForeground(wpFontColor);
+        globeCheckBox.setSelected(true);
+        globeCheckBox.setOpaque(false);
+        globeCheckBox.setVisible(false);
+//        globeCheckBox.setBounds(this.getWidth() - (globeCheckBox.getSize().width + 30), 
+//                                30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+//                                globeCheckBox.getSize().width, 
+//                                globeCheckBox.getSize().height);
+        this.add(globeCheckBox);
+        globeCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
+        
+        roseCheckBox  = new JCheckBox("Compass Rose");
+        roseCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        roseCheckBox.setForeground(wpFontColor);
+        roseCheckBox.setSelected(true);
+        roseCheckBox.setOpaque(false);
+        roseCheckBox.setVisible(false);
+//        roseCheckBox.setBounds(this.getWidth() - (roseCheckBox.getSize().width + 30), 
+//                                30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+//                                roseCheckBox.getSize().width, 
+//                                roseCheckBox.getSize().height);
+        this.add(roseCheckBox);
+        roseCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
+        
         sunDayLightCheckBox = new JCheckBox("Show daylight");
         sunDayLightCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
         sunDayLightCheckBox.setForeground(wpFontColor);
         sunDayLightCheckBox.setSelected(false);
         sunDayLightCheckBox.setOpaque(false);
         sunDayLightCheckBox.setVisible(false);
-        sunDayLightCheckBox.setBounds(this.getWidth() - (sunDayLightCheckBox.getSize().width + 30), 
-                                30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
-                                sunDayLightCheckBox.getSize().width, 
-                                sunDayLightCheckBox.getSize().height);
+//        sunDayLightCheckBox.setBounds(this.getWidth() - (sunDayLightCheckBox.getSize().width + 30), 
+//                                30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+//                                sunDayLightCheckBox.getSize().width, 
+//                                sunDayLightCheckBox.getSize().height);
         this.add(sunDayLightCheckBox);
         sunDayLightCheckBox.addActionListener(new ActionListener()
           {
@@ -415,12 +483,12 @@ public class DesktopFrame
         sunAzimuthCheckBox.setSelected(true);
         sunAzimuthCheckBox.setOpaque(false);
         sunAzimuthCheckBox.setVisible(false);
-        sunAzimuthCheckBox.setBounds(this.getWidth() - (sunAzimuthCheckBox.getSize().width + 30), 
-                                30 + 5 + HEADING_PANEL_HEIGHT + 
-                                     5 + bspJumbo.getSize().height + 
-                                     5 + sunDayLightCheckBox.getSize().height, 
-                                sunAzimuthCheckBox.getSize().width, 
-                                sunAzimuthCheckBox.getSize().height);
+//        sunAzimuthCheckBox.setBounds(this.getWidth() - (sunAzimuthCheckBox.getSize().width + 30), 
+//                                30 + 5 + HEADING_PANEL_HEIGHT + 
+//                                     5 + bspJumbo.getSize().height + 
+//                                     5 + sunDayLightCheckBox.getSize().height, 
+//                                sunAzimuthCheckBox.getSize().width, 
+//                                sunAzimuthCheckBox.getSize().height);
         this.add(sunAzimuthCheckBox);
         sunAzimuthCheckBox.addActionListener(new ActionListener()
           {
@@ -436,13 +504,13 @@ public class DesktopFrame
         moonAzimuthCheckBox.setSelected(true);
         moonAzimuthCheckBox.setOpaque(false);
         moonAzimuthCheckBox.setVisible(false);
-        moonAzimuthCheckBox.setBounds(this.getWidth() - (moonAzimuthCheckBox.getSize().width + 30), 
-                                30 + 5 + HEADING_PANEL_HEIGHT + 
-                                     5 + bspJumbo.getSize().height + 
-                                     5 + sunDayLightCheckBox.getSize().height + 
-                                     5 + sunAzimuthCheckBox.getSize().height, 
-                                moonAzimuthCheckBox.getSize().width, 
-                                moonAzimuthCheckBox.getSize().height);
+//        moonAzimuthCheckBox.setBounds(this.getWidth() - (moonAzimuthCheckBox.getSize().width + 30), 
+//                                30 + 5 + HEADING_PANEL_HEIGHT + 
+//                                     5 + bspJumbo.getSize().height + 
+//                                     5 + sunDayLightCheckBox.getSize().height + 
+//                                     5 + sunAzimuthCheckBox.getSize().height, 
+//                                moonAzimuthCheckBox.getSize().width, 
+//                                moonAzimuthCheckBox.getSize().height);
         this.add(moonAzimuthCheckBox);
         moonAzimuthCheckBox.addActionListener(new ActionListener()
           {
@@ -451,6 +519,27 @@ public class DesktopFrame
               repaint();
             }
           });
+        
+        windGaugePanel = new WindGaugePanel();
+        windGaugePanel.setPreferredSize(new Dimension(WINDGAUGE_PANEL_WIDTH, WINDGAUGE_PANEL_HEIGHT));
+        windGaugePanel.setSize(new Dimension(WINDGAUGE_PANEL_WIDTH, WINDGAUGE_PANEL_HEIGHT));
+//      windGaugePanel.setBounds(this.getWidth() - (WINDGAUGE_PANEL_WIDTH + 30), 30, WINDGAUGE_PANEL_WIDTH, WINDGAUGE_PANEL_HEIGHT);
+        windGaugePanel.setVisible(false);
+        windGaugePanel.setGlossy(false);
+        windGaugePanel.setCustomBG(new Color(0f, 0f, 0f, 0f));
+        windGaugePanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
+        this.add(windGaugePanel);     
+        
+        if (withMarquee)
+        {
+          miscDataPanel = new MarqueePanel();
+          miscDataPanel.setPreferredSize(new Dimension(MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT));
+          miscDataPanel.setSize(new Dimension(MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT));
+  //      miscDataPanel.setBounds(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 30, MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT);
+          miscDataPanel.setVisible(false);
+          miscDataPanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
+          this.add(miscDataPanel);     
+        }
       }
       
       private void drawGlossyRectangularDisplay(Graphics2D g2d, Point topLeft, Point bottomRight, Color lightColor, Color darkColor, float transparency)
@@ -506,12 +595,16 @@ public class DesktopFrame
         if (foregroundData.booleanValue())
         {
       //  System.out.println("Displaying live wall paper.");
-          Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+          Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
           bspJumbo.setDisplayColor(wpFontColor);
+          beaufortJumbo.setDisplayColor(wpFontColor);
           headingPanel.setTickColor(wpFontColor);
+          globeCheckBox.setForeground(wpFontColor);
+          roseCheckBox.setForeground(wpFontColor);
           sunDayLightCheckBox.setForeground(wpFontColor);
           sunAzimuthCheckBox.setForeground(wpFontColor);
           moonAzimuthCheckBox.setForeground(wpFontColor);
+          
           if (true) // Glossy effect
           {
             startColor = new Color(255, 255, 255);
@@ -535,15 +628,32 @@ public class DesktopFrame
           }
           else
           {
-            try { digiFont = new Font("Source Code Pro", 10, Font.PLAIN); }
-            catch (Exception ex) { System.err.println(ex.getMessage()); }
+             
+            try 
+            { 
+              digiFont = ((Font) ParamPanel.getData()[ParamData.WALLPAPER_FONT][ParamPanel.PRM_VALUE]); 
+//            System.out.println("Loaded Font [" + digiFont.toString() + "]");
+            }
+            catch (Exception ex) 
+            { 
+              try { digiFont = new Font("Courier New", 18, Font.BOLD); }
+              catch (Exception ex2) 
+              { 
+                System.err.println(ex2.getMessage()); 
+              }
+            }
           }
-          if (digiFont != null)
-            gr.setFont(digiFont.deriveFont(Font.BOLD, 20f));
-          else
-            gr.setFont(gr.getFont().deriveFont(Font.BOLD));
-
-  //        gr.setColor(Color.lightGray);
+          if (digiFont == null)
+          {
+            try { digiFont = new Font("Courier New", 18, Font.BOLD); }
+            catch (Exception ex2) 
+            { 
+              System.err.println(ex2.getMessage()); 
+            }
+        //  System.out.println("--> 2. Font is " + digiFont.toString());
+          }
+          gr.setFont(digiFont);
+  //      gr.setColor(Color.lightGray);
           gr.setColor(wpFontColor);
 
           int y = 40;
@@ -566,7 +676,10 @@ public class DesktopFrame
           boolean displayRose = true;
           int twd    = 0;
           int hdg    = 0;
-          if (displayRose)
+          try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+          // HDG (true)
+          try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+          if (displayRose && roseCheckBox.isSelected())
           {
             Dimension dim = this.getSize();
             double radius = (Math.min(dim.width, dim.height) * 0.9) / 2d;
@@ -584,7 +697,6 @@ public class DesktopFrame
             }
             // Draw arrows here
             // TWD
-            try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
             int x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
             int y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(twd + 90)));  
             int x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
@@ -604,8 +716,7 @@ public class DesktopFrame
             strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
             g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
             g2.setTransform(oldTx);
-            // HDG (true)
-            try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+
             x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
             y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
             x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
@@ -672,59 +783,135 @@ public class DesktopFrame
           currentPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false);
           if (currentPos != null)
           {
-            chartPanel.setVisible(true);
+            chartPanel.setVisible(globeCheckBox.isSelected());
             chartPanel.setChartColor(wpFontColor);
             chartPanel.setGridColor(wpFontColor);
             chartPanel.setGlobeViewLngOffset(currentPos.lng);
 //          chartPanel.setGlobeViewRightLeftRotation(23.0);  // Tilt
             chartPanel.setGlobeViewForeAftRotation(currentPos.lat);
-            chartPanel.setBounds((this.getWidth() - CHART_PANEL_WIDTH) / 2, (this.getHeight() - CHART_PANEL_HEIGHT) / 2, CHART_PANEL_WIDTH, CHART_PANEL_HEIGHT);
+            chartPanel.setBounds((this.getWidth() - CHART_PANEL_WIDTH) / 2, 
+                                 (this.getHeight() - CHART_PANEL_HEIGHT) / 2, 
+                                 CHART_PANEL_WIDTH, 
+                                 CHART_PANEL_HEIGHT);
             
-            headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT);
+            int currentYPos = 30;
+            headingPanel.setBounds(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 
+                                   currentYPos, 
+                                   HEADING_PANEL_WIDTH, 
+                                   HEADING_PANEL_HEIGHT);
             headingPanel.setVisible(true);
-            gr.drawRoundRect(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 30, HEADING_PANEL_WIDTH, HEADING_PANEL_HEIGHT, 10, 10);
+            gr.drawRoundRect(this.getWidth() - (HEADING_PANEL_WIDTH + 30), 
+                             30, 
+                             HEADING_PANEL_WIDTH, 
+                             HEADING_PANEL_HEIGHT, 10, 10);
             headingPanel.setHdg(hdg);
             
             bspJumbo.setVisible(true);   
-            bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height);
-            gr.drawRoundRect(this.getWidth() - (bspJumbo.getSize().width + 30), 30 + 5 + HEADING_PANEL_HEIGHT, bspJumbo.getSize().width, bspJumbo.getSize().height, 5, 5);
+            currentYPos += (5 + HEADING_PANEL_HEIGHT);
+            bspJumbo.setBounds(this.getWidth() - (bspJumbo.getSize().width + 30), 
+                               currentYPos, 
+                               bspJumbo.getSize().width, 
+                               bspJumbo.getSize().height);
+            gr.drawRoundRect(this.getWidth() - (bspJumbo.getSize().width + 30), 
+                             currentYPos, 
+                             bspJumbo.getSize().width, 
+                             bspJumbo.getSize().height, 5, 5);
             double bsp = 0d;
             try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
             setBSP(bsp);
             
+            beaufortJumbo.setVisible(true);   
+            beaufortJumbo.setBounds(this.getWidth() - (2 * bspJumbo.getSize().width + 30) - 5, 
+                                    currentYPos, 
+                                    bspJumbo.getSize().width, 
+                                    bspJumbo.getSize().height);
+            gr.drawRoundRect(this.getWidth() - (2 * bspJumbo.getSize().width + 30) - 5, 
+                             currentYPos, 
+                             bspJumbo.getSize().width, 
+                             bspJumbo.getSize().height, 5, 5);
+            // Display, below
+            globeCheckBox.setVisible(true);
+            currentYPos += (5 + bspJumbo.getSize().height);
+            globeCheckBox.setBounds(this.getWidth() - (globeCheckBox.getSize().width + 30), 
+                                    currentYPos, 
+                                    globeCheckBox.getPreferredSize().width, 
+                                    globeCheckBox.getPreferredSize().height);
+            
+            roseCheckBox.setVisible(true);
+            currentYPos += (5 + globeCheckBox.getSize().height);
+            roseCheckBox.setBounds(this.getWidth() - (roseCheckBox.getSize().width + 30), 
+                                    currentYPos, 
+                                    roseCheckBox.getPreferredSize().width, 
+                                    roseCheckBox.getPreferredSize().height);
+            
             sunDayLightCheckBox.setVisible(true);
+            sunDayLightCheckBox.setEnabled(globeCheckBox.isSelected());
+            currentYPos += (5 + roseCheckBox.getPreferredSize().height);
             sunDayLightCheckBox.setBounds(this.getWidth() - (sunDayLightCheckBox.getSize().width + 30), 
-                                    30 + 5 + HEADING_PANEL_HEIGHT + 5 + bspJumbo.getSize().height, 
+                                    currentYPos, 
                                     sunDayLightCheckBox.getPreferredSize().width, 
                                     sunDayLightCheckBox.getPreferredSize().height);
             
             sunAzimuthCheckBox.setVisible(true);
-            sunAzimuthCheckBox.setEnabled(sunAlt >= 0);
+            sunAzimuthCheckBox.setEnabled(sunAlt >= 0 && roseCheckBox.isSelected());
+            currentYPos += (5 + sunDayLightCheckBox.getPreferredSize().height);
             sunAzimuthCheckBox.setBounds(this.getWidth() - (sunAzimuthCheckBox.getSize().width + 30), 
-                                    30 + 5 + HEADING_PANEL_HEIGHT + 
-                                         5 + bspJumbo.getSize().height + 
-                                         5 + sunDayLightCheckBox.getPreferredSize().height, 
+                                    currentYPos, 
                                     sunAzimuthCheckBox.getPreferredSize().width, 
                                     sunAzimuthCheckBox.getPreferredSize().height);
             
             moonAzimuthCheckBox.setVisible(true);
-            moonAzimuthCheckBox.setEnabled(moonAlt >= 0);
+            moonAzimuthCheckBox.setEnabled(moonAlt >= 0 && roseCheckBox.isSelected());
+            currentYPos += (5 + sunAzimuthCheckBox.getPreferredSize().height);
             moonAzimuthCheckBox.setBounds(this.getWidth() - (moonAzimuthCheckBox.getSize().width + 30), 
-                                    30 + 5 + HEADING_PANEL_HEIGHT + 
-                                         5 + bspJumbo.getSize().height + 
-                                         5 + sunDayLightCheckBox.getPreferredSize().height +
-                                         5 + sunAzimuthCheckBox.getPreferredSize().height, 
-                                    moonAzimuthCheckBox.getPreferredSize().width, 
-                                    moonAzimuthCheckBox.getPreferredSize().height);
+                                          currentYPos, 
+                                          moonAzimuthCheckBox.getPreferredSize().width, 
+                                          moonAzimuthCheckBox.getPreferredSize().height);
+            currentYPos += (5 + moonAzimuthCheckBox.getPreferredSize().height);
+            windGaugePanel.setBounds(this.getWidth() - (WINDGAUGE_PANEL_WIDTH + 30), 
+                                     currentYPos, 
+                                     WINDGAUGE_PANEL_WIDTH, 
+                                     WINDGAUGE_PANEL_HEIGHT);
+            windGaugePanel.setVisible(true);
+            gr.drawRoundRect(this.getWidth() - (WINDGAUGE_PANEL_WIDTH + 30), 
+                             currentYPos, 
+                             WINDGAUGE_PANEL_WIDTH, 
+                             WINDGAUGE_PANEL_HEIGHT, 10, 10);
+            double tws = 0d;
+            try { tws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
+            windGaugePanel.setTws((float)tws);
+            windGaugePanel.setToolTipText("TWS " + df22.format(tws) + " kts");
+            beaufortJumbo.setValue("F " + DF3.format(WindUtils.getBeaufort(tws)));
+            if (withMarquee)
+            {
+              currentYPos += (5 + WINDGAUGE_PANEL_HEIGHT);
+              miscDataPanel.setBounds(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 
+                                       currentYPos, 
+                                       MISC_DATA_PANEL_WIDTH, 
+                                       MISC_DATA_PANEL_HEIGHT);
+              miscDataPanel.setVisible(true);
+              gr.drawRoundRect(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 
+                                       currentYPos, 
+                                       MISC_DATA_PANEL_WIDTH, 
+                                       MISC_DATA_PANEL_HEIGHT, 10, 10);
+              if (!miscDataPanel.isDisplayInProcess())
+                miscDataPanel.startTT("--- Place holder for transient data --- The quick brown fox jumps over the lazy dog.", 10, 30);
+            }
           }
         }
         else
         {
           bspJumbo.setVisible(false);        
+          beaufortJumbo.setVisible(false);    
+          globeCheckBox.setVisible(false);
+          roseCheckBox.setVisible(false);
           sunDayLightCheckBox.setVisible(false);
           sunAzimuthCheckBox.setVisible(false);
           moonAzimuthCheckBox.setVisible(false);
           headingPanel.setVisible(false);
+          windGaugePanel.setVisible(false);
+          if (withMarquee)
+            miscDataPanel.setVisible(false);
   //      gr.setColor(Color.LIGHT_GRAY);
           gr.setColor(Color.GREEN);
           Font f = gr.getFont();
@@ -1989,7 +2176,7 @@ public class DesktopFrame
                                                     ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                                                                      RenderingHints.VALUE_ANTIALIAS_ON);      
                                                     this.setOpaque(false);
-                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
+                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
                                                     g.drawRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
                                                     
                                                     // Display the dynamic data here
@@ -2012,7 +2199,7 @@ public class DesktopFrame
                                                         g.drawLine(x1 + graphicXOffset, y1 + graphicYOffset, x2 + graphicXOffset, y2 + graphicYOffset);
                                                       }
                                                     }
-                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.FOREGROUND_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
+                                                    g.setColor(((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor());
                                                  // g.setFont(g.getFont().deriveFont(Font.BOLD));
                                                     Font digiFont = null; // TODO Preference!!@!@@!
                                                     if (false)
@@ -2023,7 +2210,14 @@ public class DesktopFrame
                                                     else
                                                     {
                                                       try { digiFont = new Font("Source Code Pro", 10, Font.PLAIN); }
-                                                      catch (Exception ex) { System.err.println(ex.getMessage()); }
+                                                      catch (Exception ex) 
+                                                      { 
+                                                        try { digiFont = new Font("Courier New", 10, Font.PLAIN); }
+                                                        catch (Exception ex2) 
+                                                        { 
+                                                          System.err.println(ex2.getMessage()); 
+                                                        }
+                                                      }
                                                     }
                                                     if (digiFont != null)
                                                       g.setFont(digiFont.deriveFont(Font.BOLD, 16f));
@@ -2211,7 +2405,8 @@ public class DesktopFrame
         
       });
     
-//  fullScreen();
+    if (((Boolean)(ParamPanel.getData()[ParamData.FULL_SCREEN_DESKTOP][ParamPanel.PRM_VALUE])).booleanValue())
+      fullScreen();
   }
 
   private void setStatus(String st)
@@ -3660,6 +3855,13 @@ public class DesktopFrame
     return str;
   }
   
+  public static String rpad(String str, String with, int len)
+  {
+    while (str.length() < len)
+      str += with;
+    return str;
+  }
+  
   private class HTTPNMEAReaderThread extends Thread
   {
     private final String nmeaServerURL = "http://" +  
@@ -3986,25 +4188,78 @@ public class DesktopFrame
     }
   }
   
-  private static class VisibleCircumference
+  private static class MarqueePanel extends JPanel
   {
-    private double lat, lng;
-
-    public double getLat()
+    private String str2Display = "";
+    private int xDisplay = 0, yDisplay = 0;
+    
+    boolean displayInProcess = false;
+    
+    public void paintComponent(Graphics gr)
     {
-      return lat;
+      ((Graphics2D)gr).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                                        RenderingHints.VALUE_TEXT_ANTIALIAS_ON);      
+      ((Graphics2D)gr).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                        RenderingHints.VALUE_ANTIALIAS_ON);   
+      gr.setColor(this.getBackground());
+      gr.fillRect(0, 0, this.getWidth(), this.getHeight());
+      gr.setColor(Color.white);
+      gr.setFont(gr.getFont().deriveFont(Font.ITALIC | Font.BOLD, 16f));
+      boolean fits = false;      
+      while (!fits)
+      {
+        int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str2Display.trim());
+        fits = ((strWidth + xDisplay) <= this.getWidth());
+        if (!fits)
+          str2Display = str2Display.substring(1);
+      }
+//    gr.drawString(str2Display.replaceAll(".*", " "), xDisplay, yDisplay);
+      gr.drawString(str2Display, xDisplay, yDisplay);
     }
-
-    public double getLng()
+    
+    public void startTT(final String str, final int x, final int y)
     {
-      return lng;
+      final MarqueePanel instance = this;
+      Thread displayer = new Thread()
+        {
+          public void run()
+          {
+            displayInProcess = true;
+            for (int i=0; i<=str.length(); i++)
+            {
+              String s = rpad(str.substring(0, i), " ", str.length());              
+              str2Display = s;
+              xDisplay = x;
+              yDisplay = y;
+              try
+              {
+                EventQueue.invokeAndWait(new Runnable()
+                {
+                  public void run()
+                  {
+                    instance.repaint();
+                  }
+                });
+              }
+              catch (InvocationTargetException e)
+              {
+              }
+              catch (InterruptedException e)
+              {
+              }
+              try { Thread.sleep(100); } catch (InterruptedException ie) {}
+            }
+            try { Thread.sleep(1000); } catch (InterruptedException ie) {}
+            displayInProcess = false;
+          }
+        };
+      displayer.start();
     }
-
-    public VisibleCircumference(double l, double g)
+    
+    public boolean isDisplayInProcess()
     {
-      this.lat = l;
-      this.lng = g;
-    }    
+      return this.displayInProcess;
+    }
   }
   
   private static boolean isEastOf(double reference, double toCompare)

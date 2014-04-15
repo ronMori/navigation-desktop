@@ -14,7 +14,7 @@ public class ParamData
   public final static int DB_LOCATION                  =  7;  // ..\all-db
   public final static int BACKGROUND_IMAGE             =  8;  // ....
   public final static int NMEA_BAUD_RATE               =  9;  // ....
-  public final static int FOREGROUND_FONT_COLOR        = 10;  // Foreground Window Font Color
+  public final static int LIVE_WALLPAPER_FONT_COLOR    = 10;  // Foreground Window Font Color
   public final static int DELTA_T                      = 11;  // 65.984
   public final static int NMEA_DATA_STREAM             = 12;  // NMEA port, HTTP // for the desktop BGWindows
   public final static int AIRMAIL_LOCATION             = 13;  // C:\Program Files\Airmail
@@ -41,8 +41,10 @@ public class ParamData
   public final static int MAX_ANALOG_TWS               = 34;
   public final static int DEFAULT_FONT                 = 35;
   public final static int USE_SPOT_APP                 = 36;
+  public final static int FULL_SCREEN_DESKTOP          = 37;
+  public final static int WALLPAPER_FONT               = 38;
 
-  public final static int NB_PARAMETERS                = 37;
+  public final static int NB_PARAMETERS                = 39;
 
   private final static String[] LABELS =
   {
@@ -56,7 +58,7 @@ public class ParamData
     "DB directory or URL (for Chart Library & NMEA Console Journal)",          //  7
     "Background Image",                                                        //  8
     "NMEA Source Baud Rate",                                                   //  9
-    "Foreground Window Font Color",                                            // 10.
+    "Live Wallpaper Font Color",                                               // 10.
     "Delta T in seconds",                                                      // 11
     "NMEA Source Data Stream",                                                 // 12
     "Airmail Location",                                                        // 13
@@ -87,7 +89,9 @@ public class ParamData
     "Max value for TWS Analog Display",                                        // 34
     "Default Swing font",                                                      // 35
     // More App
-    "SPOT Bulletins"                                                           // 36 
+    "SPOT Bulletins",                                                          // 36 
+    "Full screen desktop on open",                                             // 37 
+    "Font of the live wallpaper"                                               // 38 
   };
   
   public final static String[] getLabels()
@@ -107,7 +111,7 @@ public class ParamData
     /*  7 */ "Directory where the HypersonicSQL Database Files are located (for standalone driver), or database URL (for server driver). For standalone, enter something like \".." + File.separator + "all-db\", for server driver, this would be like \"//localhost:1234/tides\".",
     /*  8 */ "Desktop Background Image",
     /*  9 */ "Baud Rate for the Serial NMEA input",
-    /* 10 */ "Color of the font used to display the data in the foreground window. Can be tweaked to be visible, depending on what your background looks like.",
+    /* 10 */ "Color of the font used to display the data in the live wallpaper. Can be tweaked to be visible, depending on what your background looks like.",
     /* 11 */ "Inserted leap seconds, check out http://aa.usno.navy.mil/data/docs/celnavtable.php, http://maia.usno.navy.mil/ser7/deltat.data and http://maia.usno.navy.mil/",
     /* 12 */ "How to read NMEA Data read from the NMEA port, to feed the background windows of the Desktop.",
     /* 13 */ "Directory in which Airmail is installed. Will be used by SailFax to locate SkedFile.txt",
@@ -134,7 +138,9 @@ public class ParamData
     /* 33 */ "Maximum value for the boat speed analog display",
     /* 34 */ "Maximum value for the true wind speed analog display",
     /* 35 */ "Default Swing font. Maybe increased or decreased for certain Look & Feels. Negative values will be ignored. Restart required after modification.",
-    /* 36 */ "Spot Bulletins"             
+    /* 36 */ "Spot Bulletins",
+    /* 37 */ "Display the desktop in full screen by default",
+    /* 38 */ "Font to use for the live wallpaper data"
   };
   
   public final static String[] getHelpText()

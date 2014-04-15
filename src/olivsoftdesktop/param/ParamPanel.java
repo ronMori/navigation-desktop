@@ -148,7 +148,7 @@ public final class ParamPanel
       case ParamData.NMEA_BAUD_RATE:
         it = "4800";
         break;
-      case ParamData.FOREGROUND_FONT_COLOR:
+      case ParamData.LIVE_WALLPAPER_FONT_COLOR:
         it = new ParamColor(Color.red, "");
         break;
       case ParamData.NMEA_CONFIG_FILE:
@@ -226,6 +226,19 @@ public final class ParamPanel
             }
           }; 
         break;
+      case ParamData.FULL_SCREEN_DESKTOP:
+        it = Boolean.valueOf(false);
+        break;
+      case ParamData.WALLPAPER_FONT:
+        it = new Font("Source Code Pro", Font.PLAIN, 20)
+          {
+            @Override
+            public String toString()
+            {
+              return FontPanel.fontToString(this);
+            }
+          }; 
+        break;
       default:
         break;
     }
@@ -294,14 +307,16 @@ public final class ParamPanel
                      i == ParamData.USE_PUBLISHER_APP || 
                      i == ParamData.USE_GOOGLE_APP || 
                      i == ParamData.USE_TIDES_APP ||
-                     i == ParamData.USE_SPOT_APP)
+                     i == ParamData.USE_SPOT_APP ||
+                     i == ParamData.FULL_SCREEN_DESKTOP)
               data[i][PRM_VALUE] = new Boolean(s);
             else if (i == ParamData.BG_WIN_FONT_COLOR ||
-                     i == ParamData.FOREGROUND_FONT_COLOR)
+                     i == ParamData.LIVE_WALLPAPER_FONT_COLOR)
               data[i][PRM_VALUE] = new ParamColor(DesktopUtilities.buildColor(s), "");
             else if (i == ParamData.MAX_TIDE_RECENT_STATIONS) 
               data[i][PRM_VALUE] = new Integer(s);
-            else if (i == ParamData.DEFAULT_FONT) 
+            else if (i == ParamData.DEFAULT_FONT ||
+                     i == ParamData.WALLPAPER_FONT) 
               data[i][PRM_VALUE] = FontPanel.stringToFont(s);
             else 
               data[i][PRM_VALUE] = s; // All the string fall in this bucket
@@ -340,8 +355,10 @@ public final class ParamPanel
       ParamData.NMEA_DATA_STREAM,
       ParamData.PLAY_SOUNDS,
       ParamData.BG_WIN_FONT_COLOR,
-      ParamData.FOREGROUND_FONT_COLOR,
-      ParamData.DEFAULT_FONT
+      ParamData.LIVE_WALLPAPER_FONT_COLOR,
+      ParamData.DEFAULT_FONT,
+      ParamData.FULL_SCREEN_DESKTOP,
+      ParamData.WALLPAPER_FONT
     },
     new int[] // NMEA
     { 
