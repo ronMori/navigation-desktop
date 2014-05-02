@@ -52,6 +52,7 @@ import generatelocator.ctx.LocatorContext;
 import generatelocator.ctx.LocatorEventListener;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -65,6 +66,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -131,6 +133,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.plaf.InternalFrameUI;
@@ -615,6 +618,35 @@ public class DesktopFrame
                                      endColor, 
                                      startColor, 
                                      0.25f);
+            // Background Grid
+            Stroke orig = ((Graphics2D)gr).getStroke();
+            Stroke stroke5 = new BasicStroke(5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER);
+            Stroke dotted = new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[] {5f}, 0f);
+
+            ((Graphics2D)gr).setStroke(stroke5);
+            gr.drawRoundRect(10, 10, this.getWidth() - 20, this.getHeight() - 20, 30, 30);
+            ((Graphics2D)gr).setStroke(orig);
+            float[] comps = wpFontColor.getColorComponents(new float[3]);
+            Color gridColor = new Color(comps[0], comps[1], comps[2], 0.15f);
+            gr.setColor(gridColor);
+            for (int i=30; i<this.getWidth() - 1; i+=30)
+            {
+              if (i % 150 == 0)
+                ((Graphics2D)gr).setStroke(orig);
+              else
+                ((Graphics2D)gr).setStroke(dotted);
+              gr.drawLine(i, 10, i, this.getHeight() - 10);
+            }
+            for (int i=30; i<this.getHeight() - 1; i+=30)
+            {
+              if (i % 150 == 0)
+                ((Graphics2D)gr).setStroke(orig);
+              else
+                ((Graphics2D)gr).setStroke(dotted);
+              gr.drawLine(10, i, this.getWidth() - 10, i);
+            }
+            ((Graphics2D)gr).setStroke(orig);
+            gr.setColor(wpFontColor);            
           }
           // Live Wallpaper, data grabber
           Font digiFont = null; 
@@ -894,8 +926,11 @@ public class DesktopFrame
                                        currentYPos, 
                                        MISC_DATA_PANEL_WIDTH, 
                                        MISC_DATA_PANEL_HEIGHT, 10, 10);
-              if (!miscDataPanel.isDisplayInProcess())
-                miscDataPanel.startTT("--- Place holder for transient data --- The quick brown fox jumps over the lazy dog.", 10, 30);
+              if (!miscDataPanel.isRunning())
+              {
+                miscDataPanel.setup("--- Place holder for transient data ---");
+                miscDataPanel.start();
+              }
             }
           }
         }
@@ -2158,7 +2193,7 @@ public class DesktopFrame
     specialInternalFrame.setSize(500, 500);
     specialInternalFrame.setOpaque(false);
     specialInternalFrame.setBorder(null);    // Remove the border
-    Color bg = new Color(0, 0, 0, 0); // This color is transparent black
+    Color bg = new Color(0f, 0f, 0f, 0f); // This color is transparent black
     specialInternalFrame.setBackground(bg);
     specialInternalFrame.getContentPane().setLayout(new BorderLayout());
     specialInternalFrame.getContentPane().add(new JPanel()
@@ -4188,77 +4223,91 @@ public class DesktopFrame
     }
   }
   
-  private static class MarqueePanel extends JPanel
+  private class MarqueePanel
+    extends JPanel
+    implements ActionListener
   {
-    private String str2Display = "";
-    private int xDisplay = 0, yDisplay = 0;
+    private static final int RATE = 20;
+    private final Timer timer = new Timer(1000 / RATE, this);
+    private final JLabel label = new JLabel();
+    private String s = "";
+    private int n = 1;
+    private int index;
     
-    boolean displayInProcess = false;
-    
-    public void paintComponent(Graphics gr)
+    private boolean running = false;
+
+    public boolean isRunning()
     {
-      ((Graphics2D)gr).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                                        RenderingHints.VALUE_TEXT_ANTIALIAS_ON);      
-      ((Graphics2D)gr).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                        RenderingHints.VALUE_ANTIALIAS_ON);   
-      gr.setColor(this.getBackground());
-      gr.fillRect(0, 0, this.getWidth(), this.getHeight());
-      gr.setColor(Color.white);
-      gr.setFont(gr.getFont().deriveFont(Font.ITALIC | Font.BOLD, 16f));
-      boolean fits = false;      
-      while (!fits)
+      return running;
+    }
+
+    public MarqueePanel()
+    {
+    }
+    
+    public void setup(String s)
+    {
+      if (s == null)
       {
-        int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str2Display.trim());
-        fits = ((strWidth + xDisplay) <= this.getWidth());
-        if (!fits)
-          str2Display = str2Display.substring(1);
-      }
-//    gr.drawString(str2Display.replaceAll(".*", " "), xDisplay, yDisplay);
-      gr.drawString(str2Display, xDisplay, yDisplay);
-    }
-    
-    public void startTT(final String str, final int x, final int y)
-    {
-      final MarqueePanel instance = this;
-      Thread displayer = new Thread()
+        throw new IllegalArgumentException("Null string ");
+      }      
+      Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
+      Font f = ((Font) ParamPanel.getData()[ParamData.WALLPAPER_FONT][ParamPanel.PRM_VALUE]); 
+      label.setFont(f);
+      this.n = 1; // s.length();
+      String str = s;
+      boolean ok = false;
+      while (!ok)
+      {
+        int strWidth = label.getFontMetrics(label.getFont()).stringWidth(str.trim());
+        if (strWidth < this.getWidth()) // Panel width
         {
-          public void run()
-          {
-            displayInProcess = true;
-            for (int i=0; i<=str.length(); i++)
-            {
-              String s = rpad(str.substring(0, i), " ", str.length());              
-              str2Display = s;
-              xDisplay = x;
-              yDisplay = y;
-              try
-              {
-                EventQueue.invokeAndWait(new Runnable()
-                {
-                  public void run()
-                  {
-                    instance.repaint();
-                  }
-                });
-              }
-              catch (InvocationTargetException e)
-              {
-              }
-              catch (InterruptedException e)
-              {
-              }
-              try { Thread.sleep(100); } catch (InterruptedException ie) {}
-            }
-            try { Thread.sleep(1000); } catch (InterruptedException ie) {}
-            displayInProcess = false;
-          }
-        };
-      displayer.start();
+          ok = true;
+          this.n = str.length();
+        }
+        else
+          str = str.substring(0, str.length() - 1);
+      }
+
+      StringBuilder sb = new StringBuilder(n);
+      for (int i=0; i<n; i++)
+      {
+        sb.append(' ');
+      }
+      this.s = sb + s + sb;
+      
+      label.setForeground(wpFontColor);
+   // label.setBackground(new Color(0f, 0f, 0f, 0f));
+      Color bg = this.getParent().getBackground();
+      this.setBackground(new Color(bg.getRGB()));      
+//    label.setBackground(Color.blue);      
+      label.setText(sb.toString());
+      this.setLayout(new BorderLayout());
+      this.add(label, BorderLayout.NORTH);      
     }
-    
-    public boolean isDisplayInProcess()
+
+    public void start()
     {
-      return this.displayInProcess;
+      running = true;
+      timer.start();
+    }
+
+    public void stop()
+    {
+      running = false;
+      timer.stop();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e)
+    {
+  //  System.out.println("Action Performed, timer event");
+      index++;
+      if (index > s.length() - n)
+      {
+        index = 0;
+      }
+      label.setText(s.substring(index, index + n));
     }
   }
   
