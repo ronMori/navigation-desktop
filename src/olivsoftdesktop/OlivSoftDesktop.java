@@ -804,7 +804,7 @@ public class OlivSoftDesktop
           // Swap
           args = _args;
           
-          System.out.println("New output args:");
+          System.out.println("GUI: New output args:");
           for (String s: args)
             System.out.println(s);
         }
@@ -832,6 +832,10 @@ public class OlivSoftDesktop
       final String UDP  = "UDP:";
       final String FILE = "FILE:";
       
+      System.out.println("DesktopNMEAReader: New output args:");
+      for (String s: args)
+        System.out.println(s);
+
       String[] output = getOutputChannels(args);
       if (output != null)
       {
