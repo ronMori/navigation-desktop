@@ -26,7 +26,7 @@ public class RebroadcastPanel
   private GridBagLayout gridBagLayout1 = new GridBagLayout();
   private JCheckBox HTTPCheckBox = new JCheckBox();
   private JComboBox xmlJsonComboBox = new JComboBox();
-  private JLabel overHttpLabel = new JLabel(" over HTTP");
+  private JLabel overHttpLabel = new JLabel(" / HTTP");
   private JPanel httpPanel = new JPanel();
   private JCheckBox UDPCheckBox = new JCheckBox();
   private JCheckBox TCPCheckBox = new JCheckBox();
@@ -74,7 +74,7 @@ public class RebroadcastPanel
     throws Exception
   {
     this.setLayout(gridBagLayout1);
-    this.setSize(new Dimension(376, 187));
+    this.setSize(new Dimension(263, 68));
     xmlJsonComboBox.removeAllItems();
     xmlJsonComboBox.addItem("XML");
     xmlJsonComboBox.addItem("json");
@@ -86,6 +86,7 @@ public class RebroadcastPanel
           HTTPCheckBox_actionPerformed(e);
         }
       });
+    overHttpLabel.setText("/ HTTP");
     httpPanel.setLayout(gridBagLayout2);
     httpPanel.add(HTTPCheckBox, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 0, 0, 0), 0, 0));
@@ -202,6 +203,7 @@ public class RebroadcastPanel
     
     logFileTextField.setEnabled(false);
     logFileButton.setEnabled(false);
+    logFileButton.setPreferredSize(new Dimension(21, 21));
 
     RMICheckBox.addActionListener(new ActionListener()
       {

@@ -65,6 +65,7 @@ public class InputChannelPanel
     throws Exception
   {
     this.setLayout(gridBagLayout1);
+    this.setSize(new Dimension(296, 81));
     serialRadioButton.setText("Serial");
     serialRadioButton.setToolTipText("Serial Port");
     serialRadioButton.setHorizontalTextPosition(SwingConstants.LEADING);
@@ -100,7 +101,7 @@ public class InputChannelPanel
       });
     serialPortLabel.setText("Port");
     tcpPortLabel.setText("Port");
-    udpPortLabel.setText("Port and Address");
+    udpPortLabel.setText("Server");
     udpPortLabel.setToolTipText("Port and Address (or machine name)");
     fileLabel.setText("Data file");
     tcpPortFormattedTextField.setText("7001");
@@ -108,6 +109,8 @@ public class InputChannelPanel
     udpPortFormattedTextField.setText("8001");
     dataFileButton.setText("...");
 
+    dataFileButton.setMaximumSize(new Dimension(21, 21));
+    dataFileButton.setPreferredSize(new Dimension(21, 21));
     dataFileButton.addActionListener(new ActionListener()
       {
         public void actionPerformed(ActionEvent e)
@@ -129,11 +132,11 @@ public class InputChannelPanel
         }
       });
     serialPortsComboBox.setPreferredSize(new Dimension(100, 20));
-    tcpPortFormattedTextField.setPreferredSize(new Dimension(50, 20));
+    tcpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
     tcpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
-    udpPortFormattedTextField.setPreferredSize(new Dimension(50, 20));
+    udpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
     udpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
-    udpMachineTextField.setPreferredSize(new Dimension(100, 20));
+    udpMachineTextField.setPreferredSize(new Dimension(50, 20));
     udpMachineTextField.setHorizontalAlignment(JTextField.CENTER);
     dataFileTextField.setPreferredSize(new Dimension(150, 20));
     dataFileTextField.setHorizontalAlignment(JTextField.RIGHT);
@@ -164,8 +167,8 @@ public class InputChannelPanel
              new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 5, 0, 0), 0, 0));
     this.add(udpMachineTextField,
-             new GridBagConstraints(3, 2, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 2, 0, 0), 0, 0));
+             new GridBagConstraints(3, 2, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                    new Insets(0, 2, 0, 0), 0, 0));
     this.add(dataFileTextField,
              new GridBagConstraints(2, 3, 2, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
           new Insets(0, 5, 0, 0), 0, 0));

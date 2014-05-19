@@ -759,8 +759,17 @@ public class OlivSoftDesktop
          * - logfile - file name
          */
         System.out.println("Displaying Headless GUI here.");
-        HeadlessGUIPanel guiPanel = new HeadlessGUIPanel();
-        int resp = JOptionPane.showConfirmDialog(null, guiPanel, "Input-Output", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        boolean smallUI = "true".equals(System.getProperty("small.ui", "false"));
+        HeadlessGUIPanel guiPanel = new HeadlessGUIPanel(smallUI);
+        // A JScrollPane, for the RasPI
+        JScrollPane jsp = new JScrollPane(guiPanel);
+        if (smallUI)
+        {
+          jsp.setPreferredSize(new Dimension(275, 150)); //306, 203 Fits on the Radspberry TS, 320x240
+          javax.swing.UIManager.put("OptionPane.buttonFont", new Font("Arial", Font.PLAIN, 8)); // TODO A system variable?
+        }
+//      int resp = JOptionPane.showConfirmDialog(null, guiPanel, "Input-Output", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int resp = JOptionPane.showConfirmDialog(null, jsp, "Input-Output", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (resp == JOptionPane.OK_OPTION)
         {
           verbose = guiPanel.isVerbose();
