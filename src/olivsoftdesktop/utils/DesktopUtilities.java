@@ -12,6 +12,9 @@ import java.io.FileOutputStream;
 
 import java.net.URL;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -32,6 +35,9 @@ import oracle.xml.parser.v2.XMLElement;
 
 public class DesktopUtilities
 {
+  public final static NumberFormat NF_22 = new DecimalFormat("#0.00");
+  public final static NumberFormat NF_3  = new DecimalFormat("#00");
+  
   public static String replaceString(String orig, String oldStr, String newStr)
   {
     String ret = orig;
@@ -52,6 +58,20 @@ public class DesktopUtilities
     return ret;
   }
 
+  public static String lpad(String str, String with, int len)
+  {
+    while (str.length() < len)
+      str = with + str;
+    return str;
+  }
+  
+  public static String rpad(String str, String with, int len)
+  {
+    while (str.length() < len)
+      str += with;
+    return str;
+  }
+  
   public static String chooseFile(int mode, String flt, String desc)
   {
     return chooseFile(mode, new String[]

@@ -32,6 +32,7 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -67,6 +68,8 @@ import nmea.server.datareader.CustomNMEAClient;
 import nmea.server.utils.HTTPServer;
 import nmea.server.utils.Utils;
 
+import olivsoftdesktop.charmode.CharacterModeConsole;
+
 import olivsoftdesktop.ctx.DesktopContext;
 
 import olivsoftdesktop.param.HeadlessGUIPanel;
@@ -83,6 +86,10 @@ import olivsoftdesktop.utils.gui.UpdatePanel;
 import oracle.xml.parser.v2.DOMParser;
 import oracle.xml.parser.v2.XMLDocument;
 import oracle.xml.parser.v2.XMLElement;
+
+import org.fusesource.jansi.AnsiConsole;
+
+import user.util.GeomUtil;
 //import nmea.rmiserver.NMEAServer;
 
 public class OlivSoftDesktop
@@ -570,17 +577,20 @@ public class OlivSoftDesktop
 
   public static void main(String[] args)
   {
-    String lnf = System.getProperty("swing.defaultlaf");
-    if (lnf == null) // Let the -Dswing.defaultlaf do the job.
+    if (!"yes".equals(System.getProperty("headless", "no")))
     {
-      try
+      String lnf = System.getProperty("swing.defaultlaf");
+      if (lnf == null) // Let the -Dswing.defaultlaf do the job.
       {
-        if (System.getProperty("swing.defaultlaf") == null)
-          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      }
-      catch(Exception e)
-      {
-        e.printStackTrace();
+        try
+        {
+          if (System.getProperty("swing.defaultlaf") == null)
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch(Exception e)
+        {
+          e.printStackTrace();
+        }
       }
     }
     String baudRate = System.getProperty("baud.rate", "4800");
@@ -713,13 +723,13 @@ public class OlivSoftDesktop
       String hostname   = "localhost";
       String dataFile   = null; // "D:\\OlivSoft\\all-scripts\\logged-data\\2010-11-08.Nuku-Hiva-Tuamotu.nmea";
 
-      // TODO output channel parameter(s)
+      // output channel parameter(s)
 
       dataFile = System.getProperty("logged.nmea.data", null); // Logged NMEA Data 
       boolean verbose = "true".equals(System.getProperty("verbose", "false"));
       netPort = System.getProperty("net.port", null); 
       serialPort = System.getProperty("serial.port", null); 
-      hostname = System.getProperty("hostname", null);
+      hostname = System.getProperty("hostname", hostname);
       String netOptStr = System.getProperty("net.transport", null);
       if (netOptStr != null)
       {
@@ -786,6 +796,7 @@ public class OlivSoftDesktop
           {
             netOption = CustomNMEAClient.TCP_OPTION;
             netPort = guiPanel.getTcpPort();
+            hostname = guiPanel.getTcpMachine();
           }
           else if (channel == InputChannelPanel.UDP)
           {
@@ -818,7 +829,6 @@ public class OlivSoftDesktop
             System.out.println(s);
         }
       }
-    
       // Input channel
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
                                                                  serialPort, 
@@ -925,7 +935,7 @@ public class OlivSoftDesktop
         if (udpWriter != null | tcpWriter != null || logFile != null)
         {
           NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
-          {
+            {
               @Override
               public void manageNMEAString(String nmeaString)
               {
@@ -987,9 +997,18 @@ public class OlivSoftDesktop
           }
         });
       }
+      
+      // Character-mode console
+      boolean charConsole = "true".equals(System.getProperty("char.console", "false")); // System variable
+      if (charConsole)
+      {
+//      System.out.println("DISPLAYING CHARACTER-MODE CONSOLE");
+        CharacterModeConsole cmConsole = new CharacterModeConsole();
+        cmConsole.displayConsole();
+      }
     }
   }
-  
+
   private static void shutDownHTTPserver(String req)
   {
     try

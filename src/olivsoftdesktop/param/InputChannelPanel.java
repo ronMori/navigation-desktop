@@ -42,6 +42,7 @@ public class InputChannelPanel
   private JLabel udpPortLabel = new JLabel();
   private JLabel fileLabel = new JLabel();
   private JFormattedTextField tcpPortFormattedTextField = new JFormattedTextField(new DecimalFormat("####0"));
+  private JTextField tcpMachineTextField = new JTextField();
   private JTextField udpMachineTextField = new JTextField();
   private JFormattedTextField udpPortFormattedTextField = new JFormattedTextField(new DecimalFormat("####0"));
   private JTextField dataFileTextField = new JTextField();
@@ -100,10 +101,12 @@ public class InputChannelPanel
         }
       });
     serialPortLabel.setText("Port");
-    tcpPortLabel.setText("Port");
-    udpPortLabel.setText("Server");
+    tcpPortLabel.setText("Prt/Srv");
+    tcpPortLabel.setToolTipText("Port and Address (or machine name)");
+    udpPortLabel.setText("Prt/Srv");
     udpPortLabel.setToolTipText("Port and Address (or machine name)");
     fileLabel.setText("Data file");
+    tcpMachineTextField.setText("localhost");
     tcpPortFormattedTextField.setText("7001");
     udpMachineTextField.setText("localhost");
     udpPortFormattedTextField.setText("8001");
@@ -134,8 +137,11 @@ public class InputChannelPanel
     serialPortsComboBox.setPreferredSize(new Dimension(100, 20));
     tcpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
     tcpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
-    udpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
+    tcpMachineTextField.setPreferredSize(new Dimension(50, 20));
+    tcpMachineTextField.setHorizontalAlignment(JTextField.CENTER);
+    tcpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
     udpPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
+    udpPortFormattedTextField.setPreferredSize(new Dimension(35, 20));
     udpMachineTextField.setPreferredSize(new Dimension(50, 20));
     udpMachineTextField.setHorizontalAlignment(JTextField.CENTER);
     dataFileTextField.setPreferredSize(new Dimension(150, 20));
@@ -163,6 +169,9 @@ public class InputChannelPanel
     this.add(tcpPortFormattedTextField,
              new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 5, 0, 0), 0, 0));
+    this.add(tcpMachineTextField,
+             new GridBagConstraints(3, 1, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                    new Insets(0, 2, 0, 0), 0, 0));
     this.add(udpPortFormattedTextField,
              new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
           new Insets(0, 5, 0, 0), 0, 0));
@@ -226,6 +235,7 @@ public class InputChannelPanel
     serialPortsComboBox.setEnabled(serial);
     tcpPortLabel.setEnabled(tcp);
     tcpPortFormattedTextField.setEnabled(tcp);
+    tcpMachineTextField.setEnabled(tcp);
     udpPortLabel.setEnabled(udp);
     udpPortFormattedTextField.setEnabled(udp);
     udpMachineTextField.setEnabled(udp);
@@ -256,6 +266,11 @@ public class InputChannelPanel
     return tcpPortFormattedTextField.getText();
   }
 
+  public String getTcpMachine()
+  { 
+    return tcpMachineTextField.getText();
+  }
+  
   public String getUdpPort()
   {
     return udpPortFormattedTextField.getText();

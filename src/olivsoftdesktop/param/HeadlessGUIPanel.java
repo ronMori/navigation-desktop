@@ -87,7 +87,7 @@ public class HeadlessGUIPanel
     this.setLayout(gridBagLayout1);
   //this.setPreferredSize(new Dimension(306, 203));
   //this.setBounds(new Rectangle(10, 10, 400, 210));
-    this.setSize(new Dimension(310, 205));
+    this.setSize(new Dimension(307, 205));
     inputPanel.setBorder(BorderFactory.createTitledBorder("Input Channel"));
     outputPanel.setBorder(BorderFactory.createTitledBorder("Output Channel(s)"));
     this.add(inputPanel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
@@ -117,6 +117,11 @@ public class HeadlessGUIPanel
     return inputPanel.getTcpPort();
   }
 
+  public String getTcpMachine()
+  { 
+    return inputPanel.getTcpMachine();
+  }
+  
   public String getUdpPort()
   {
     return inputPanel.getUdpPort();

@@ -204,8 +204,14 @@ public class DesktopNMEAReader
     
     try
     {
-      NMEACache.getInstance().dispatch(payload);    
-      NMEAContext.getInstance().fireNMEAString(payload);    
+      synchronized (NMEAContext.getInstance().getNMEAListeners())
+      {
+        NMEACache.getInstance().dispatch(payload);    
+      }
+      synchronized (NMEAContext.getInstance().getNMEAListeners())
+      {
+        NMEAContext.getInstance().fireNMEAString(payload);    
+      }
     }
     catch (Exception ex)
     {
