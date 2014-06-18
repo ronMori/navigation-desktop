@@ -1,10 +1,15 @@
 package olivsoftdesktop.charmode;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+
+import java.io.PrintStream;
 
 import java.text.DecimalFormat;
 import java.text.Format;
+
+import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -27,11 +32,14 @@ import ocss.nmea.parser.Depth;
 import ocss.nmea.parser.Distance;
 import ocss.nmea.parser.GeoPos;
 import ocss.nmea.parser.Pressure;
+import ocss.nmea.parser.SolarDate;
 import ocss.nmea.parser.Speed;
 
 import ocss.nmea.parser.Temperature;
 import ocss.nmea.parser.TrueWindDirection;
 import ocss.nmea.parser.TrueWindSpeed;
+
+import ocss.nmea.parser.UTCDate;
 
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.EscapeSeq;
@@ -42,6 +50,8 @@ import user.util.GeomUtil;
 
 public class CharacterModeConsole
 {
+  private final static boolean DEBUG = false;
+  
   private static int cellSize   = 13;
   private static int dataSize   =  5;
   private static int keySize    =  3;
@@ -51,6 +61,8 @@ public class CharacterModeConsole
   private final static Format DF_31 = new DecimalFormat("#00.0");
   private final static Format DF_3  = new DecimalFormat("##0");
   private final static Format DF_4  = new DecimalFormat("###0");
+  private final static SimpleDateFormat SDF               = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'UTC'");
+  private final static SimpleDateFormat SOLAR_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'Solar'");
   
   private static Map<String, AssociatedData> suffixes = new HashMap<String, AssociatedData>();
   static
@@ -67,7 +79,7 @@ public class CharacterModeConsole
     suffixes.put("COG", new AssociatedData("t",  DF_3));
     suffixes.put("CDR", new AssociatedData("t",  DF_3)); // Current Direction
     suffixes.put("TWD", new AssociatedData("t",  DF_3));
-    suffixes.put("POS", new AssociatedData("",   null)); // Special Display (String). TODO Same for times and dates, and lat & long.
+//  suffixes.put("POS", new AssociatedData("",   null)); // Special Display (String). TODO Same for times and dates, and lat & long.
     suffixes.put("BAT", new AssociatedData("V",  DF_22));
     suffixes.put("MWT", new AssociatedData("C",  DF_31)); // Water Temp
     suffixes.put("MTA", new AssociatedData("C",  DF_31)); // Air Temp
@@ -77,6 +89,16 @@ public class CharacterModeConsole
     suffixes.put("CCS", new AssociatedData("kt", DF_22)); // Current Speed
     suffixes.put("CCD", new AssociatedData("t",  DF_3));  // Current Direction
     suffixes.put("TBF", new AssociatedData("m",  DF_4));  // Time buffer (in minutes) for current calculation
+    suffixes.put("XTE", new AssociatedData("nm", DF_22)); 
+  }
+
+  private static Map<String, Integer> nonNumericData = new HashMap<String, Integer>();
+  static
+  {
+    nonNumericData.put("POS", 24);
+    nonNumericData.put("GDT", 40);
+    nonNumericData.put("SLT", 40);
+    nonNumericData.put("NWP", 10);
   }
   
   private static Map<String, String> colorMap = new HashMap<String, String>();
@@ -97,11 +119,20 @@ public class CharacterModeConsole
   public CharacterModeConsole()
   {
     super();
+    try
+    {
+//    System.setOut(new PrintStream(new FileOutputStream("out.txt", true)));
+//    System.setErr(new PrintStream(new FileOutputStream("err.txt", true)));
+    }
+    catch (Exception ex)
+    {
+      ex.printStackTrace();
+    }
   }
   
   public void displayConsole()
   {
-    // System.out.println("Displaying Character mode console");
+//  System.out.println("Displaying Character mode console");
     // Init console here
     AnsiConsole.systemInstall();
     AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
@@ -112,53 +143,76 @@ public class CharacterModeConsole
       ex.printStackTrace();
     }
     
-    final SuperBool first = new SuperBool(true);        
+    try { Thread.sleep(1000L); } catch (Exception ex) {} // Not nice, I know...
     
+    final SuperBool first = new SuperBool(true);        
     // The small touchscreen (320x240) in 8x8 resolution has 40 columns per line of text, in 6x12, 54 columns.
-    synchronized (NMEAContext.getInstance().getNMEAListeners())
+    synchronized (NMEAContext.getInstance())
     {
-      NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
-        {
-          @Override
-          public void manageNMEAString(String nmeaString) // TODO ? Will need an event like CacheHasBeenHit, for GPSd
+      synchronized (NMEAContext.getInstance().getNMEAListeners())
+      {
+        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
           {
-            super.manageNMEAString(nmeaString);
-            try
+            @Override
+            public void manageNMEAString(String nmeaString) // TODO ? Will need an event like CacheHasBeenHit, for GPSd
             {
-              if (first.isTrue())
+    //        super.manageNMEAString(nmeaString);
+              try
               {
-                AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-                first.setValue(false);
-                try { initConsole(); }
-                catch (Exception ex)
+    //            plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
+                if (first.isTrue())
                 {
-                  ex.printStackTrace();
+                  AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
+                  first.setValue(false);
+                  try { initConsole(); }
+                  catch (Exception ex)
+                  {
+                    ex.printStackTrace();
+                  }
                 }
+                Set<String> keys = consoleData.keySet();
+                for (String s : keys)
+                {
+                  ConsoleData cd = consoleData.get(s);
+                  int col = cd.getX();
+                  int row = cd.getY();
+                  String value = "";
+                  if (nonNumericData.containsKey(s))
+                  {
+                    if ("POS".equals(s))                  
+                      value = DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS), " ", 12) + 
+                              DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng, GeomUtil.NO_DEG, GeomUtil.EW), " ", 12);
+                    else if ("GDT".equals(s))  
+                    {
+                      UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                      value = DesktopUtilities.lpad(SDF.format(utcDate.getValue()), " ", 24);
+                    }
+                    else if ("SLT".equals(s))  
+                    {
+                      SolarDate solarDate = (SolarDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_SOLAR_TIME, true);
+                      value = DesktopUtilities.lpad(SOLAR_DATE_FORMAT.format(solarDate.getValue()), " ", 24);
+                    }
+                    else if ("NWP".equals(s))  
+                    {
+                      value = (String)NMEAContext.getInstance().getCache().get(NMEADataCache.TO_WP, true);
+                    }
+                  }
+                  else
+                    value = DesktopUtilities.lpad(suffixes.get(s).getFmt().format(getValueFromCache(s)), " ", dataSize); // + " ";
+                  String plot = plotOneValue(1 + ((col - 1) * cellSize), row + 1, value, colorMap.get(cd.getFgData()), colorMap.get(cd.getBgData()));
+                  AnsiConsole.out.println(plot);          
+    //            try { Thread.sleep(10); } catch (Exception ex) {}
+                }
+    //          plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
               }
-              Set<String> keys = consoleData.keySet();
-              for (String s : keys)
+              catch (Exception ex)
               {
-                ConsoleData cd = consoleData.get(s);
-                int col = cd.getX();
-                int row = cd.getY();
-                String value = "";
-                if ("POS".equals(s))                  
-                  value = DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS), " ", 12) + 
-                          DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng, GeomUtil.NO_DEG, GeomUtil.EW), " ", 12);
-                else
-                  value = DesktopUtilities.lpad(suffixes.get(s).getFmt().format(getValueFromCache(s)), " ", dataSize); // + " ";
-                String plot = plotOneValue(1 + ((col - 1) * cellSize), row + 1, value, colorMap.get(cd.getFgData()), colorMap.get(cd.getBgData()));
-                AnsiConsole.out.println(plot);          
-                try { Thread.sleep(10); } catch (Exception ex) {}
+                System.err.println(nmeaString);
               }
             }
-            catch (Exception ex)
-            {
-              System.out.println(nmeaString);
-            }
-          }
-        });
-    }
+          });
+      }
+    }        
   }
   
   private double getValueFromCache(String key)
@@ -247,8 +301,8 @@ public class CharacterModeConsole
         Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
                             ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
         Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1)
-          System.out.println("No entry in Calculated Current Map");
+        if (keys.size() != 1 && DEBUG)
+          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
         for (Long l : keys)
           value = currentMap.get(l).getSpeed().getValue();
       }
@@ -261,8 +315,8 @@ public class CharacterModeConsole
         Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
                             ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
         Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1)
-          System.out.println("No entry in Calculated Current Map");
+        if (keys.size() != 1 && DEBUG)
+          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
         for (Long l : keys)
           value = currentMap.get(l).getDirection().getValue();
       }
@@ -275,13 +329,17 @@ public class CharacterModeConsole
         Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
                             ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
         Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1)
-          System.out.println("No entry in Calculated Current Map");
+        if (keys.size() != 1 && DEBUG)
+          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
         for (Long l : keys)
           value = l / (60 * 1000);
       }
       catch (Exception ignore) {}
     }
+    else if ("XTE".equals(key))
+    {
+      try { value = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.XTE)).getValue(); } catch (Exception ignore) {}
+    }    
     return value;
   }
   
@@ -295,7 +353,7 @@ public class CharacterModeConsole
     while (props.hasMoreElements())
     {
       String prop = props.nextElement();
-    //    System.out.println("Prop:" + prop);
+//    System.out.println("Prop:" + prop);
       String value = consoleProps.getProperty(prop);
       String[] elem = value.split(",");
       consoleData.put(prop.trim(),
@@ -339,15 +397,18 @@ public class CharacterModeConsole
       {
         String k = cols.get(j);
 //      System.err.print(k + " ");
-        if ("POS".equals(k))
-          consoleLine.add(new CharData(k, // POS!
-                                       "  ** **.**'N *** **.**'E",  //    "                        ", 
-                                       suffixes.get(k).getSuffix(), 
+        if (nonNumericData.containsKey(k))
+        {
+//      if ("POS".equals(k))
+          consoleLine.add(new CharData(k, 
+                                       DesktopUtilities.lpad(" ", " ", nonNumericData.get(k)), // "  ** **.**'N *** **.**'E",  //    "                        ", 
+                                       "", // suffixes.get(k).getSuffix(), 
                                        cellSize, 
                                        colorMap.get(consoleData.get(k).getFgData()),
                                        colorMap.get(consoleData.get(k).getBgData()),
                                        colorMap.get(consoleData.get(k).getFgTitle()),
                                        colorMap.get(consoleData.get(k).getBgTitle())));
+        }
         else
           consoleLine.add(new CharData(k, 
                                        0, 
@@ -366,7 +427,8 @@ public class CharacterModeConsole
       String dataLine = formatCharacterLine(1, 1 + i.intValue(), cda);
       AnsiConsole.out.println(dataLine);          
 //    System.out.println(dataLine);
-    }    
+    }   
+//  plotMessage("Console Ready...");
   }
   
   private static String formatCharacterLine(int x, int y, CharData[] lineData)
@@ -375,7 +437,7 @@ public class CharacterModeConsole
     line += EscapeSeq.ansiLocate(x, y);
     for (CharData cd : lineData)
     {
-      int rpad = cd.getCellLen() - (cd.getKey().length() + cd.formattedValue().length() + cd.getSuffix().length() + 3);
+  //  int rpad = cd.getCellLen() - (cd.getKey().length() + cd.formattedValue().length() + cd.getSuffix().length() + 3);
       String s = EscapeSeq.ansiSetTextAndBackgroundColor(cd.getTitleColor(), cd.getTitleBackground()) + 
       EscapeSeq.ANSI_BOLD + 
       cd.getKey() + 
@@ -399,12 +461,27 @@ public class CharacterModeConsole
     String line = "";
     line += EscapeSeq.ansiLocate(x + keySize, y);
     String s = EscapeSeq.ansiSetTextAndBackgroundColor(valueColor, bgColor) + 
-    EscapeSeq.ANSI_BOLD + 
-    " " + value + " ";
+               EscapeSeq.ANSI_BOLD + 
+               " " + value + " ";
     line += s;
     return line;
   }
 
+  private static void plotMessage(String mess)
+  {
+    String line = "";
+    int x = 0, y = 10;
+    line = EscapeSeq.ansiLocate(x, y) +
+           EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLUE) + 
+           EscapeSeq.ANSI_BOLD + 
+           mess +       
+           EscapeSeq.ANSI_NORMAL + 
+           EscapeSeq.ANSI_DEFAULT_BACKGROUND + 
+           EscapeSeq.ANSI_DEFAULT_TEXT;;
+    
+    AnsiConsole.out.println(line);          
+  }
+  
   private static class AssociatedData
   {
     private String suffix;
@@ -602,7 +679,7 @@ public class CharacterModeConsole
   // Propeties test 
   public static void main(String[] args) throws Exception
   {
-    String propFileName = System.getProperty("", "char.console.properties"); // "D:\\_mywork\\dev-corner\\olivsoft\\OlivSoftDesktop\\char.console.properties"
+    String propFileName = System.getProperty("console.definition", "char.console.properties"); // "D:\\_mywork\\dev-corner\\olivsoft\\OlivSoftDesktop\\char.console.properties"
     Map<String, ConsoleData> consoleData = new HashMap<String, ConsoleData>();
     Properties consoleProps = new Properties();
     consoleProps.load(new FileReader(new File(propFileName)));
@@ -702,7 +779,7 @@ public class CharacterModeConsole
           value = DesktopUtilities.lpad(suffixes.get(s).getFmt().format(Math.random() * 100), " ", dataSize); // + " ";
         String plot = plotOneValue(1 + ((col - 1) * cellSize), row + 1, value, colorMap.get(cd.getFgData()), colorMap.get(cd.getBgData()));
         AnsiConsole.out.println(plot);          
-        try { Thread.sleep(100); } catch (Exception ex) {}
+  //    try { Thread.sleep(100); } catch (Exception ex) {}
       }
       try { Thread.sleep(1000); } catch (Exception ex) {}
       i++;

@@ -68,6 +68,7 @@ import nmea.server.datareader.CustomNMEAClient;
 import nmea.server.utils.HTTPServer;
 import nmea.server.utils.Utils;
 
+import olivsoftdesktop.charmode.CharModePanel;
 import olivsoftdesktop.charmode.CharacterModeConsole;
 
 import olivsoftdesktop.ctx.DesktopContext;
@@ -1002,9 +1003,17 @@ public class OlivSoftDesktop
       boolean charConsole = "true".equals(System.getProperty("char.console", "false")); // System variable
       if (charConsole)
       {
-//      System.out.println("DISPLAYING CHARACTER-MODE CONSOLE");
-        CharacterModeConsole cmConsole = new CharacterModeConsole();
-        cmConsole.displayConsole();
+        if ("false".equals(System.getProperty("swing.console", "false")))
+        {
+  //      System.out.println("DISPLAYING CHARACTER-MODE CONSOLE");
+          CharacterModeConsole cmConsole = new CharacterModeConsole();
+          cmConsole.displayConsole();
+        }
+        else
+        {
+          CharModePanel cmp = new CharModePanel();
+          JOptionPane.showMessageDialog(null, cmp, "Character mode", JOptionPane.PLAIN_MESSAGE);
+        }
       }
     }
   }
