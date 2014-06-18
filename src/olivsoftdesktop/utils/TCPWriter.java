@@ -45,7 +45,8 @@ public class TCPWriter
   protected void setSocket(Socket skt)
   {
     this.clientSocketlist.add(skt);
-    System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
+    if ("true".equals(System.getProperty("verbose", "false")))
+      System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
   }
   
   public void write(byte[] message)
@@ -86,7 +87,8 @@ public class TCPWriter
         for (Socket skt : toRemove)
         {
           this.clientSocketlist.remove(skt);
-          System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
+          if ("true".equals(System.getProperty("verbose", "false")))
+            System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
         }
       }
     }
