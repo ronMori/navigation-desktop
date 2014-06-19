@@ -218,7 +218,7 @@ public class CharacterModeConsole
   private double getValueFromCache(String key)
   {
     double value = 0;
-    if ("BSP".equals(key))  // TODO Add times and dates
+    if ("BSP".equals(key)) 
     {
       try { value = ((Speed) NMEAContext.getInstance().getCache().get(NMEADataCache.BSP)).getValue(); } catch (Exception ignore) {}
     }
@@ -345,7 +345,7 @@ public class CharacterModeConsole
   
   private void initConsole() throws Exception
   {
-    String propFileName = System.getProperty("char.console.properties", "char.console.properties"); // "D:\\_mywork\\dev-corner\\olivsoft\\OlivSoftDesktop\\char.console.properties"
+    String propFileName = System.getProperty("console.definition", "char.console.properties"); // "D:\\_mywork\\dev-corner\\olivsoft\\OlivSoftDesktop\\char.console.properties"
     consoleData = new HashMap<String, ConsoleData>();
     Properties consoleProps = new Properties();
     consoleProps.load(new FileReader(new File(propFileName)));
@@ -354,20 +354,23 @@ public class CharacterModeConsole
     {
       String prop = props.nextElement();
 //    System.out.println("Prop:" + prop);
-      String value = consoleProps.getProperty(prop);
-      String[] elem = value.split(",");
-      consoleData.put(prop.trim(),
-                      new ConsoleData(prop.trim(), 
-                                      Integer.parseInt(elem[0].trim()), 
-                                      Integer.parseInt(elem[1].trim()), 
-                                      elem[2].trim(), 
-                                      elem[3].trim(), 
-                                      elem[4].trim(), 
-                                      elem[5].trim()));
+      if (!prop.equals("console.title"))
+      {
+        String value = consoleProps.getProperty(prop);
+        String[] elem = value.split(",");
+        consoleData.put(prop.trim(),
+                        new ConsoleData(prop.trim(), 
+                                        Integer.parseInt(elem[0].trim()), 
+                                        Integer.parseInt(elem[1].trim()), 
+                                        elem[2].trim(), 
+                                        elem[3].trim(), 
+                                        elem[4].trim(), 
+                                        elem[5].trim()));
+      }
     }
     // First display
     AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-    String screenTitle = " - Character-mode NMEA console -";
+    String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
     AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
     
     // Ordered lists
@@ -687,21 +690,24 @@ public class CharacterModeConsole
     while (props.hasMoreElements())
     {
       String prop = props.nextElement();
-//    System.out.println("Prop:" + prop);
-      String value = consoleProps.getProperty(prop);
-      String[] elem = value.split(",");
-      consoleData.put(prop.trim(),
-                      new ConsoleData(prop.trim(), 
-                                      Integer.parseInt(elem[0].trim()), 
-                                      Integer.parseInt(elem[1].trim()), 
-                                      elem[2].trim(), 
-                                      elem[3].trim(), 
-                                      elem[4].trim(), 
-                                      elem[5].trim()));
+      if (!prop.equals("console.title"))
+      {
+  //    System.out.println("Prop:" + prop);
+        String value = consoleProps.getProperty(prop);
+        String[] elem = value.split(",");
+        consoleData.put(prop.trim(),
+                        new ConsoleData(prop.trim(), 
+                                        Integer.parseInt(elem[0].trim()), 
+                                        Integer.parseInt(elem[1].trim()), 
+                                        elem[2].trim(), 
+                                        elem[3].trim(), 
+                                        elem[4].trim(), 
+                                        elem[5].trim()));
+      }
     }
     // First display
     AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-    String screenTitle = "Character-mode NMEA console";
+    String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
     AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
     
     // Ordered lists
