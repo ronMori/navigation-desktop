@@ -97,6 +97,7 @@ import java.net.URL;
 import java.sql.Connection;
 
 import java.text.DecimalFormat;
+import java.text.Format;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -119,6 +120,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDesktopPane;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -130,6 +132,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -178,6 +181,7 @@ import ocss.nmea.parser.Angle360;
 import ocss.nmea.parser.Depth;
 import ocss.nmea.parser.Distance;
 import ocss.nmea.parser.GeoPos;
+import ocss.nmea.parser.Pressure;
 import ocss.nmea.parser.SVData;
 import ocss.nmea.parser.Speed;
 import ocss.nmea.parser.Temperature;
@@ -289,6 +293,7 @@ public class DesktopFrame
 
   private JMenu menuHelp = new JMenu();
   private JMenuItem menuHelpAbout = new JMenuItem();
+  private JMenuItem menuHelpRebroadcast = new JMenuItem();
   private JPanel bottomPanel = new JPanel(new BorderLayout());
   private JLabel statusBar = new JLabel();
   private JProgressBar progressBar = new JProgressBar();
@@ -342,14 +347,16 @@ public class DesktopFrame
       private JCheckBox sunDayLightCheckBox;
       private JCheckBox sunAzimuthCheckBox;
       private JCheckBox moonAzimuthCheckBox;
+
+      private JCheckBox marqueeCheckBox;
       
       private JCheckBox globeCheckBox;
       private JCheckBox roseCheckBox;
       
-      private boolean withMarquee = false;
-      private MarqueePanel miscDataPanel;
-      private final int MISC_DATA_PANEL_WIDTH  = 250;
-      private final int MISC_DATA_PANEL_HEIGHT = 200;
+      private boolean withMarquee = true;
+      private MarqueePanel marqueePanel;
+      private final int MARQUEE_PANEL_WIDTH  = 250;
+      private final int MARQUEE_PANEL_HEIGHT = 200;
       
       @SuppressWarnings("compatibility:-2193568848390199696")
       private final static long serialVersionUID = 1L;
@@ -523,6 +530,21 @@ public class DesktopFrame
             }
           });
         
+        marqueeCheckBox = new JCheckBox("Marquee");
+        marqueeCheckBox.setHorizontalTextPosition(SwingConstants.LEADING);
+        marqueeCheckBox.setForeground(wpFontColor);
+        marqueeCheckBox.setSelected(false);
+        marqueeCheckBox.setOpaque(false);
+        marqueeCheckBox.setVisible(true);
+        this.add(marqueeCheckBox);
+        marqueeCheckBox.addActionListener(new ActionListener()
+          {
+            public void actionPerformed(ActionEvent e)
+            {
+              repaint();
+            }
+          });
+        
         windGaugePanel = new WindGaugePanel();
         windGaugePanel.setPreferredSize(new Dimension(WINDGAUGE_PANEL_WIDTH, WINDGAUGE_PANEL_HEIGHT));
         windGaugePanel.setSize(new Dimension(WINDGAUGE_PANEL_WIDTH, WINDGAUGE_PANEL_HEIGHT));
@@ -535,13 +557,13 @@ public class DesktopFrame
         
         if (withMarquee)
         {
-          miscDataPanel = new MarqueePanel();
-          miscDataPanel.setPreferredSize(new Dimension(MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT));
-          miscDataPanel.setSize(new Dimension(MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT));
+          marqueePanel = new MarqueePanel();
+          marqueePanel.setPreferredSize(new Dimension(MARQUEE_PANEL_WIDTH, MARQUEE_PANEL_HEIGHT));
+          marqueePanel.setSize(new Dimension(MARQUEE_PANEL_WIDTH, MARQUEE_PANEL_HEIGHT));
   //      miscDataPanel.setBounds(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 30, MISC_DATA_PANEL_WIDTH, MISC_DATA_PANEL_HEIGHT);
-          miscDataPanel.setVisible(false);
-          miscDataPanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
-          this.add(miscDataPanel);     
+          marqueePanel.setVisible(false);
+          marqueePanel.setBackground(new Color(0f, 0f, 0f, 0f)); // Transparent
+          this.add(marqueePanel);     
         }
       }
       
@@ -704,7 +726,7 @@ public class DesktopFrame
               y += (gr.getFont().getSize() + 2);
             }
           }
-          // Some drawing...
+          // Some drawings...
           boolean displayRose = true;
           int twd    = 0;
           int hdg    = 0;
@@ -900,6 +922,13 @@ public class DesktopFrame
                                           moonAzimuthCheckBox.getPreferredSize().width, 
                                           moonAzimuthCheckBox.getPreferredSize().height);
             currentYPos += (5 + moonAzimuthCheckBox.getPreferredSize().height);
+
+            marqueeCheckBox.setBounds(this.getWidth() - (marqueeCheckBox.getSize().width + 30), 
+                                      currentYPos, 
+                                      marqueeCheckBox.getPreferredSize().width, 
+                                      marqueeCheckBox.getPreferredSize().height);
+            currentYPos += (5 + marqueeCheckBox.getPreferredSize().height);
+
             windGaugePanel.setBounds(this.getWidth() - (WINDGAUGE_PANEL_WIDTH + 30), 
                                      currentYPos, 
                                      WINDGAUGE_PANEL_WIDTH, 
@@ -917,19 +946,32 @@ public class DesktopFrame
             if (withMarquee)
             {
               currentYPos += (5 + WINDGAUGE_PANEL_HEIGHT);
-              miscDataPanel.setBounds(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 
-                                       currentYPos, 
-                                       MISC_DATA_PANEL_WIDTH, 
-                                       MISC_DATA_PANEL_HEIGHT);
-              miscDataPanel.setVisible(true);
-              gr.drawRoundRect(this.getWidth() - (MISC_DATA_PANEL_WIDTH + 30), 
-                                       currentYPos, 
-                                       MISC_DATA_PANEL_WIDTH, 
-                                       MISC_DATA_PANEL_HEIGHT, 10, 10);
-              if (!miscDataPanel.isRunning())
+              marqueePanel.setBounds(this.getWidth() - (MARQUEE_PANEL_WIDTH + 30), 
+//                                   currentYPos,                                    // Next in line...
+                                     this.getHeight() - (MARQUEE_PANEL_HEIGHT + 30), // Bottom of the wallpaper
+                                     MARQUEE_PANEL_WIDTH, 
+                                     MARQUEE_PANEL_HEIGHT);
+              if (marqueeCheckBox.isSelected())
               {
-                miscDataPanel.setup("--- Place holder for transient data ---");
-                miscDataPanel.start();
+                marqueePanel.setVisible(true);
+//                gr.drawRoundRect(this.getWidth() - (MARQUEE_PANEL_WIDTH + 30), 
+////                               currentYPos,                                    // Next in line...
+//                                 this.getHeight() - (MARQUEE_PANEL_HEIGHT + 30), // Bottom of the wallpaper
+//                                 MARQUEE_PANEL_WIDTH, 
+//                                 MARQUEE_PANEL_HEIGHT, 10, 10);
+                if (!marqueePanel.isRunning())
+                {
+                  marqueePanel.setup(); // "--- Place holder for transient data ---");
+                  marqueePanel.start();
+                }
+              }
+              else
+              {
+                marqueePanel.setVisible(false);
+                if (marqueePanel.isRunning())
+                {
+                  marqueePanel.stop();
+                }
               }
             }
           }
@@ -946,7 +988,7 @@ public class DesktopFrame
           headingPanel.setVisible(false);
           windGaugePanel.setVisible(false);
           if (withMarquee)
-            miscDataPanel.setVisible(false);
+            marqueePanel.setVisible(false);
   //      gr.setColor(Color.LIGHT_GRAY);
           gr.setColor(Color.GREEN);
           Font f = gr.getFont();
@@ -1288,11 +1330,11 @@ public class DesktopFrame
   private int HTTPPort = -1;
   private int RMIPort  = -1;
 //private int GPSDPort = -1;
+  private transient HTTPServer httpServer = null;
   private transient UDPWriter udpWriter   = null;
   private transient TCPWriter tcpWriter   = null;
 //private transient GPSDWriter gpsdWriter = null;
   private RebroadcastPanel rebroadcastPanel = null;
-  private boolean rebroadcastVerbose = "true".equals(System.getProperty("verbose", "false"));
 
   private static String NMEA_EOS = new String(new char[] {0x0A, 0x0D});
   
@@ -1305,6 +1347,7 @@ public class DesktopFrame
   }
   public DesktopFrame(List<DesktopUserExitInterface> userExitList)
   {
+    DesktopContext.getInstance().setDesktopVerbose("true".equals(System.getProperty("verbose", "false")));
     this.userExitList = userExitList;
 //  NMEA_EOS = new String(new char[] {0x0A, 0x0D}); //(System.getProperty("os.name").contains("Windows")?NMEAParser.STANDARD_NMEA_EOS:NMEAParser.LINUX_NMEA_EOS);
     try
@@ -1801,6 +1844,9 @@ public class DesktopFrame
     menuHelp.setText( "Help" );
     menuHelpAbout.setText( "About" );
     menuHelpAbout.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { helpAbout_ActionPerformed( ae ); } } );
+    menuHelpRebroadcast.setText("Rebroadcast help");
+    menuHelpRebroadcast.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { helpRebroadcast_ActionPerformed( ae ); } } );
+    
     statusBar.setText( " Ready" );
     // Rebroadcast option
     statusBar.addMouseListener(new MouseListener()
@@ -2179,6 +2225,8 @@ public class DesktopFrame
                                               });
     }
     menuHelp.add( menuHelpAbout );
+    menuHelp.add( menuHelpRebroadcast );
+    
     menuBar.add( menuHelp );
     bottomPanel.add(statusBar, BorderLayout.WEST);
     bottomPanel.add(progressBar, BorderLayout.EAST);
@@ -2750,7 +2798,7 @@ public class DesktopFrame
                 String message = str;
                 if (TCPPort != -1 && str != null)
                 {
-                  if (rebroadcastVerbose)
+                  if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on TCP Port " + TCPPort + ": [" + str + "]");
                   if (tcpWriter != null)
                   {
@@ -2760,7 +2808,7 @@ public class DesktopFrame
                 }
                 if (UDPPort != -1 && str != null)
                 {
-                  if (rebroadcastVerbose)
+                  if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
                   udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                   prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
@@ -2774,13 +2822,13 @@ public class DesktopFrame
 //                }
                 if (HTTPPort != -1 && str != null)
                 {
-                  if (rebroadcastVerbose)
+                  if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on HTTP Port " + HTTPPort + ":" + str);
                   prefix += (" => " + rebroadcastPanel.getHttpFlavor() + "/HTTP " + HTTPPort);
                 }
                 if (RMIPort != -1 && str != null)
                 {
-                  if (rebroadcastVerbose)
+                  if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on RMI Port " + RMIPort + ":" + str);
                   prefix += (" => RMI " + RMIPort);
                 }
@@ -2941,19 +2989,20 @@ public class DesktopFrame
                 prefix += ((ParamPanel.getData()[ParamData.NMEA_HOST_NAME][ParamPanel.PRM_VALUE]).toString() + ":" + (ParamPanel.getData()[ParamData.NMEA_HTTP_PORT][ParamPanel.PRM_VALUE]).toString());
               
               // Re-broadcast ?
+              // Add condition set by the Admin HTTP Port...
               if (TCPPort != -1)
               {
-                if (rebroadcastVerbose)
-                  System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
-                if (tcpWriter != null)
+                if (tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable())
                 {
+                  if (DesktopContext.getInstance().isDesktopVerbose())
+                    System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
                   tcpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                   prefix += (" => TCP " + TCPPort);
                 }
               }
-              if (UDPPort != -1)
+              if (UDPPort != -1 && udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable())
               {
-                if (rebroadcastVerbose)
+                if (DesktopContext.getInstance().isDesktopVerbose())
                   System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
                 udpWriter.write((DesktopUtilities.superTrim(str) + getNMEA_EOS()).getBytes());
                 prefix += (" => UDP " + rebroadcastPanel.udpHost() + ":" + UDPPort);
@@ -2970,13 +3019,13 @@ public class DesktopFrame
 //              }
               if (HTTPPort != -1)
               {
-                if (rebroadcastVerbose)
+                if (DesktopContext.getInstance().isDesktopVerbose())
                   System.out.println("Rebroadcasting on HTTP Port " + HTTPPort + ":" + str);
                 prefix += (" => " + rebroadcastPanel.getHttpFlavor() + "/HTTP " + HTTPPort);
               }
               if (RMIPort != -1)
               {
-                if (rebroadcastVerbose)
+                if (DesktopContext.getInstance().isDesktopVerbose())
                   System.out.println("Rebroadcasting on RMI Port " + RMIPort + ":" + str);
                 prefix += (" => RMI " + RMIPort);
               }
@@ -3145,6 +3194,37 @@ public class DesktopFrame
   void helpAbout_ActionPerformed(ActionEvent e)
   {
     JOptionPane.showMessageDialog(this, new DesktopFrame_AboutBoxPanel(), "About", JOptionPane.PLAIN_MESSAGE);
+  }
+  
+  void helpRebroadcast_ActionPerformed(ActionEvent e)
+  {
+    showHelp();
+  }
+
+  private void showHelp()
+  {
+    JPanel helpPanel = new JPanel();
+    helpPanel.setPreferredSize(new Dimension(500, 500));
+    JEditorPane jEditorPane = new JEditorPane();
+    JScrollPane jScrollPane = new JScrollPane();
+    helpPanel.setLayout(new BorderLayout());
+    jEditorPane.setEditable(false);
+    jEditorPane.setFocusable(false);
+    jEditorPane.setFont(new Font("Verdana", 0, 10));
+    jEditorPane.setBackground(Color.lightGray);
+    jScrollPane.getViewport().add(jEditorPane, null);
+
+    try
+    {
+      jEditorPane.setPage(this.getClass().getResource("rebroadcast.help.html"));
+      jEditorPane.repaint();
+    }
+    catch (Exception ex)
+    {
+      ex.printStackTrace();
+    }
+    helpPanel.add(jScrollPane, BorderLayout.CENTER);
+    JOptionPane.showMessageDialog(this, helpPanel, "NMEA Rebroadcasting Help", JOptionPane.PLAIN_MESSAGE); 
   }
 
   private void this_windowClosing(WindowEvent e)
@@ -4112,11 +4192,11 @@ public class DesktopFrame
             System.setProperty("http.port", Integer.toString(HTTPPort));
             if (rebroadcastPanel.getHttpFlavor().equals("XML"))
             {
-              new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
+              httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
               html5Console.setEnabled(true);
             }
             if (rebroadcastPanel.getHttpFlavor().equals("json"))
-              new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
+              httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
             
             // Remind the URL of the html console (in the clipboard)
             String consoleURL = "http://localhost:" + Integer.toString(HTTPPort) + "/html5/console.html";
@@ -4227,7 +4307,7 @@ public class DesktopFrame
     extends JPanel
     implements ActionListener
   {
-    private static final int RATE = 20;
+    private static final int RATE = 1; // The lower the slower
     private final Timer timer = new Timer(1000 / RATE, this);
     private final JLabel label = new JLabel();
     private String s = "";
@@ -4245,22 +4325,20 @@ public class DesktopFrame
     {
     }
     
-    public void setup(String s)
+    public void setup() // String s)
     {
-      if (s == null)
-      {
-        throw new IllegalArgumentException("Null string ");
-      }      
+      String s = composeStringFromCache();
+      
       Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
       Font f = ((Font) ParamPanel.getData()[ParamData.WALLPAPER_FONT][ParamPanel.PRM_VALUE]); 
-      label.setFont(f);
+      label.setFont(f.deriveFont(Font.BOLD, 1.5f * f.getSize()));
       this.n = 1; // s.length();
       String str = s;
-      boolean ok = false;
+      boolean ok = true;  // TEMP Not here!
       while (!ok)
       {
         int strWidth = label.getFontMetrics(label.getFont()).stringWidth(str.trim());
-        if (strWidth < this.getWidth()) // Panel width
+        if (strWidth < label.getWidth()) // Label width
         {
           ok = true;
           this.n = str.length();
@@ -4279,13 +4357,15 @@ public class DesktopFrame
       label.setForeground(wpFontColor);
    // label.setBackground(new Color(0f, 0f, 0f, 0f));
       Color bg = this.getParent().getBackground();
-      this.setBackground(new Color(bg.getRGB()));      
-//    label.setBackground(Color.blue);      
+      this.setBackground(new Color(bg.getRGB()));    
+      this.setOpaque(false);
+//    label.setBackground(Color.yellow);      
       label.setText(sb.toString());
+      
       this.setLayout(new BorderLayout());
       this.add(label, BorderLayout.NORTH);      
     }
-
+    
     public void start()
     {
       running = true;
@@ -4298,16 +4378,130 @@ public class DesktopFrame
       timer.stop();
     }
 
+
     @Override
     public void actionPerformed(ActionEvent e)
     {
   //  System.out.println("Action Performed, timer event");
+      this.s = composeStringFromCache(); // Compose the string from the cache
+
+      String str = composeDataString(s);
+      label.setText(str);
+    }
+    
+    private String composeDataString(String s)
+    {
+      String[] sa = s.split("\n");
+      String fmt = "";
+      fmt += "<html>";
+      for (int i=index; i<sa.length; i++)
+        fmt += (sa[i] + "<br>");
+      for (int i=0; i<index; i++)
+        fmt += (sa[i] + "<br>");
+      fmt += "</html>";
+      
       index++;
-      if (index > s.length() - n)
-      {
+      if (index > sa.length)
         index = 0;
-      }
-      label.setText(s.substring(index, index + n));
+      
+      return fmt;
+    }
+    
+    private final Format DIR_FMT   = new DecimalFormat("###'\272t'");
+    private final Format ANGLE_FMT = new DecimalFormat("###'\272'");
+    private final Format SPEED_FMT = new DecimalFormat("#0.00' kt'");
+    private final Format DEPTH_FMT = new DecimalFormat("#0.00' m'");
+    private final Format TEMP_FMT  = new DecimalFormat("#0.00'\272C'");
+    private final Format DIST_FMT  = new DecimalFormat("###0.00' nm'");
+    private final Format PRESS_FMT = new DecimalFormat("###0.0' mb'");
+    private final Format VOLT_FMT  = new DecimalFormat("00.00' V'");
+    
+    private String composeStringFromCache()
+    {
+      double aws = 0d;
+      try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+      int awa    = 0;
+      try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+      double bsp = 0d;
+      try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+      int hdg    = 0;
+      try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+      
+      double bl = 0d;
+      try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
+      double sl = 0d;
+      try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
+      double depth = 0d;
+      try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
+      double temp  = 0d;
+      try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
+      int twd = 0;
+      try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+      double tws = 0d;
+      try { tws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
+      double twa = 0d; 
+      try { twa = ((Angle180) NMEAContext.getInstance().getCache().get(NMEADataCache.TWA, true)).getValue(); } catch (Exception ignore) {}
+      int cdr = 0; // TODO The calculated one
+      try { cdr = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.CDR, true)).getDoubleValue(); } catch (Exception ex) {}
+      double csp = 0; // TODO The calculated one
+      try { csp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.CSP, true)).getDoubleValue(); } catch (Exception ex) {}
+      float bat = 0;
+      try { bat = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.BATTERY, true)).floatValue(); } catch (Exception ignore) {}
+      double xte = 0;
+      try { xte = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.XTE, true)).getValue(); } catch (Exception ignore) {}
+      String nwp = "";
+      nwp = (String)NMEAContext.getInstance().getCache().get(NMEADataCache.TO_WP, true);
+
+      // Air temperature, Pressure
+      double airtemp = -Double.MAX_VALUE; 
+      try { airtemp = ((Temperature) NMEAContext.getInstance().getCache().get(NMEADataCache.AIR_TEMP, true)).getValue(); } catch (Exception ignore) {}
+      double prmsl = 0d; 
+      try { prmsl = ((Pressure) NMEAContext.getInstance().getCache().get(NMEADataCache.BARO_PRESS, true)).getValue(); } catch (Exception ignore) {}
+      
+      // A preference for the data to diaplay in the marquee
+      ParamPanel.MarqueeDataList mdl = ((ParamPanel.MarqueeDataList)ParamPanel.getData()[ParamData.MARQUEE_DATA][ParamPanel.PRM_VALUE]);
+      String dl = mdl.toString();
+      String[] da = dl.split(",");
+      String str = "";
+      for (String id : da)
+      {
+        if ("BSP".equals(id))
+          str += ("BSP:" + lpad(SPEED_FMT.format(bsp), " ", 8)    + "\n");
+        else if ("HDG".equals(id))
+          str += ("HDG:" + lpad(DIR_FMT.format(hdg), " ", 5)      + "\n");
+        else if ("TWD".equals(id))
+          str += ("TWD:" + lpad(DIR_FMT.format(twd), " ", 5)      + "\n");
+        else if ("TWS".equals(id))
+          str += ("TWS:" + lpad(SPEED_FMT.format(tws), " ", 8)    + "\n");
+        else if ("TWA".equals(id))
+          str += ("TWA:" + lpad(ANGLE_FMT.format(twa), " ", 5)    + "\n");
+        else if ("AWS".equals(id))
+          str += ("AWS:" + lpad(SPEED_FMT.format(aws), " ", 8)    + "\n");
+        else if ("AWA".equals(id))
+          str += ("AWA:" + lpad(ANGLE_FMT.format(awa), " ", 5)    + "\n");
+        else if ("DBT".equals(id))
+          str += ("DBT:" + lpad(DEPTH_FMT.format(depth), " ", 7)  + "\n");
+        else if ("MWT".equals(id))
+          str += ("MWT:" + lpad(TEMP_FMT.format(temp), " ", 7)    + "\n");
+        else if ("LOG".equals(id))
+          str += ("LOG:" + lpad(DIST_FMT.format(bl), " ", 11)     + "\n");
+        else if ("MAT".equals(id) && airtemp != -Double.MAX_VALUE)
+          str += ("MAT:" + lpad(TEMP_FMT.format(airtemp), " ", 7) + "\n");
+        else if ("PRS".equals(id) && prmsl > 0)
+          str += ("PRS:" + lpad(PRESS_FMT.format(prmsl), " ", 10) + "\n");
+        else if ("CDR".equals(id) && prmsl > 0)
+          str += ("CDR:" + lpad(DIR_FMT.format(cdr), " ", 5) + "\n");
+        else if ("CSP".equals(id))
+          str += ("AWS:" + lpad(SPEED_FMT.format(csp), " ", 8)    + "\n");
+        else if ("BAT".equals(id))
+          str += ("BAT:" + lpad(VOLT_FMT.format(bat), " ", 7)    + "\n");
+        else if ("XTE".equals(id))
+          str += ("XTE:" + lpad(DIST_FMT.format(xte), " ", 11)     + "\n");
+        else if ("NWP".equals(id))
+          str += ("NWP:" + lpad(nwp, " ", 6)    + "\n");
+      } 
+//    System.out.println("Composed " + str);
+      return str;
     }
   }
   

@@ -9,8 +9,11 @@ import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
+import olivsoftdesktop.param.MarqueeDataPanel;
 
 import olivsoftdesktop.utils.DesktopUtilities;
 
@@ -23,6 +26,7 @@ public class FieldPlusFinder
   public final static int PROPERTIES_TYPE = 3;
   public final static int NMEA_TYPE       = 4;
   public final static int FONT_TYPE       = 5;
+  public final static int MARQUEE_DATA_TYPE = 6;
   
   BorderLayout borderLayout1 = new BorderLayout();
   JButton finderButton = new JButton();
@@ -103,6 +107,12 @@ public class FieldPlusFinder
       fileType = new String[] {"data"};
       desc = "directory";
       option = JFileChooser.DIRECTORIES_ONLY;
+    }
+    else if (this.type == MARQUEE_DATA_TYPE)
+    {
+      MarqueeDataPanel mdp = new MarqueeDataPanel();
+      JOptionPane.showMessageDialog(this, mdp, "Marquee Data", JOptionPane.PLAIN_MESSAGE);
+      
     }
     String val = this.textField.getText();
     System.out.println("Editing :" + val);

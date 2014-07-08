@@ -96,9 +96,9 @@ public class CharacterModeConsole
   static
   {
     nonNumericData.put("POS", 24);
-    nonNumericData.put("GDT", 40);
-    nonNumericData.put("SLT", 40);
-    nonNumericData.put("NWP", 10);
+    nonNumericData.put("GDT", 40); // GPS Date & Time
+    nonNumericData.put("SLT", 40); // Solar Time
+    nonNumericData.put("NWP", 10); // Next Way point
   }
   
   private static Map<String, String> colorMap = new HashMap<String, String>();
