@@ -5,6 +5,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
+import olivsoftdesktop.ctx.DesktopContext;
+
 public class UDPWriter
 {
   private int udpPort         = 8001;
@@ -34,7 +36,7 @@ public class UDPWriter
   
   public void write(byte[] message)
   {
-    if ("true".equals(System.getProperty("verbose", "false")))
+    if (DesktopContext.getInstance().isDesktopVerbose())
       System.out.println("UDP write on " + this.hostName + ":" + udpPort + " [" + new String(message) + "]");
     try
     {

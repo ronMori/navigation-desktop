@@ -15,7 +15,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
+import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.JCheckBox;
@@ -46,6 +50,8 @@ import olivsoftdesktop.param.widget.FieldAndButtonCellEditor;
 import olivsoftdesktop.param.widget.FieldPlusFinder;
 
 import olivsoftdesktop.param.widget.FieldPlusFontPicker;
+
+import olivsoftdesktop.param.widget.FieldPlusMarqueeDataPicker;
 
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.SerialPortList;
@@ -239,6 +245,9 @@ public final class ParamPanel
             }
           }; 
         break;
+      case ParamData.MARQUEE_DATA:
+        it = new MarqueeDataList("BSP,HDG,TWD,TWS,TWA,AWS,AWA,DBT,MWT,LOG,MAT,PRS,XTE,BAT,CDR,CDS,NWP");
+        break;
       default:
         break;
     }
@@ -318,6 +327,8 @@ public final class ParamPanel
             else if (i == ParamData.DEFAULT_FONT ||
                      i == ParamData.WALLPAPER_FONT) 
               data[i][PRM_VALUE] = FontPanel.stringToFont(s);
+            else if (i == ParamData.MARQUEE_DATA)
+              data[i][PRM_VALUE] = new MarqueeDataList(s);
             else 
               data[i][PRM_VALUE] = s; // All the string fall in this bucket
           }
@@ -358,7 +369,8 @@ public final class ParamPanel
       ParamData.LIVE_WALLPAPER_FONT_COLOR,
       ParamData.DEFAULT_FONT,
       ParamData.FULL_SCREEN_DESKTOP,
-      ParamData.WALLPAPER_FONT
+      ParamData.WALLPAPER_FONT,
+      ParamData.MARQUEE_DATA
     },
     new int[] // NMEA
     { 
@@ -781,7 +793,13 @@ public final class ParamPanel
         if (c instanceof JComponent) 
         {
           JComponent jc = (JComponent)c;
-          try { jc.setToolTipText(getValueAt(rowIndex, vColIndex).toString()); } catch (Exception e) { e.printStackTrace(); }
+          try 
+          { 
+            Object val = getValueAt(rowIndex, vColIndex);
+            if (val != null)
+              jc.setToolTipText(val.toString()); 
+          } 
+          catch (Exception e) { e.printStackTrace(); }
         }
         return c;
       }
@@ -890,7 +908,22 @@ public final class ParamPanel
       super(s);
     }
   }
+  public static class MarqueeDataList
+  {
+    private String value;
     
+    public MarqueeDataList(String s) { this.value = s; }
+    
+    public void setValue(String str) { this.value = str; }
+    public String getValue() { return this.value; }
+    public String toString() { return getValue(); }
+    
+    public String[] getDataValues()
+    {
+      return value.split(",");
+    }
+  }
+      
   public static class DataDirectory
   {
     private String desc;
@@ -1009,6 +1042,7 @@ public final class ParamPanel
     FieldAndButtonCellEditor prop   = new FieldAndButtonCellEditor(FieldPlusFinder.PROPERTIES_TYPE);
     FieldAndButtonCellEditor ldd    = new FieldAndButtonCellEditor(FieldPlusFinder.DIRECTORY_TYPE);
     FieldPlusFontPicker      ffp    = null; // new FieldPlusFontPicker(null);
+    FieldPlusMarqueeDataPicker mdp  = null;
 
     public ParamEditor()
     {
@@ -1132,6 +1166,12 @@ public final class ParamPanel
         componentToApply = ffp;
         ffp.setText(FontPanel.fontToString((Font)value));
       }
+      else if (column == 1 && value instanceof MarqueeDataList)
+      {
+        mdp = new FieldPlusMarqueeDataPicker(value);
+        componentToApply = mdp;
+        mdp.setText(value.toString());
+      }
       else if (column == 1)
       {
         System.out.println(">> Default renderer for Colunm:" + column  + ", row:" + row + ", value is a " + value.getClass().getName() + ":" + value.toString());
@@ -1190,6 +1230,19 @@ public final class ParamPanel
         {
       //  System.out.println("Original Value is a " + originalValue.getClass().getName());
           return (Font)originalValue;
+        }
+      }
+      else if (componentToApply instanceof FieldPlusMarqueeDataPicker)
+      {
+        Object obj = ((FieldPlusMarqueeDataPicker)componentToApply).getCellEditorValue();        
+        if (obj instanceof String)
+        {
+          return new MarqueeDataList((String)obj);
+        }
+        else 
+        {
+      //  System.out.println("Original Value is a " + originalValue.getClass().getName());
+          return originalValue;
         }
       }
       else if (componentToApply instanceof ColorPickerCellEditor)

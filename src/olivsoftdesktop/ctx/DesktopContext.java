@@ -36,6 +36,18 @@ public class DesktopContext
   
   private boolean readingNMEA = false;
   
+  private boolean httpRebroadcastEnable = false;
+  private boolean tcpRebroadcastEnable  = false;
+  private boolean udpRebroadcastEnable  = false;
+  private boolean fileRebroadcastEnable = false;
+  
+  private boolean httpRebroadcastAvailable = false;
+  private boolean tcpRebroadcastAvailable  = false;
+  private boolean udpRebroadcastAvailable  = false;
+  private boolean fileRebroadcastAvailable = false;
+  
+  private boolean desktopVerbose = false;
+
   private DesktopContext()
   {
     parser = new DOMParser();
@@ -48,6 +60,56 @@ public class DesktopContext
     if (instance == null)
       instance = new DesktopContext();
     return instance;
+  }
+
+  public void setDesktopVerbose(boolean desktopVerbose)
+  {
+    this.desktopVerbose = desktopVerbose;
+  }
+
+  public void setHttpRebroadcastAvailable(boolean httpRebroadcastAvailable)
+  {
+    this.httpRebroadcastAvailable = httpRebroadcastAvailable;
+  }
+
+  public boolean isHttpRebroadcastAvailable()
+  {
+    return httpRebroadcastAvailable;
+  }
+
+  public void setTcpRebroadcastAvailable(boolean tcpRebroadcastAvailable)
+  {
+    this.tcpRebroadcastAvailable = tcpRebroadcastAvailable;
+  }
+
+  public boolean isTcpRebroadcastAvailable()
+  {
+    return tcpRebroadcastAvailable;
+  }
+
+  public void setUdpRebroadcastAvailable(boolean udpRebroadcastAvailable)
+  {
+    this.udpRebroadcastAvailable = udpRebroadcastAvailable;
+  }
+
+  public boolean isUdpRebroadcastAvailable()
+  {
+    return udpRebroadcastAvailable;
+  }
+
+  public void setFileRebroadcastAvailable(boolean fileRebroadcastAvailable)
+  {
+    this.fileRebroadcastAvailable = fileRebroadcastAvailable;
+  }
+
+  public boolean isFileRebroadcastAvailable()
+  {
+    return fileRebroadcastAvailable;
+  }
+
+  public boolean isDesktopVerbose()
+  {
+    return desktopVerbose;
   }
 
   public DOMParser getParser()
@@ -133,4 +195,44 @@ public class DesktopContext
   {
     return readingNMEA;
   }
+  
+  public void setHttpRebroadcastEnable(boolean httpRebroadcastEnable)
+  {
+    this.httpRebroadcastEnable = httpRebroadcastEnable;
+  }
+
+  public boolean isHttpRebroadcastEnable()
+  {
+    return httpRebroadcastEnable;
+  }
+
+  public void setTcpRebroadcastEnable(boolean tcpRebroadcastEnable)
+  {
+    this.tcpRebroadcastEnable = tcpRebroadcastEnable;
+  }
+
+  public boolean isTcpRebroadcastEnable()
+  {
+    return tcpRebroadcastEnable;
+  }
+
+  public void setUdpRebroadcastEnable(boolean udpRebroadcastEnable)
+  {
+    this.udpRebroadcastEnable = udpRebroadcastEnable;
+  }
+
+  public boolean isUdpRebroadcastEnable()
+  {
+    return udpRebroadcastEnable;
+  }
+
+  public void setFileRebroadcastEnable(boolean fileRebroadcastEnable)
+  {
+    this.fileRebroadcastEnable = fileRebroadcastEnable;
+  }
+
+  public boolean isFileRebroadcastEnable()
+  {
+    return fileRebroadcastEnable;
+  }  
 }

@@ -19,6 +19,8 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import olivsoftdesktop.ctx.DesktopContext;
+
 public class TCPWriter
 {
   private List<Socket> clientSocketlist = new ArrayList<Socket>(1);
@@ -45,13 +47,13 @@ public class TCPWriter
   protected void setSocket(Socket skt)
   {
     this.clientSocketlist.add(skt);
-    if ("true".equals(System.getProperty("verbose", "false")))
+    if (DesktopContext.getInstance().isDesktopVerbose())
       System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
   }
   
   public void write(byte[] message)
   {
-    if ("true".equals(System.getProperty("verbose", "false")))
+    if (DesktopContext.getInstance().isDesktopVerbose())
     {
       System.out.println("TCP write on port " + tcpPort + " [" + new String(message, 0, message.length - 2) + "]");
       System.out.print("[");
@@ -87,7 +89,7 @@ public class TCPWriter
         for (Socket skt : toRemove)
         {
           this.clientSocketlist.remove(skt);
-          if ("true".equals(System.getProperty("verbose", "false")))
+          if (DesktopContext.getInstance().isDesktopVerbose())
             System.out.println("- " + clientSocketlist.size() + " TCP Client socket(s)");
         }
       }

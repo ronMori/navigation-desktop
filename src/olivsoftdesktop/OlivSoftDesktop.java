@@ -78,6 +78,8 @@ import olivsoftdesktop.param.InputChannelPanel;
 import olivsoftdesktop.param.ParamData;
 import olivsoftdesktop.param.ParamPanel;
 
+import olivsoftdesktop.server.AdminHttpServer;
+
 import olivsoftdesktop.utils.DesktopNMEAReader;
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.TCPWriter;
@@ -830,6 +832,11 @@ public class OlivSoftDesktop
             System.out.println(s);
         }
       }
+      // Headless Console: Start admin http server
+      String adminPortStr = System.getProperty("admin.http.port", "8080");
+      int adminPort = Integer.parseInt(adminPortStr);
+      /* AdminHttpServer adminHttpServer = */ new AdminHttpServer(adminPort);
+
       // Input channel
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
                                                                  serialPort, 
@@ -868,6 +875,8 @@ public class OlivSoftDesktop
               String port = out.substring(HTTP.length());
               System.setProperty("http.port", port);
               httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
+              DesktopContext.getInstance().setHttpRebroadcastEnable(true);
+              DesktopContext.getInstance().setHttpRebroadcastAvailable(true);
             }
             catch (Exception ex)
             {
@@ -881,6 +890,8 @@ public class OlivSoftDesktop
               String port = out.substring(TCP.length());
               int tcpPort = Integer.parseInt(port);
               tcpWriter = new TCPWriter(tcpPort);
+              DesktopContext.getInstance().setTcpRebroadcastEnable(true);
+              DesktopContext.getInstance().setTcpRebroadcastAvailable(true);
             }
             catch (Exception ex)
             {
@@ -896,6 +907,8 @@ public class OlivSoftDesktop
               String address =  out.substring(UDP.length(), out.indexOf(":", UDP.length() + 1));
               int udpPort = Integer.parseInt(port);
               udpWriter = new UDPWriter(udpPort, address); 
+              DesktopContext.getInstance().setUdpRebroadcastEnable(true);
+              DesktopContext.getInstance().setUdpRebroadcastAvailable(true);
             }
             catch (Exception ex)
             {
@@ -915,6 +928,8 @@ public class OlivSoftDesktop
               try
               {
                 logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
+                DesktopContext.getInstance().setFileRebroadcastEnable(true);
+                DesktopContext.getInstance().setFileRebroadcastAvailable(true);
               }
               catch (Exception ex)
               {
@@ -941,11 +956,11 @@ public class OlivSoftDesktop
               public void manageNMEAString(String nmeaString)
               {
                 super.manageNMEAString(nmeaString);
-                if (_udpWriter != null)
+                if (_udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable())
                   _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
-                if (_tcpWriter != null)
+                if (_tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable())
                   _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
-                if (_logFile != null)
+                if (_logFile != null && DesktopContext.getInstance().isFileRebroadcastEnable())
                 {
                   try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
                 }

@@ -13,13 +13,14 @@ import nmea.server.utils.Utils;
 
 import ocss.nmea.parser.StringParsers;
 
+import olivsoftdesktop.ctx.DesktopContext;
+
 import util.NMEACache;
 
 
 public class DesktopNMEAReader
   implements NMEAEventManager
 {
-  private boolean verbose = false;
   private String pfile = "";
   private String serial = null;
   private int br = 0;
@@ -39,7 +40,7 @@ public class DesktopNMEAReader
                            String fName, // simulation file
                            String propertiesFile)
   {
-    this.verbose = v;
+    DesktopContext.getInstance().setDesktopVerbose(v);
     this.serial = serial;
     this.br = br;
     this.port = port;
@@ -184,14 +185,9 @@ public class DesktopNMEAReader
       };
   }
   
-  public boolean verbose()
-  {
-    return verbose;
-  }
-
   public void manageDataEvent(String payload)
   {
-    if (verbose)
+    if (DesktopContext.getInstance().isDesktopVerbose())
     {
       String displ = payload;
       while ((displ.endsWith("\r") || displ.endsWith("\n")) && displ.length() >= 0)
@@ -227,8 +223,14 @@ public class DesktopNMEAReader
   
   public void stopReader() throws Exception 
   {
-    if ("true".equals(System.getProperty("verbose", "false")))
+    if (DesktopContext.getInstance().isDesktopVerbose())
       System.out.println(this.getClass().getName() + ": Stop Reading requested.");
     nmeaClient.stopReading();
+  }
+
+  @Override
+  public boolean verbose()
+  {
+    return DesktopContext.getInstance().isDesktopVerbose();
   }
 }

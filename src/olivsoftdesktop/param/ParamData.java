@@ -43,8 +43,9 @@ public class ParamData
   public final static int USE_SPOT_APP                 = 36;
   public final static int FULL_SCREEN_DESKTOP          = 37;
   public final static int WALLPAPER_FONT               = 38;
+  public final static int MARQUEE_DATA                 = 39;
 
-  public final static int NB_PARAMETERS                = 39;
+  public final static int NB_PARAMETERS                = 40;
 
   private final static String[] LABELS =
   {
@@ -91,7 +92,8 @@ public class ParamData
     // More App
     "SPOT Bulletins",                                                          // 36 
     "Full screen desktop on open",                                             // 37 
-    "Font of the live wallpaper"                                               // 38 
+    "Font of the live wallpaper",                                              // 38 
+    "Marquee Data (live wallpapaer)"                                           // 39
   };
   
   public final static String[] getLabels()
@@ -140,7 +142,8 @@ public class ParamData
     /* 35 */ "Default Swing font. Maybe increased or decreased for certain Look & Feels. Negative values will be ignored. Restart required after modification.",
     /* 36 */ "Spot Bulletins",
     /* 37 */ "Display the desktop in full screen by default",
-    /* 38 */ "Font to use for the live wallpaper data"
+    /* 38 */ "Font to use for the live wallpaper data",
+    /* 39 */ "Select the data to display in the marquee of the live wallpaper"
   };
   
   public final static String[] getHelpText()
