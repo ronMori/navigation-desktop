@@ -12,6 +12,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,8 @@ public class CharacterModeConsole
   private final static SimpleDateFormat SDF               = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'UTC'");
   private final static SimpleDateFormat SOLAR_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'Solar'");
   
+  private Date loggingStarted = null;
+  
   private static Map<String, AssociatedData> suffixes = new HashMap<String, AssociatedData>();
   static
   {
@@ -99,6 +102,7 @@ public class CharacterModeConsole
     nonNumericData.put("GDT", 40); // GPS Date & Time
     nonNumericData.put("SLT", 40); // Solar Time
     nonNumericData.put("NWP", 10); // Next Way point
+    nonNumericData.put("STD", 40); // Started (logging)
   }
   
   private static Map<String, String> colorMap = new HashMap<String, String>();
@@ -123,6 +127,7 @@ public class CharacterModeConsole
     {
 //    System.setOut(new PrintStream(new FileOutputStream("out.txt", true)));
 //    System.setErr(new PrintStream(new FileOutputStream("err.txt", true)));
+      loggingStarted = new Date();
     }
     catch (Exception ex)
     {
@@ -195,6 +200,10 @@ public class CharacterModeConsole
                     else if ("NWP".equals(s))  
                     {
                       value = (String)NMEAContext.getInstance().getCache().get(NMEADataCache.TO_WP, true);
+                    }
+                    else if ("STD".equals(s))
+                    {
+                      value = loggingStarted.toString();
                     }
                   }
                   else

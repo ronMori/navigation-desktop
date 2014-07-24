@@ -27,7 +27,7 @@
       <h2>Graphical User Interface (GUI)</h2>
       Rebroadcast is available from a right-click at the botton-left of the Console Desktop frame.
       <br>
-      It can be started and stoppped at any time.
+      It can be started and stopped at any time.
     </p>
     <p>
       <h2>Headless Console</h2>
@@ -36,8 +36,21 @@
       <br>
       This http server runs on a port defined by a system variable named <code>admin.http.port</code>, default is <code>8080</code>.
       <br>
-      This server is systematically started when the headless console option is selected.
+      This server is systematically started when the headless console option is selected.      
       <br>
+      You can access the server from a browser (locally or remotely), by typing
+      <pre>
+ http://&lt;hostname-or-ip>:&lt;port>/help
+      </pre>
+      or even easier
+      <pre>
+ http://&lt;hostname-or-ip>:&lt;port>/console
+      </pre>
+      For example, 
+      <pre style="background-color: lightgray;">
+
+ http://localhost:8080/console
+      </pre>
       <h3>Command line options (parameters)</h3>
       <pre>
 -output=HTTP:[PortNum]
@@ -57,12 +70,22 @@
 java -cp $CP \
      -Dverbose=false \
      -Dheadless=yes \
-     -Dheadless.gui=yes \
-     -Dlogged.nmea.data=D:\OlivSoft\all-scripts\logged-data\2010-11-08.Nuku-Hiva-Tuamotu.nmea \
+     -Dlogged.nmea.data=/home/oliv/OlivSoft/all-scripts/logged-data/2010-11-08.Nuku-Hiva-Tuamotu.nmea \
      olivsoftdesktop.OlivSoftDesktop -output=HTTP:9999 \
-                                     -output=TCP:7001 
+                                     -output=TCP:7001 \
                                      -output=UDP:230.0.0.1:8001 
-      </pre>      
+      </pre>   
+      <i><b>Note:</b></i> With the Admin Server, you can only turn the options <b>OFF</b> or <b>ON</b>.   
+      <br>
+      This means that if you need (for example) the data to be re-broadcasted on TCP, the parameter <b>-output=TCP:7001</b> must have been set at startup. Then - and only then - you can turn in <b>OFF</b> from the Admin Server, and back <b>ON</b> when needed.
+      <br>
+      <i>This is why</i> each <code>-output</code> parameter can have a suffix that can be <code>true</code>, <code>false</code>, <code>TRUE</code>, or <code>FALSE</code>, like:
+      <pre>
+ -output=TCP:7001,false
+      </pre>
+      <code>true</code> is the default value. that means that <code>-output=TCP:7001,true</code> is equivalent to <code>-output=TCP:7001</code>.
+      <br>
+      In the example above, TCP re-broadcast will be avaiable, but will start only when turned <b>ON</b> by the Admin Server. As wee said, this is available for the <code>HTTP</code>, <code>TCP</code>, <code>UDP</code>, and <code>FILE</code> outputs.
     </p>
     <hr>
     <address>&copy; 2014, OlivSoft</address>
