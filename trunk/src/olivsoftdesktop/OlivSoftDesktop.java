@@ -873,9 +873,15 @@ public class OlivSoftDesktop
             try
             {
               String port = out.substring(HTTP.length());
+              String enabled = "true";
+              if (port.indexOf(",") > -1)
+              {
+                enabled = port.substring(port.indexOf(",") + 1);
+                port = port.substring(0, port.indexOf(","));
+              }
               System.setProperty("http.port", port);
               httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
-              DesktopContext.getInstance().setHttpRebroadcastEnable(true);
+              DesktopContext.getInstance().setHttpRebroadcastEnable("true".equalsIgnoreCase(enabled));
               DesktopContext.getInstance().setHttpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -888,9 +894,15 @@ public class OlivSoftDesktop
             try
             {
               String port = out.substring(TCP.length());
+              String enabled = "true";
+              if (port.indexOf(",") > -1)
+              {
+                enabled = port.substring(port.indexOf(",") + 1);
+                port = port.substring(0, port.indexOf(","));
+              }
               int tcpPort = Integer.parseInt(port);
               tcpWriter = new TCPWriter(tcpPort);
-              DesktopContext.getInstance().setTcpRebroadcastEnable(true);
+              DesktopContext.getInstance().setTcpRebroadcastEnable("true".equalsIgnoreCase(enabled));
               DesktopContext.getInstance().setTcpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -905,9 +917,15 @@ public class OlivSoftDesktop
             {
               String port =     out.substring(out.indexOf(":", UDP.length() + 1) + 1);
               String address =  out.substring(UDP.length(), out.indexOf(":", UDP.length() + 1));
+              String enabled = "true";
+              if (port.indexOf(",") > -1)
+              {
+                enabled = port.substring(port.indexOf(",") + 1);
+                port = port.substring(0, port.indexOf(","));
+              }
               int udpPort = Integer.parseInt(port);
               udpWriter = new UDPWriter(udpPort, address); 
-              DesktopContext.getInstance().setUdpRebroadcastEnable(true);
+              DesktopContext.getInstance().setUdpRebroadcastEnable("true".equalsIgnoreCase(enabled));
               DesktopContext.getInstance().setUdpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -920,6 +938,12 @@ public class OlivSoftDesktop
             try
             {
               String fName = out.substring(FILE.length());
+              String enabled = "true";
+              if (fName.indexOf(",") > -1)
+              {
+                enabled = fName.substring(fName.indexOf(",") + 1);
+                fName = fName.substring(0, fName.indexOf(","));
+              }
               File f = new File(fName);
               if (f.exists())
                 System.out.println("------------------------------------------------------------\n" + 
@@ -928,7 +952,7 @@ public class OlivSoftDesktop
               try
               {
                 logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
-                DesktopContext.getInstance().setFileRebroadcastEnable(true);
+                DesktopContext.getInstance().setFileRebroadcastEnable("true".equalsIgnoreCase(enabled));
                 DesktopContext.getInstance().setFileRebroadcastAvailable(true);
               }
               catch (Exception ex)
@@ -1076,7 +1100,7 @@ public class OlivSoftDesktop
     if (outputList.size() > 0)
     {
       output = new String[outputList.size()];
-      output =outputList.toArray(output);
+      output = outputList.toArray(output);
     }
     return output;
   }

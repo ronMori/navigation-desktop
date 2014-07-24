@@ -58,6 +58,7 @@ public class AdminHttpServer
   public AdminHttpServer(int port)
   {
     System.out.println(">>> Starting Admin HTTP server on port " + port);
+    System.out.println(">>> Try http://localhost:" + port + "/console from a browser.");
     this._port = port;    
     
     // Infinite loop, waiting for requests
@@ -71,6 +72,7 @@ public class AdminHttpServer
           Map<String, String> header = new HashMap<String, String>();
           ServerSocket ss = new ServerSocket(_port);
           boolean help = false;
+          boolean console = false;
           while (go)
           {
             Socket client = ss.accept();
@@ -85,6 +87,7 @@ public class AdminHttpServer
             command = "";
             commandReply = "Good";
             help = false;
+            console = false;
             while (go && (line = in.readLine()) != null)
             {
               if (verbose) System.out.println("HTTP Request:" + line);
@@ -121,6 +124,11 @@ public class AdminHttpServer
               {
 //              System.out.println("Received an help request");
                 help = true;
+              }
+              else if (line.startsWith("POST /console") || line.startsWith("GET /console"))
+              {
+//              System.out.println("Received an help request");
+                console = true;
               }
               else if (command.trim().length() > 0)
               {
@@ -283,6 +291,11 @@ public class AdminHttpServer
               content = (generateHelpContent());
               contentType = "text/html";
             }
+            else if (console)          
+            {
+              content = (generateConsoleContent());
+              contentType = "text/html";
+            }
             else if (fileToFetch.trim().length() > 0)
             {
               File f = new File(fileToFetch);
@@ -365,8 +378,9 @@ public class AdminHttpServer
     str += "<html><head><title>Admin server help</title></head><body><pre>\n";
     str += ("Date is:" + new Date().toString() + "\n\n");
     str += "------------------------------------\n";
-    str += "Available commands are:";
+    str += "Available commands (base-paths) are:";
     str += "<ul>";
+    str += "<li>/console</li>";
     str += "<li>/help</li>";
     str += "<li>/exit</li>";
     str += "<li>/put/http/on</li>";
@@ -387,6 +401,54 @@ public class AdminHttpServer
     str += "</ul>";
     str += "------------------------------------\n";
     str += "</pre></body></html>\n";    
+    return str;
+  }
+    
+  private String generateConsoleContent()
+  {
+    String css = "<style type='text/css'>\n" + 
+    "      body { background : #ffffff; color : #000000; font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      h1 { color: white; font-style: italic; font-size: 14pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular; background-color: black; padding-left: 5pt } \n" + 
+    "      h2 { font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      h3 { font-style: italic; font-weight: bold; font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular; font-weight: bold  } \n" + 
+    "      li { font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      p { font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      td { font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      small { font-size: 10pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      blockquote{ font-style: italic; font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular }--> \n" + 
+    "      em { font-size: 12pt; font-style: italic; font-weight: bold; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      pre { font-size: 11pt; font-family: Courier New, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      address { font-size: 12pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular } \n" + 
+    "      a:link { color : #000000}  \n" + 
+    "      a:active { color: #000000}  \n" + 
+    "      a:visited { color : #000000}\n" + 
+    "    </style>  \n";
+    String str = "";
+    str += "<html><head><title>Admin Server Console</title>" + css + "</head><body>\n";
+    str += "<h1>Admin Console</h1>\n";
+    str += "<ul>";
+    str += "<li><a href='/console'>Console</a></li>";
+    str += "<li><a href='/help'>Help</a></li>";
+    str += "<li><a href='/exit'>Exit</a></li>";
+    str += "<li><a href='/put/http/on'>Turn HTTP On</a></li>";
+    str += "<li><a href='/put/http/off'>Turn HTTP Off</a></li>";
+    str += "<li><a href='/put/tcp/on'>Turn TCP On</a></li>";
+    str += "<li><a href='/put/tcp/off'>Turn TCP Off</a></li>";
+    str += "<li><a href='/put/udp/on'>Turn UDP On</a></li>";
+    str += "<li><a href='/put/udp/off'>Turn UDP Off</a></li>";
+    str += "<li><a href='/put/log/on'>Turn Logging On</a></li>"; // ?logfile=[file.name]</li>";
+    str += "<li><a href='/put/log/off'>Turn Logging Off</a></li>";
+    str += "<li><a href='/put/verbose/on'>Turn Verbose On</a></li>";
+    str += "<li><a href='/put/verbose/off'>Turn Verbose Off</a></li>";
+    str += "<li><a href='/get/http'>HTTP Status</a></li>";
+    str += "<li><a href='/get/tcp'>TCP Status</a></li>";
+    str += "<li><a href='/get/udp'>UDP Status</a></li>";
+    str += "<li><a href='/get/log'>Logging Status</a></li>";
+    str += "<li><a href='/get/verbose'>Verbose Status</a></li>";
+    str += "</ul>";
+    str += "<hr>\n";
+    str += "<address>&copy; OlivSoft</address>";
+    str += "</body></html>\n";    
     return str;
   }
     
