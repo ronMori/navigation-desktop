@@ -1,4 +1,3 @@
-
 package olivsoftdesktop.charmode;
 
 import java.awt.Color;
