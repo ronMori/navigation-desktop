@@ -53,6 +53,11 @@ public class AdminHttpServer
   private final static String LOG_STATUS       = "/get/log";
   private final static String VERBOSE_STATUS   = "/get/verbose";
   
+  private final static String REC_NO           = "/get/recno";
+
+  private final static String ALL_STATUS       = "/get/all";
+  private final static String RESET_CONSOLE    = "/update/console";
+
   private final static String LOGFILE_NAME     = "logfile";
   
   public AdminHttpServer(int port)
@@ -226,6 +231,10 @@ public class AdminHttpServer
 //                System.out.println("Disabling verbose");                  
                   DesktopContext.getInstance().setDesktopVerbose(false);
                 } 
+                else if (RESET_CONSOLE.equals(command))
+                {
+                  DesktopContext.getInstance().fireResetConsole();
+                }
                 else if (HTTP_STATUS.equals(command))
                 {
 //                System.out.println("HTTP_STATUS");        
@@ -263,6 +272,34 @@ public class AdminHttpServer
 //                System.out.println("VERBOSE_STATUS");                  
                   commandReply = DesktopContext.getInstance().isDesktopVerbose() ? "on" : "off";
                 }  
+                else if (REC_NO.equals(command))
+                {
+                  commandReply = "Reading record # " + Long.toString(getReplayFileRecnum());
+                }  
+                else if (ALL_STATUS.equals(command))
+                {
+                  if (DesktopContext.getInstance().isHttpRebroadcastAvailable())
+                    commandReply = "HTTP re-broadcast is " + (DesktopContext.getInstance().isHttpRebroadcastEnable() ? "on" : "off");
+                  else 
+                    commandReply = "HTTP re-broadcast not available";
+                  commandReply += "\n";
+                  if (DesktopContext.getInstance().isTcpRebroadcastAvailable())
+                    commandReply += "TCP re-broadcast is " + (DesktopContext.getInstance().isTcpRebroadcastEnable() ? "on" : "off");
+                  else 
+                    commandReply += "TCP re-broadcast not available";
+                  commandReply += "\n";                  
+                  if (DesktopContext.getInstance().isUdpRebroadcastAvailable())
+                    commandReply += "UDP re-broadcast is " + (DesktopContext.getInstance().isUdpRebroadcastEnable() ? "on" : "off");
+                  else 
+                    commandReply += "UDP re-broadcast not available";
+                  commandReply += "\n";
+                  if (DesktopContext.getInstance().isFileRebroadcastAvailable())
+                    commandReply += "File re-broadcast is " + (DesktopContext.getInstance().isFileRebroadcastEnable() ? "on" : "off");
+                  else 
+                    commandReply += "File re-broadcast not available";
+                  commandReply += "\n";
+                  commandReply += "Verbose is " + (DesktopContext.getInstance().isDesktopVerbose() ? "on" : "off");
+                }
                 else
                 {
                // commandReply = "Unknown query";
@@ -372,11 +409,18 @@ public class AdminHttpServer
     httpListenerThread.start();
   }
 
+  private long getReplayFileRecnum()
+  {
+    long recNo = 0L;
+    recNo = NMEAContext.getInstance().getReplayFileRecNum();
+    return recNo;
+  }
+  
   private String generateHelpContent()
   {
     String str = ""; // "Content-Type: text/html\r\n\r\n";
     str += "<html><head><title>Admin server help</title></head><body><pre>\n";
-    str += ("Date is:" + new Date().toString() + "\n\n");
+    str += ("Server System Date is:" + new Date().toString() + "\n\n");
     str += "------------------------------------\n";
     str += "Available commands (base-paths) are:";
     str += "<ul>";
@@ -398,6 +442,9 @@ public class AdminHttpServer
     str += "<li>/get/udp</li>";
     str += "<li>/get/log</li>";
     str += "<li>/get/verbose</li>";
+    str += "<li>/get/all</li>";
+    str += "<li>/update/console</li>";
+    str += "<li>/get/recno</li>";
     str += "</ul>";
     str += "------------------------------------\n";
     str += "</pre></body></html>\n";    
@@ -440,11 +487,14 @@ public class AdminHttpServer
     str += "<li><a href='/put/log/off'>Turn Logging Off</a></li>";
     str += "<li><a href='/put/verbose/on'>Turn Verbose On</a></li>";
     str += "<li><a href='/put/verbose/off'>Turn Verbose Off</a></li>";
+    str += "<li><a href='/get/all'><b>All Status</b></a></li>";
     str += "<li><a href='/get/http'>HTTP Status</a></li>";
     str += "<li><a href='/get/tcp'>TCP Status</a></li>";
     str += "<li><a href='/get/udp'>UDP Status</a></li>";
     str += "<li><a href='/get/log'>Logging Status</a></li>";
     str += "<li><a href='/get/verbose'>Verbose Status</a></li>";
+    str += "<li><a href='/update/console'>Reset Char Console</a></li>";
+    str += "<li><a href='/get/recno'>Current record (replay)</a></li>";
     str += "</ul>";
     str += "<hr>\n";
     str += "<address>&copy; OlivSoft</address>";

@@ -44,8 +44,9 @@ public class ParamData
   public final static int FULL_SCREEN_DESKTOP          = 37;
   public final static int WALLPAPER_FONT               = 38;
   public final static int MARQUEE_DATA                 = 39;
+  public final static int AIRMAIL_ID                   = 40;
 
-  public final static int NB_PARAMETERS                = 40;
+  public final static int NB_PARAMETERS                = 41;
 
   private final static String[] LABELS =
   {
@@ -93,7 +94,9 @@ public class ParamData
     "SPOT Bulletins",                                                          // 36 
     "Full screen desktop on open",                                             // 37 
     "Font of the live wallpaper",                                              // 38 
-    "Marquee Data (live wallpapaer)"                                           // 39
+    "Marquee Data (live wallpaper)",                                           // 39
+    //
+    "Airmail ID"                                                               // 40
   };
   
   public final static String[] getLabels()
@@ -143,7 +146,8 @@ public class ParamData
     /* 36 */ "Spot Bulletins",
     /* 37 */ "Display the desktop in full screen by default",
     /* 38 */ "Font to use for the live wallpaper data",
-    /* 39 */ "Select the data to display in the marquee of the live wallpaper"
+    /* 39 */ "Select the data to display in the marquee of the live wallpaper",
+    /* 40 */ "Airmail ID (like XYZ9876), part of the message names, like 1234_XYZ9876.msg"
   };
   
   public final static String[] getHelpText()

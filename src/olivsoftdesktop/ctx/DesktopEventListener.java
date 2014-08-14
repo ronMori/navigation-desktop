@@ -8,4 +8,5 @@ public abstract class DesktopEventListener implements EventListener
   public void bgWinColorChanged() {}
   public void startReadingNMEAPort() {}
   public void startNMEACache() {}
+  public void resetConsole() {}
 }
