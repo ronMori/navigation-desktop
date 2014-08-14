@@ -390,7 +390,8 @@ public final class ParamPanel
     new int[] // SAILFAX
     { 
       ParamData.SAILFAX_CATALOG,
-      ParamData.AIRMAIL_LOCATION
+      ParamData.AIRMAIL_LOCATION,
+      ParamData.AIRMAIL_ID
     },
     new int[] // Databases
     {

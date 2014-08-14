@@ -42,6 +42,10 @@ import ocss.nmea.parser.TrueWindSpeed;
 
 import ocss.nmea.parser.UTCDate;
 
+import olivsoftdesktop.ctx.DesktopContext;
+
+import olivsoftdesktop.ctx.DesktopEventListener;
+
 import olivsoftdesktop.utils.DesktopUtilities;
 import olivsoftdesktop.utils.EscapeSeq;
 
@@ -66,7 +70,8 @@ public class CharacterModeConsole
   private final static SimpleDateFormat SOLAR_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'Solar'");
   
   private Date loggingStarted = null;
-  
+  private final SuperBool first = new SuperBool(true);        
+
   private static Map<String, AssociatedData> suffixes = new HashMap<String, AssociatedData>();
   static
   {
@@ -99,10 +104,10 @@ public class CharacterModeConsole
   static
   {
     nonNumericData.put("POS", 24);
-    nonNumericData.put("GDT", 40); // GPS Date & Time
-    nonNumericData.put("SLT", 40); // Solar Time
+    nonNumericData.put("GDT", 32); // GPS Date & Time
+    nonNumericData.put("SLT", 32); // Solar Time
     nonNumericData.put("NWP", 10); // Next Way point
-    nonNumericData.put("STD", 40); // Started (logging)
+    nonNumericData.put("STD", 32); // Started (logging)
   }
   
   private static Map<String, String> colorMap = new HashMap<String, String>();
@@ -128,6 +133,14 @@ public class CharacterModeConsole
 //    System.setOut(new PrintStream(new FileOutputStream("out.txt", true)));
 //    System.setErr(new PrintStream(new FileOutputStream("err.txt", true)));
       loggingStarted = new Date();
+      
+      DesktopContext.getInstance().addApplicationListener(new DesktopEventListener()
+                                                          {
+                                                            public void resetConsole() 
+                                                            {
+                                                              first.setValue(true);
+                                                            }
+                                                          });
     }
     catch (Exception ex)
     {
@@ -150,7 +163,7 @@ public class CharacterModeConsole
     
     try { Thread.sleep(1000L); } catch (Exception ex) {} // Not nice, I know...
     
-    final SuperBool first = new SuperBool(true);        
+    first.setValue(true);        
     // The small touchscreen (320x240) in 8x8 resolution has 40 columns per line of text, in 6x12, 54 columns.
     synchronized (NMEAContext.getInstance())
     {

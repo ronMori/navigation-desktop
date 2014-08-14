@@ -273,15 +273,26 @@ public class CharModePanel
       String prop = props.nextElement();
   //  System.out.println("Prop:" + prop);
       String value = consoleProps.getProperty(prop);
-      String[] elem = value.split(",");
-      consoleData.put(prop.trim(),
-                      new ConsoleData(prop.trim(), 
-                                      Integer.parseInt(elem[0].trim()), 
-                                      Integer.parseInt(elem[1].trim()), 
-                                      elem[2].trim(), 
-                                      elem[3].trim(), 
-                                      elem[4].trim(), 
-                                      elem[5].trim()));
+      if (!"console.title".equals(prop))
+      {
+        String[] elem = value.split(",");
+        try
+        {
+          ConsoleData cd = new ConsoleData(prop.trim(), 
+                                           Integer.parseInt(elem[0].trim()), 
+                                           Integer.parseInt(elem[1].trim()), 
+                                           elem[2].trim(), 
+                                           elem[3].trim(), 
+                                           elem[4].trim(), 
+                                           elem[5].trim());
+          consoleData.put(prop.trim(), cd);
+        }
+        catch (NumberFormatException nfe)
+        {
+          System.err.println("Oops: " + nfe.getMessage());
+  //      nfe.printStackTrace();
+        }
+      }
     }
   }
   
@@ -439,16 +450,26 @@ public class CharModePanel
       {
       }
 //    System.out.println("   " + s + ":" + value);
-      plotOneValue(gr, 
-                   col, 
-                   row, 
-                   value, 
-                   colorMap.get(cd.getFgData()), 
-                   colorMap.get(cd.getBgData()),
-                   s,
-                   suffixes.get(s).getSuffix(), 
-                   colorMap.get(cd.getFgTitle()),
-                   colorMap.get(cd.getBgTitle()));
+      try
+      {
+        plotOneValue(gr, 
+                     col, 
+                     row, 
+                     value, 
+                     colorMap.get(cd.getFgData()), 
+                     colorMap.get(cd.getBgData()),
+                     s,
+                     suffixes.get(s) == null ? "" : suffixes.get(s).getSuffix(), 
+                     colorMap.get(cd.getFgTitle()),
+                     colorMap.get(cd.getBgTitle()));
+      }
+      catch (Exception ex)
+      {
+        System.out.println("Col " + col + " row " + row);
+        System.out.println("Value " + value);
+        System.out.println("Key " + s);
+        ex.printStackTrace();
+      }
 //    try { Thread.sleep(10); } catch (Exception ex) {}
     }    
   }

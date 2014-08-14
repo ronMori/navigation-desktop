@@ -111,6 +111,15 @@ public class DesktopContext
   {
     return desktopVerbose;
   }
+  
+  public void fireResetConsole()
+  {
+    for (int i=0; i < this.getListeners().size(); i++)
+    {
+      DesktopEventListener l = this.getListeners().get(i);
+      l.resetConsole();
+    }    
+  }
 
   public DOMParser getParser()
   {

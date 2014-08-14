@@ -2654,6 +2654,8 @@ public class DesktopFrame
       case SPOT:
         try
         {
+          System.setProperty("airmail.location", (ParamPanel.getData()[ParamData.AIRMAIL_LOCATION][ParamPanel.PRM_VALUE]).toString());
+          System.setProperty("airmail.id", (ParamPanel.getData()[ParamData.AIRMAIL_ID][ParamPanel.PRM_VALUE]).toString());
           spotFrame = new SPOTInternalFrame(); 
           spotFrame.setIconifiable(true);
           spotFrame.setClosable(true);
