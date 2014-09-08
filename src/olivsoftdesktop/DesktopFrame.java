@@ -166,7 +166,9 @@ import nmea.server.utils.HTTPServer;
 
 import nmea.server.utils.Utils;
 
+import nmea.ui.NMEAAnalyzerInternalFrame;
 import nmea.ui.NMEAInternalFrame;
+import nmea.ui.NMEAtoGPXInternalFrame;
 import nmea.ui.viewer.elements.AWDisplay;
 
 import nmea.ui.viewer.spot.SPOTInternalFrame;
@@ -262,7 +264,10 @@ public class DesktopFrame
   private JMenuItem nmeaConsoleMenuItem = new JMenuItem();
   private JCheckBoxMenuItem backGroundNMEARead = new JCheckBoxMenuItem();
 //private JCheckBoxMenuItem backGroundNMEAServer = new JCheckBoxMenuItem();
-  private JMenuItem replayNmeaMenuItem  = new JMenuItem();
+  private JMenuItem replayNmeaMenuItem   = new JMenuItem();
+  private JMenuItem logToGPXMenuItem     = new JMenuItem();
+  private JMenuItem logAnalyzerMenuItem  = new JMenuItem();
+  
   private JMenuItem starFinderMenuItem  = new JMenuItem();
   private JMenuItem d2102StarFinderMenuItem  = new JMenuItem();
   private JMenuItem spotMenuItem        = new JMenuItem();
@@ -1321,6 +1326,8 @@ public class DesktopFrame
   private JInternalFrame almanac         = null;
   private JInternalFrame tides           = null;
   private JInternalFrame realTimeAlmanac = null;
+  private JInternalFrame logToGpx        = null;
+  private JInternalFrame logAnalyzer     = null;
   
   private transient Connection chartConnection = null;
 //private Connection logConnection = null;
@@ -1375,6 +1382,8 @@ public class DesktopFrame
   private final static int STARFINDER_2012D     = 12;
   private final static int REAL_TIME_ALMANAC    = 13;
   private final static int SPOT                 = 14;
+  private final static int LOG_TO_GPX           = 15;
+  private final static int LOG_ANALYZER         = 16;
 
   private final static String TIME_BG_WINDOW_TITLE       = "UTC";
   private final static String GPS_SIGNAL_BG_WINDOW_TITLE = "GPS Signal";
@@ -1753,6 +1762,10 @@ public class DesktopFrame
     nmeaMenuItem.setText("NMEA Data");
     nmeaConsoleMenuItem.setText("NMEA Console");
     replayNmeaMenuItem.setText("Replay NMEA Data");
+    logToGPXMenuItem.setText("Log to GPX");
+    logToGPXMenuItem.setToolTipText("Can be imported in OpenCPN, GoogleEarth, etc.");
+    logAnalyzerMenuItem.setText("Log Analyzer");
+    
     spotMenuItem.setText("SPOT Bulletins");
     starFinderMenuItem.setText("Planetarium");
     d2102StarFinderMenuItem.setText("Star Finder (2102-D)");
@@ -1813,6 +1826,9 @@ public class DesktopFrame
         } 
       });
     replayNmeaMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(REPLAY_NMEA); } } );
+    logToGPXMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(LOG_TO_GPX); } } );
+    logAnalyzerMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(LOG_ANALYZER); } } );
+
     starFinderMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(STARFINDER); } } );
     d2102StarFinderMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(STARFINDER_2012D); } } );
     sailFaxMenuItem.addActionListener( new ActionListener() { public void actionPerformed( ActionEvent ae ) { appRequest_ActionPerformed(SAILFAX); } } );
@@ -1925,6 +1941,10 @@ public class DesktopFrame
       nmeaMenuItem.add(backGroundNMEARead);
 //    nmeaMenuItem.add(backGroundNMEAServer);
       nmeaMenuItem.add(replayNmeaMenuItem);
+      nmeaMenuItem.add(new JSeparator());
+      nmeaMenuItem.add(logToGPXMenuItem);
+      nmeaMenuItem.add(logAnalyzerMenuItem);
+      
       menuFile.add(new JSeparator());
       separatorIsLast = true;
       nbMenuItem++;
@@ -2401,6 +2421,16 @@ public class DesktopFrame
           replayNmeaMenuItem.setEnabled(true);
           NMEAContext.getInstance().removeNMEAListenerGroup(Constants.NMEA_SERVER_LISTENER_GROUP_ID);
         }
+        public void internalTxFrameClosed() 
+        {
+          logToGpx.setVisible(false);
+          logToGPXMenuItem.setEnabled(true);
+        }
+        public void internalAnalyzerFrameClosed() 
+        {
+          logAnalyzer.setVisible(false);
+          logAnalyzerMenuItem.setEnabled(true);
+        }
       });
     SailFaxContext.getInstance().addSailFaxListener(new SailfaxEventListener()
       {
@@ -2650,6 +2680,28 @@ public class DesktopFrame
         {
           System.out.println("No TransmissionSelectorInternalFrame");
         }
+        break;
+      case LOG_ANALYZER:
+        logAnalyzer = new NMEAAnalyzerInternalFrame();
+        logAnalyzer.setIconifiable(true);
+        logAnalyzer.setClosable(true);
+        logAnalyzer.setMaximizable(true);
+        logAnalyzer.setResizable(true);
+        desktop.add(logAnalyzer);
+        logAnalyzer.setVisible(true);
+        logAnalyzerMenuItem.setEnabled(false);
+        centerFrame(masterDim, logAnalyzer);
+        break;
+      case LOG_TO_GPX:
+        logToGpx = new NMEAtoGPXInternalFrame();
+        logToGpx.setIconifiable(true);
+        logToGpx.setClosable(true);
+        logToGpx.setMaximizable(true);
+        logToGpx.setResizable(true);
+        desktop.add(logToGpx);
+        logToGpx.setVisible(true);
+        logToGPXMenuItem.setEnabled(false);
+        centerFrame(masterDim, logToGpx);
         break;
       case SPOT:
         try

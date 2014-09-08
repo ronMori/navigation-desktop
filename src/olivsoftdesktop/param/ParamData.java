@@ -147,7 +147,7 @@ public class ParamData
     /* 37 */ "Display the desktop in full screen by default",
     /* 38 */ "Font to use for the live wallpaper data",
     /* 39 */ "Select the data to display in the marquee of the live wallpaper",
-    /* 40 */ "Airmail ID (like XYZ9876), part of the message names, like 1234_XYZ9876.msg"
+    /* 40 */ "Airmail ID (like XYZ9876), part of the SPOT message names, like 1234_XYZ9876.msg"
   };
   
   public final static String[] getHelpText()
