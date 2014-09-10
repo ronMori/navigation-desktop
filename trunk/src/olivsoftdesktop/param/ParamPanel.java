@@ -248,6 +248,9 @@ public final class ParamPanel
       case ParamData.MARQUEE_DATA:
         it = new MarqueeDataList("BSP,HDG,TWD,TWS,TWA,AWS,AWA,DBT,MWT,LOG,MAT,PRS,XTE,BAT,CDR,CDS,NWP");
         break;
+      case ParamData.AIRMAIL_ID:
+        it = "- No ID -";
+        break;
       default:
         break;
     }
@@ -536,7 +539,13 @@ public final class ParamPanel
     {
       for (int i=0; i<localData.length; i++)
       {
-        String before = (data[((int[])categoryIndexes[currentCategoryIndex])[i]][PRM_VALUE]).toString();
+        String before = "";
+        try { before = (data[((int[])categoryIndexes[currentCategoryIndex])[i]][PRM_VALUE]).toString(); }
+        catch (Exception ex) 
+        { 
+          System.err.println("New parameter maybe?"); 
+          ex.printStackTrace();
+        }
         String after = localData[i][PRM_VALUE].toString();
         if (i == ParamData.DEFAULT_FONT)
           after = FontPanel.fontToString((Font)localData[i][PRM_VALUE]);
