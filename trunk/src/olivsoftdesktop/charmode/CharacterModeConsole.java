@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import nmea.event.NMEAReaderListener;
@@ -53,7 +54,7 @@ import org.fusesource.jansi.AnsiConsole;
 
 import user.util.GeomUtil;
 
-public class CharacterModeConsole
+public class CharacterModeConsole 
 {
   private final static boolean DEBUG = false;
   
@@ -68,6 +69,7 @@ public class CharacterModeConsole
   private final static Format DF_4  = new DecimalFormat("###0");
   private final static SimpleDateFormat SDF               = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'UTC'");
   private final static SimpleDateFormat SOLAR_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy HH:mm:ss 'Solar'");
+  static { SOLAR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("etc/UTC")); }
   
   private Date loggingStarted = null;
   private final SuperBool first = new SuperBool(true);        
@@ -87,7 +89,7 @@ public class CharacterModeConsole
     suffixes.put("COG", new AssociatedData("t",  DF_3));
     suffixes.put("CDR", new AssociatedData("t",  DF_3)); // Current Direction
     suffixes.put("TWD", new AssociatedData("t",  DF_3));
-//  suffixes.put("POS", new AssociatedData("",   null)); // Special Display (String). TODO Same for times and dates, and lat & long.
+//  suffixes.put("POS", new AssociatedData("",   null)); // Special Display (String). 
     suffixes.put("BAT", new AssociatedData("V",  DF_22));
     suffixes.put("MWT", new AssociatedData("C",  DF_31)); // Water Temp
     suffixes.put("MTA", new AssociatedData("C",  DF_31)); // Air Temp
@@ -98,6 +100,7 @@ public class CharacterModeConsole
     suffixes.put("CCD", new AssociatedData("t",  DF_3));  // Current Direction
     suffixes.put("TBF", new AssociatedData("m",  DF_4));  // Time buffer (in minutes) for current calculation
     suffixes.put("XTE", new AssociatedData("nm", DF_22)); 
+    suffixes.put("PRF", new AssociatedData("%",  DF_31)); // Performance
   }
 
   private static Map<String, Integer> nonNumericData = new HashMap<String, Integer>();
@@ -316,6 +319,10 @@ public class CharacterModeConsole
     {
       try { value = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.BATTERY)).floatValue(); } catch (Exception ignore) {}
     }    
+    else if ("PRF".equals(key))
+    {
+      try { value = 100.0 *((Double)NMEAContext.getInstance().getCache().get(NMEADataCache.PERF)).doubleValue(); } catch (Exception ignore) {}
+    }    
     else if ("CCS".equals(key))
     {
       try
@@ -372,6 +379,7 @@ public class CharacterModeConsole
     Properties consoleProps = new Properties();
     consoleProps.load(new FileReader(new File(propFileName)));
     Enumeration<String> props = (Enumeration<String>)consoleProps.propertyNames();
+    boolean lineZeroIsBusy = false;
     while (props.hasMoreElements())
     {
       String prop = props.nextElement();
@@ -380,6 +388,9 @@ public class CharacterModeConsole
       {
         String value = consoleProps.getProperty(prop);
         String[] elem = value.split(",");
+        int line = Integer.parseInt(elem[1].trim());
+        if (line == 0)
+          lineZeroIsBusy = true;
         consoleData.put(prop.trim(),
                         new ConsoleData(prop.trim(), 
                                         Integer.parseInt(elem[0].trim()), 
@@ -392,9 +403,11 @@ public class CharacterModeConsole
     }
     // First display
     AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-    String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
-    AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
-    
+    if (!lineZeroIsBusy)
+    {
+      String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
+      AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
+    }
     // Ordered lists
     Map<Integer, Map<Integer, String>> table = new TreeMap<Integer, Map<Integer, String>>();
     Set<String> keys = consoleData.keySet();
@@ -709,6 +722,7 @@ public class CharacterModeConsole
     Properties consoleProps = new Properties();
     consoleProps.load(new FileReader(new File(propFileName)));
     Enumeration<String> props = (Enumeration<String>)consoleProps.propertyNames();
+    boolean lineZeroIsBusy = false;
     while (props.hasMoreElements())
     {
       String prop = props.nextElement();
@@ -717,6 +731,9 @@ public class CharacterModeConsole
   //    System.out.println("Prop:" + prop);
         String value = consoleProps.getProperty(prop);
         String[] elem = value.split(",");
+        int line = Integer.parseInt(elem[1].trim());
+        if (line == 0)
+          lineZeroIsBusy = true;
         consoleData.put(prop.trim(),
                         new ConsoleData(prop.trim(), 
                                         Integer.parseInt(elem[0].trim()), 
@@ -729,9 +746,11 @@ public class CharacterModeConsole
     }
     // First display
     AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-    String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
-    AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
-    
+    if (!lineZeroIsBusy)
+    {
+      String screenTitle = consoleProps.getProperty("console.title", " - Character-mode NMEA console -");
+      AnsiConsole.out.println(EscapeSeq.ansiLocate(1, 1) + EscapeSeq.ansiSetTextAndBackgroundColor(EscapeSeq.ANSI_WHITE, EscapeSeq.ANSI_BLACK) + EscapeSeq.ANSI_BOLD + screenTitle + EscapeSeq.ANSI_NORMAL + EscapeSeq.ANSI_DEFAULT_BACKGROUND + EscapeSeq.ANSI_DEFAULT_TEXT);
+    }    
     // Ordered lists
     Map<Integer, Map<Integer, String>> table = new TreeMap<Integer, Map<Integer, String>>();
     Set<String> keys = consoleData.keySet();

@@ -79,6 +79,7 @@ public class CharModePanel
     suffixes.put("CCS", new AssociatedData("kt", DF_22)); // Current Speed
     suffixes.put("CCD", new AssociatedData("t",  DF_3));  // Current Direction
     suffixes.put("TBF", new AssociatedData("m",  DF_4));  // Time buffer (in minutes) for current calculation
+    suffixes.put("PRF", new AssociatedData("%",  DF_31)); // Performance
   }
   
   private static Map<String, Color> colorMap = new HashMap<String, Color>();
@@ -214,6 +215,10 @@ public class CharModePanel
     else if ("BAT".equals(key))
     {
       try { value = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.BATTERY)).floatValue(); } catch (Exception ignore) {}
+    }    
+    else if ("PRF".equals(key))
+    {
+      try { value = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.PERF)).floatValue(); } catch (Exception ignore) {}
     }    
     else if ("CCS".equals(key))
     {
