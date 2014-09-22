@@ -1,5 +1,7 @@
 package olivsoftdesktop.charmode;
 
+import coreutilities.Utilities;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -72,6 +74,7 @@ public class CharacterModeConsole
   static { SOLAR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("etc/UTC")); }
   
   private Date loggingStarted = null;
+  private boolean startedUpdatedWithRMC = false;
   private final SuperBool first = new SuperBool(true);        
 
   private static Map<String, AssociatedData> suffixes = new HashMap<String, AssociatedData>();
@@ -135,8 +138,7 @@ public class CharacterModeConsole
     {
 //    System.setOut(new PrintStream(new FileOutputStream("out.txt", true)));
 //    System.setErr(new PrintStream(new FileOutputStream("err.txt", true)));
-      loggingStarted = new Date();
-      
+      loggingStarted = new Date();      
       DesktopContext.getInstance().addApplicationListener(new DesktopEventListener()
                                                           {
                                                             public void resetConsole() 
@@ -219,7 +221,25 @@ public class CharacterModeConsole
                     }
                     else if ("STD".equals(s))
                     {
-                      value = loggingStarted.toString();
+                      if (!startedUpdatedWithRMC)
+                      {
+                        UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                        if (utcDate != null)
+                        {
+                          loggingStarted = utcDate.getValue();
+                          startedUpdatedWithRMC = true;
+                        }
+                      }
+                //    value = loggingStarted.toString();
+                      UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                      if (utcDate != null)
+                      {
+                        long delta = utcDate.getValue().getTime() - loggingStarted.getTime();
+                        value = Utilities.readableTime(delta, true); // Elapsed since the beginning
+                      }
+                      else
+                        value = DesktopUtilities.lpad(SDF.format(loggingStarted), " ", 24);
+                      
                     }
                   }
                   else
