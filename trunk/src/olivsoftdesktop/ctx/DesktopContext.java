@@ -5,6 +5,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 
+import java.util.Date;
 import java.util.List;
 
 import olivsoftdesktop.DesktopFrame;
@@ -65,6 +66,7 @@ public class DesktopContext
   public void setDesktopVerbose(boolean desktopVerbose)
   {
     this.desktopVerbose = desktopVerbose;
+    System.setProperty("verbose", Boolean.toString(desktopVerbose));
   }
 
   public void setHttpRebroadcastAvailable(boolean httpRebroadcastAvailable)
@@ -208,6 +210,7 @@ public class DesktopContext
   public void setHttpRebroadcastEnable(boolean httpRebroadcastEnable)
   {
     this.httpRebroadcastEnable = httpRebroadcastEnable;
+    System.out.println((httpRebroadcastEnable ? "Enabling" : "Disabling") + " HTTP at " + (new Date()).toString());
   }
 
   public boolean isHttpRebroadcastEnable()
@@ -218,6 +221,7 @@ public class DesktopContext
   public void setTcpRebroadcastEnable(boolean tcpRebroadcastEnable)
   {
     this.tcpRebroadcastEnable = tcpRebroadcastEnable;
+    System.out.println((tcpRebroadcastEnable ? "Enabling" : "Disabling") + " TCP at " + (new Date()).toString());
   }
 
   public boolean isTcpRebroadcastEnable()
@@ -228,6 +232,7 @@ public class DesktopContext
   public void setUdpRebroadcastEnable(boolean udpRebroadcastEnable)
   {
     this.udpRebroadcastEnable = udpRebroadcastEnable;
+    System.out.println((udpRebroadcastEnable ? "Enabling" : "Disabling") + " UDP at " + (new Date()).toString());
   }
 
   public boolean isUdpRebroadcastEnable()
@@ -238,6 +243,7 @@ public class DesktopContext
   public void setFileRebroadcastEnable(boolean fileRebroadcastEnable)
   {
     this.fileRebroadcastEnable = fileRebroadcastEnable;
+    System.out.println((fileRebroadcastEnable ? "Enabling" : "Disabling") + " logging at " + (new Date()).toString());
   }
 
   public boolean isFileRebroadcastEnable()
