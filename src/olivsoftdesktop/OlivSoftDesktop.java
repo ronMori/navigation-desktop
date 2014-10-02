@@ -986,6 +986,8 @@ public class OlivSoftDesktop
                   _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
                 if (_logFile != null && DesktopContext.getInstance().isFileRebroadcastEnable())
                 {
+                  if ("true".equals(System.getProperty("verbose", "false")))
+                    System.out.println((new Date()).toString() + ": Logging [" + DesktopUtilities.superTrim(nmeaString) + "]");
                   try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
                 }
               }

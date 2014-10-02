@@ -211,7 +211,7 @@ public class AdminHttpServer
                     DesktopContext.getInstance().setFileRebroadcastEnable(true); // TODO A file name
                   }
                   else
-                    commandReply = "FILE re-broadcasting NOT available";
+                    commandReply = "FILE (log) re-broadcasting NOT available";
                 }
                 else if (TURN_LOGFILE_OFF.equals(command))
                 {
@@ -219,7 +219,7 @@ public class AdminHttpServer
                   if (DesktopContext.getInstance().isFileRebroadcastAvailable())
                     DesktopContext.getInstance().setFileRebroadcastEnable(false);
                   else
-                    commandReply = "FILE re-broadcasting NOT available";
+                    commandReply = "FILE (log) re-broadcasting NOT available";
                 } 
                 else if (TURN_VERBOSE_ON.equals(command))
                 {
@@ -294,9 +294,9 @@ public class AdminHttpServer
                     commandReply += "UDP re-broadcast not available";
                   commandReply += "\n";
                   if (DesktopContext.getInstance().isFileRebroadcastAvailable())
-                    commandReply += "File re-broadcast is " + (DesktopContext.getInstance().isFileRebroadcastEnable() ? "on" : "off");
+                    commandReply += "Logging is " + (DesktopContext.getInstance().isFileRebroadcastEnable() ? "on" : "off");
                   else 
-                    commandReply += "File re-broadcast not available";
+                    commandReply += "Logging not available";
                   commandReply += "\n";
                   commandReply += "Verbose is " + (DesktopContext.getInstance().isDesktopVerbose() ? "on" : "off");
                 }
