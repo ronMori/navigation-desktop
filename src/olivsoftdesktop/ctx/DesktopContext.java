@@ -1,6 +1,8 @@
 
 package olivsoftdesktop.ctx;
 
+import coreutilities.log.Logger;
+
 import java.io.File;
 
 import java.util.ArrayList;
@@ -210,7 +212,7 @@ public class DesktopContext
   public void setHttpRebroadcastEnable(boolean httpRebroadcastEnable)
   {
     this.httpRebroadcastEnable = httpRebroadcastEnable;
-    System.out.println((httpRebroadcastEnable ? "Enabling" : "Disabling") + " HTTP at " + (new Date()).toString());
+    Logger.log((httpRebroadcastEnable ? "Enabling" : "Disabling") + " HTTP at " + (new Date()).toString(), Logger.INFO);
   }
 
   public boolean isHttpRebroadcastEnable()
@@ -221,7 +223,7 @@ public class DesktopContext
   public void setTcpRebroadcastEnable(boolean tcpRebroadcastEnable)
   {
     this.tcpRebroadcastEnable = tcpRebroadcastEnable;
-    System.out.println((tcpRebroadcastEnable ? "Enabling" : "Disabling") + " TCP at " + (new Date()).toString());
+    Logger.log((tcpRebroadcastEnable ? "Enabling" : "Disabling") + " TCP at " + (new Date()).toString(), Logger.INFO);
   }
 
   public boolean isTcpRebroadcastEnable()
@@ -232,7 +234,7 @@ public class DesktopContext
   public void setUdpRebroadcastEnable(boolean udpRebroadcastEnable)
   {
     this.udpRebroadcastEnable = udpRebroadcastEnable;
-    System.out.println((udpRebroadcastEnable ? "Enabling" : "Disabling") + " UDP at " + (new Date()).toString());
+    Logger.log((udpRebroadcastEnable ? "Enabling" : "Disabling") + " UDP at " + (new Date()).toString(), Logger.INFO);
   }
 
   public boolean isUdpRebroadcastEnable()
@@ -243,7 +245,7 @@ public class DesktopContext
   public void setFileRebroadcastEnable(boolean fileRebroadcastEnable)
   {
     this.fileRebroadcastEnable = fileRebroadcastEnable;
-    System.out.println((fileRebroadcastEnable ? "Enabling" : "Disabling") + " logging at " + (new Date()).toString());
+    Logger.log((fileRebroadcastEnable ? "Enabling" : "Disabling") + " logging at " + (new Date()).toString(), Logger.INFO);
   }
 
   public boolean isFileRebroadcastEnable()

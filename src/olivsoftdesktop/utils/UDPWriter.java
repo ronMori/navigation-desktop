@@ -1,5 +1,7 @@
 package olivsoftdesktop.utils;
 
+import coreutilities.log.Logger;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -15,12 +17,12 @@ public class UDPWriter
   private final static String DEFAULT_HOST = "127.0.0.1"; // "230.0.0.1"
   private String hostName = DEFAULT_HOST; 
   
-  public UDPWriter(int port)
+  public UDPWriter(int port) throws Exception
   {
     this(port, DEFAULT_HOST);
   }
   
-  public UDPWriter(int port, String host)
+  public UDPWriter(int port, String host) throws Exception
   {
     this.hostName = host;
     this.udpPort = port;
@@ -30,7 +32,9 @@ public class UDPWriter
     }
     catch (Exception ex)
     {
-      ex.printStackTrace();
+      Logger.log(ex.getLocalizedMessage(), Logger.INFO);      
+      throw ex;
+//    ex.printStackTrace();
     }
   }
   
