@@ -1,15 +1,9 @@
 package olivsoftdesktop.utils;
 
-import java.io.BufferedReader;
+import coreutilities.log.Logger;
 
 import java.io.DataOutputStream;
-import java.io.InputStreamReader;
 
-import java.net.ConnectException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -28,7 +22,7 @@ public class TCPWriter
   private int tcpPort               = 7001;
   private ServerSocket serverSocket = null;
   
-  public TCPWriter(int port)
+  public TCPWriter(int port) throws Exception
   {
     this.tcpPort = port;
 
@@ -39,8 +33,9 @@ public class TCPWriter
     }
     catch (Exception ex)
     {
-      JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), "TCP Writer", JOptionPane.ERROR_MESSAGE);
-      ex.printStackTrace();
+      try { JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), "TCP Writer", JOptionPane.ERROR_MESSAGE); } catch (Exception ex2) {}
+      Logger.log(ex.getLocalizedMessage(), Logger.INFO);      
+      throw ex;
     }
   }
   

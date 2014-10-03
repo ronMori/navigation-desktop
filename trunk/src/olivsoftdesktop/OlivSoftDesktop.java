@@ -7,6 +7,8 @@ import coreutilities.Utilities;
 import coreutilities.ctx.CoreContext;
 import coreutilities.ctx.CoreEventListener;
 
+import coreutilities.log.Logger;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -580,6 +582,7 @@ public class OlivSoftDesktop
 
   public static void main(String[] args)
   {
+    Logger.log("Starting the Desktop", Logger.INFO);      
     if (!"yes".equals(System.getProperty("headless", "no")))
     {
       String lnf = System.getProperty("swing.defaultlaf");
@@ -906,8 +909,7 @@ public class OlivSoftDesktop
               DesktopContext.getInstance().setTcpRebroadcastAvailable(true);
             }
             catch (Exception ex)
-            {
-              
+            {              
               ex.printStackTrace();
             }
           }
@@ -987,7 +989,7 @@ public class OlivSoftDesktop
                 if (_logFile != null && DesktopContext.getInstance().isFileRebroadcastEnable())
                 {
                   if ("true".equals(System.getProperty("verbose", "false")))
-                    System.out.println((new Date()).toString() + ": Logging [" + DesktopUtilities.superTrim(nmeaString) + "]");
+                    System.err.println((new Date()).toString() + ": Logging [" + DesktopUtilities.superTrim(nmeaString) + "]");
                   try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
                 }
               }

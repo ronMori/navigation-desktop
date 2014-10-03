@@ -4244,14 +4244,20 @@ public class DesktopFrame
             HTTPPort = rebroadcastPanel.getHTTPPort();
             System.out.println("Starting HTTP Server on port " + HTTPPort);
             System.setProperty("http.port", Integer.toString(HTTPPort));
-            if (rebroadcastPanel.getHttpFlavor().equals("XML"))
+            try
             {
-              httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
-              html5Console.setEnabled(true);
+              if (rebroadcastPanel.getHttpFlavor().equals("XML"))
+              {
+                httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=xml" }, null, null); 
+                html5Console.setEnabled(true);
+              }
+              if (rebroadcastPanel.getHttpFlavor().equals("json"))
+                httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
             }
-            if (rebroadcastPanel.getHttpFlavor().equals("json"))
-              httpServer = new HTTPServer(new String[] { "-verbose=" + (rebroadcastPanel.httpVerbose()?"y":"n"), "-fmt=json" }, null, null); 
-            
+            catch (Exception ex)
+            {
+              ex.printStackTrace();              
+            }
             // Remind the URL of the html console (in the clipboard)
             String consoleURL = "http://localhost:" + Integer.toString(HTTPPort) + "/html5/console.html";
             String vanillaURL = "http://localhost:" + Integer.toString(HTTPPort) + "/";
@@ -4282,7 +4288,15 @@ public class DesktopFrame
           {
             UDPPort = rebroadcastPanel.getUDPPort();
             System.out.println("Creating UDP writer on " + rebroadcastPanel.udpHost() + ":" + UDPPort);
-            udpWriter = new UDPWriter(UDPPort, rebroadcastPanel.udpHost()); 
+            try
+            {
+              udpWriter = new UDPWriter(UDPPort, rebroadcastPanel.udpHost()); 
+            }
+            catch (Exception ex)
+            {
+              System.err.println("Cannot create UDPWriter:");
+              ex.printStackTrace();
+            }
           }
           else if (!rebroadcastPanel.isUDPSelected() && UDPPort != -1)
             UDPPort = -1;
@@ -4292,7 +4306,15 @@ public class DesktopFrame
             TCPPort = rebroadcastPanel.getTCPPort();
 //          System.out.println("Creating TCP writer on " + rebroadcastPanel.tcpHost() + ":" + TCPPort);
             System.out.println("Creating TCP writer on port " + TCPPort);
-            tcpWriter = new TCPWriter(TCPPort); // , rebroadcastPanel.tcpHost()); 
+            try
+            {
+              tcpWriter = new TCPWriter(TCPPort); // , rebroadcastPanel.tcpHost()); 
+            }
+            catch (Exception ex)
+            {
+              System.err.println("Cannot create TCPWriter:");
+              ex.printStackTrace();
+            }
           }
           else if (!rebroadcastPanel.isTCPSelected() && TCPPort != -1)
           {
