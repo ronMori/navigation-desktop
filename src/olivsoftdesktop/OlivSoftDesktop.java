@@ -838,16 +838,18 @@ public class OlivSoftDesktop
       // Headless Console: Start admin http server
       String adminPortStr = System.getProperty("admin.http.port", "8080");
       int adminPort = Integer.parseInt(adminPortStr);
-      try
+      if (adminPort > 0)
       {
-     /* AdminHttpServer adminHttpServer = */ 
-        new AdminHttpServer(adminPort);
+        try
+        {
+       /* AdminHttpServer adminHttpServer = */ 
+          new AdminHttpServer(adminPort);
+        }
+        catch (Exception ex) // Probably an AddressInUseException
+        {
+          ex.printStackTrace();
+        }
       }
-      catch (Exception ex) // Probably an AddressInUseException
-      {
-        ex.printStackTrace();
-      }
-
       // Input channel
       final DesktopNMEAReader nmeaReader = new DesktopNMEAReader(verbose, 
                                                                  serialPort, 
