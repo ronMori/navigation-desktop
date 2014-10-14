@@ -221,25 +221,34 @@ public class CharacterModeConsole
                     }
                     else if ("STD".equals(s))
                     {
-                      if (!startedUpdatedWithRMC)
+                      boolean withRMC = false;
+                      if (withRMC)
                       {
+                        if (!startedUpdatedWithRMC)
+                        {
+                          UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
+                          if (utcDate != null)
+                          {
+                            loggingStarted = utcDate.getValue();
+                            startedUpdatedWithRMC = true;
+                          }
+                        }
+                  //    value = loggingStarted.toString();
                         UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
                         if (utcDate != null)
                         {
-                          loggingStarted = utcDate.getValue();
-                          startedUpdatedWithRMC = true;
+                          long delta = utcDate.getValue().getTime() - loggingStarted.getTime();
+                          value = Utilities.readableTime(delta, true); // Elapsed since the beginning
                         }
-                      }
-                //    value = loggingStarted.toString();
-                      UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                      if (utcDate != null)
-                      {
-                        long delta = utcDate.getValue().getTime() - loggingStarted.getTime();
-                        value = Utilities.readableTime(delta, true); // Elapsed since the beginning
+                        else
+                          value = DesktopUtilities.lpad(SDF.format(loggingStarted), " ", 24);
                       }
                       else
-                        value = DesktopUtilities.lpad(SDF.format(loggingStarted), " ", 24);
-                      
+                      {
+                        long delta = ((Long)NMEAContext.getInstance().getCache().get(NMEADataCache.TIME_RUNNING, true)).longValue();
+                        delta = 1000 * (delta / 1000);
+                        value = Utilities.readableTime(delta, true); // Elapsed since the beginning
+                      }
                     }
                   }
                   else
