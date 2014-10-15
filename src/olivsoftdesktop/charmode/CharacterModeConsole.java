@@ -151,6 +151,22 @@ public class CharacterModeConsole
     {
       ex.printStackTrace();
     }
+    // Start refresh thread, every 5 minutes by default
+    if ("yes".equals(System.getProperty("console.refresh", "yes")))
+    {
+      Thread refresher = new Thread()
+        {
+          public void run()
+          {
+            while (true)
+            {
+              try { Thread.sleep(5 * 60 * 1000L); } catch (Exception ex) {}
+              first.setValue(true);
+            }
+          }
+        };
+      refresher.start();
+    }
   }
   
   public void displayConsole()
