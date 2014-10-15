@@ -279,22 +279,22 @@ public class AdminHttpServer
                 else if (ALL_STATUS.equals(command))
                 {
                   if (DesktopContext.getInstance().isHttpRebroadcastAvailable())
-                    commandReply = "HTTP re-broadcast is " + (DesktopContext.getInstance().isHttpRebroadcastEnable() ? "on" : "off");
+                    commandReply = "HTTP re-broadcast is " + (DesktopContext.getInstance().isHttpRebroadcastEnable() ? "on" : "off") + ", on port " + Integer.toString(DesktopContext.getInstance().getHttpRebroadcastPort());
                   else 
                     commandReply = "HTTP re-broadcast not available";
                   commandReply += "\n";
                   if (DesktopContext.getInstance().isTcpRebroadcastAvailable())
-                    commandReply += "TCP re-broadcast is " + (DesktopContext.getInstance().isTcpRebroadcastEnable() ? "on" : "off");
+                    commandReply += "TCP re-broadcast is " + (DesktopContext.getInstance().isTcpRebroadcastEnable() ? "on" : "off") + ", on port " + Integer.toString(DesktopContext.getInstance().getTcpRebroadcastPort());
                   else 
                     commandReply += "TCP re-broadcast not available";
                   commandReply += "\n";                  
                   if (DesktopContext.getInstance().isUdpRebroadcastAvailable())
-                    commandReply += "UDP re-broadcast is " + (DesktopContext.getInstance().isUdpRebroadcastEnable() ? "on" : "off");
+                    commandReply += "UDP re-broadcast is " + (DesktopContext.getInstance().isUdpRebroadcastEnable() ? "on" : "off") + ", on port " + Integer.toString(DesktopContext.getInstance().getUdpRebroadcastPort());
                   else 
                     commandReply += "UDP re-broadcast not available";
                   commandReply += "\n";
                   if (DesktopContext.getInstance().isFileRebroadcastAvailable())
-                    commandReply += "Logging is " + (DesktopContext.getInstance().isFileRebroadcastEnable() ? "on" : "off");
+                    commandReply += "Logging is " + (DesktopContext.getInstance().isFileRebroadcastEnable() ? "on" : "off") + ", in " + DesktopContext.getInstance().getFileRebroadcastName();
                   else 
                     commandReply += "Logging not available";
                   commandReply += "\n";
