@@ -895,6 +895,7 @@ public class OlivSoftDesktop
               System.setProperty("http.port", port);
               httpServer = new HTTPServer(new String[] { "-verbose=" + (System.getProperty("verbose", "n")), "-fmt=xml" }, null, null); 
               DesktopContext.getInstance().setHttpRebroadcastEnable("true".equalsIgnoreCase(enabled));
+              DesktopContext.getInstance().setHttpRebroadcastPort(Integer.parseInt(port));
               DesktopContext.getInstance().setHttpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -916,6 +917,7 @@ public class OlivSoftDesktop
               int tcpPort = Integer.parseInt(port);
               tcpWriter = new TCPWriter(tcpPort);
               DesktopContext.getInstance().setTcpRebroadcastEnable("true".equalsIgnoreCase(enabled));
+              DesktopContext.getInstance().setTcpRebroadcastPort(tcpPort);
               DesktopContext.getInstance().setTcpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -938,6 +940,7 @@ public class OlivSoftDesktop
               int udpPort = Integer.parseInt(port);
               udpWriter = new UDPWriter(udpPort, address); 
               DesktopContext.getInstance().setUdpRebroadcastEnable("true".equalsIgnoreCase(enabled));
+              DesktopContext.getInstance().setUdpRebroadcastPort(udpPort);
               DesktopContext.getInstance().setUdpRebroadcastAvailable(true);
             }
             catch (Exception ex)
@@ -965,6 +968,7 @@ public class OlivSoftDesktop
               {
                 logFile = new BufferedWriter(new FileWriter(f, true)); // true: append
                 DesktopContext.getInstance().setFileRebroadcastEnable("true".equalsIgnoreCase(enabled));
+                DesktopContext.getInstance().setFileRebroadcastName(fName);
                 DesktopContext.getInstance().setFileRebroadcastAvailable(true);
               }
               catch (Exception ex)

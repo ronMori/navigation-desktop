@@ -49,6 +49,51 @@ public class DesktopContext
   private boolean udpRebroadcastAvailable  = false;
   private boolean fileRebroadcastAvailable = false;
   
+  private int httpRebroadcastPort    = 0;
+
+  public void setHttpRebroadcastPort(int httpRebroadcastPort)
+  {
+    this.httpRebroadcastPort = httpRebroadcastPort;
+  }
+
+  public int getHttpRebroadcastPort()
+  {
+    return httpRebroadcastPort;
+  }
+
+  public void setTcpRebroadcastPort(int tcpRebroadcastPort)
+  {
+    this.tcpRebroadcastPort = tcpRebroadcastPort;
+  }
+
+  public int getTcpRebroadcastPort()
+  {
+    return tcpRebroadcastPort;
+  }
+
+  public void setUdpRebroadcastPort(int udpRebroadcastPort)
+  {
+    this.udpRebroadcastPort = udpRebroadcastPort;
+  }
+
+  public int getUdpRebroadcastPort()
+  {
+    return udpRebroadcastPort;
+  }
+
+  public void setFileRebroadcastName(String fileRebroadcastName)
+  {
+    this.fileRebroadcastName = fileRebroadcastName;
+  }
+
+  public String getFileRebroadcastName()
+  {
+    return fileRebroadcastName;
+  }
+  private int tcpRebroadcastPort     = 0;
+  private int udpRebroadcastPort     = 0;
+  private String fileRebroadcastName = "";
+  
   private boolean desktopVerbose = false;
 
   private DesktopContext()
