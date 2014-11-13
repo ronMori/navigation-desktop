@@ -14,9 +14,11 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import olivsoftdesktop.ctx.DesktopContext;
+import olivsoftdesktop.ctx.DesktopEventListener;
 
 public class TCPWriter
 {
+  private TCPWriter instance = this;
   private List<Socket> clientSocketlist = new ArrayList<Socket>(1);
   
   private int tcpPort               = 7001;
@@ -37,6 +39,19 @@ public class TCPWriter
       Logger.log(ex.getLocalizedMessage(), Logger.INFO);      
       throw ex;
     }
+    
+    DesktopContext.getInstance().addApplicationListener(new DesktopEventListener()
+    {
+      public void getNbClients(int connectionType) 
+      {
+//      System.out.println("TCP Writer: nb clients requested.");
+        if (connectionType == DesktopEventListener.TCP_TYPE)
+        {
+          int nbClient = instance.getNbClients();
+          DesktopContext.getInstance().fireNbClients(connectionType, nbClient);
+        }
+      }      
+    });
   }
   
   protected void setSocket(Socket skt)
@@ -89,6 +104,11 @@ public class TCPWriter
         }
       }
     }
+  }
+  
+  private int getNbClients()
+  {
+    return clientSocketlist.size();
   }
   
   private String formatByteHexa(byte b)

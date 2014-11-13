@@ -836,7 +836,7 @@ public class OlivSoftDesktop
         }
       }
       // Headless Console: Start admin http server
-      String adminPortStr = System.getProperty("admin.http.port", "8080");
+      String adminPortStr = System.getProperty("admin.http.port", "7070");
       int adminPort = Integer.parseInt(adminPortStr);
       if (adminPort > 0)
       {

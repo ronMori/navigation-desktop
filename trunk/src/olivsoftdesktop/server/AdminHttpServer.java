@@ -17,6 +17,7 @@ import java.util.Map;
 import nmea.server.ctx.NMEAContext;
 
 import olivsoftdesktop.ctx.DesktopContext;
+import olivsoftdesktop.ctx.DesktopEventListener;
 
 
 /**
@@ -59,12 +60,14 @@ public class AdminHttpServer
   private final static String RESET_CONSOLE    = "/update/console";
 
   private final static String LOGFILE_NAME     = "logfile";
+
+  private final static String NB_TCP_CLIENTS   = "/get/tcp/clients";
   
   public AdminHttpServer(int port)
   {
     System.out.println(">>> Starting Admin HTTP server on port " + port);
     System.out.println(">>> Try http://localhost:" + port + "/console from a browser.");
-    this._port = port;    
+    this._port = port;        
     
     // Infinite loop, waiting for requests
     Thread httpListenerThread = new Thread()
@@ -276,6 +279,55 @@ public class AdminHttpServer
                 {
                   commandReply = "Reading record # " + Long.toString(getReplayFileRecnum());
                 }  
+                else if (NB_TCP_CLIENTS.equals(command))
+                {
+                  if (DesktopContext.getInstance().isTcpRebroadcastAvailable())
+                  {
+                    if (DesktopContext.getInstance().isTcpRebroadcastEnable())
+                    {
+                      final Thread currentThread = Thread.currentThread();
+                      DesktopEventListener del = new DesktopEventListener()
+                      {
+                        public void setNbClients(int connectionType, int nb) 
+                        {
+                          if (connectionType == DesktopEventListener.TCP_TYPE)
+                          {
+    //                      System.out.println(">>> Got NB client response:" + Integer.toString(nb));
+                            setStr("Nb TCP clients:" + Integer.toString(nb));
+                            synchronized (currentThread)
+                            {
+                              currentThread.notify();
+    //                        System.out.println("Thread notification completed.");
+                            }
+                          }
+                        } 
+                      };
+                      DesktopContext.getInstance().addApplicationListener(del);
+                      Thread sendRequest = new Thread()
+                        {
+                          public void run()
+                          {
+                            setStr("No clients");
+                            DesktopContext.getInstance().fireGetNbClients(DesktopEventListener.TCP_TYPE);
+    //                      System.out.println(">>> request completed.");
+                          }
+                        };
+                      sendRequest.start();
+                      synchronized (currentThread)
+                      {
+    //                  System.out.println(">>> Waiting for the response, nb TCP client.");
+                        currentThread.wait(500L);
+                        commandReply = str;
+    //                  System.out.println(">>> Got the response, done waiting. [" + str + "]");
+                        DesktopContext.getInstance().removeApplicationListener(del);
+                      }
+                    }
+                    else
+                      commandReply = "TCP Rebroadcast is disabled";
+                  }
+                  else
+                    commandReply = "No TCP Rebroadcast available";
+                }
                 else if (ALL_STATUS.equals(command))
                 {
                   if (DesktopContext.getInstance().isHttpRebroadcastAvailable())
@@ -409,6 +461,12 @@ public class AdminHttpServer
     httpListenerThread.start();
   }
 
+  private String str = "";
+  private void setStr(String str)
+  {
+    this.str = str;
+  }
+  
   private long getReplayFileRecnum()
   {
     long recNo = 0L;
@@ -445,6 +503,7 @@ public class AdminHttpServer
     str += "<li>/get/all</li>";
     str += "<li>/update/console</li>";
     str += "<li>/get/recno</li>";
+    str += "<li>/get/tcp/clients</li>";
     str += "</ul>";
     str += "------------------------------------\n";
     str += "</pre></body></html>\n";    
@@ -495,6 +554,7 @@ public class AdminHttpServer
     str += "<li><a href='/get/verbose'>Verbose Status</a></li>";
     str += "<li><a href='/update/console'>Reset Char Console</a></li>";
     str += "<li><a href='/get/recno'>Current record (replay)</a></li>";
+    str += "<li><a href='/get/tcp/clients'>Nb TCP Clients</a></li>";
     str += "</ul>";
     str += "<hr>\n";
     str += "<address>&copy; OlivSoft</address>";
@@ -505,7 +565,7 @@ public class AdminHttpServer
   //  For dev tests
   public static void main(String[] args) throws Exception
   {
-//  System.setProperty("admin.http.port", "8080");
+//  System.setProperty("admin.http.port", "7070");
     int port = 8080;
     new AdminHttpServer(port);
     Thread t = new Thread()
