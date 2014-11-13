@@ -297,4 +297,22 @@ public class DesktopContext
   {
     return fileRebroadcastEnable;
   }  
+  
+  public void fireNbClients(int type, int nb)
+  {
+    for (int i=0; i < this.getListeners().size(); i++)
+    {
+      DesktopEventListener l = this.getListeners().get(i);
+      l.setNbClients(type, nb);
+    }
+  }
+  
+  public void fireGetNbClients(int type)
+  {
+    for (int i=0; i < this.getListeners().size(); i++)
+    {
+      DesktopEventListener l = this.getListeners().get(i);
+      l.getNbClients(type);
+    }
+  }
 }
