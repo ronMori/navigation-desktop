@@ -253,6 +253,7 @@ public class DesktopFrame
   private final static DecimalFormat DF2     = new DecimalFormat("00");
   private final static DecimalFormat DF22    = new DecimalFormat("00.00");
   private final static DecimalFormat DF3     = new DecimalFormat("##0");
+  private final static DecimalFormat DF31    = new DecimalFormat("###0.0");
   
   private BorderLayout layoutMain = new BorderLayout();
   private JMenuBar menuBar = new JMenuBar();
@@ -3675,22 +3676,30 @@ public class DesktopFrame
               int hdg    = 0;
               try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
               
-              double bl = 0d;
+              double bl = 0d; // Big Log
               try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
-              double sl = 0d;
+              double sl = 0d; // Small log
               try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
               double depth = 0d;
               try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
               double temp  = 0d;
               try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
+              double atemp  = Double.MIN_VALUE;
+              try { atemp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.AIR_TEMP, true)).getValue(); } catch (Exception ex) {}              
+              double bpress  = Double.MIN_VALUE;
+              try { bpress = ((Pressure)NMEAContext.getInstance().getCache().get(NMEADataCache.BARO_PRESS, true)).getValue(); } catch (Exception ex) {}              
               
               grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
               grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
               grabbedData.add("HDG:" + Integer.toString(hdg % 360) + degSymbol);
               grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
               grabbedData.add("DBT: " + DF22.format(depth) + " m");
-              grabbedData.add("Water Temp:" + DF22.format(temp) + degSymbol + "C");
-              
+              grabbedData.add("Water Temp   : " + DF22.format(temp) + degSymbol + "C");
+              if (atemp != Double.MIN_VALUE)
+                grabbedData.add("Air Temp     : " + DF22.format(atemp) + degSymbol + "C");
+              if (bpress != Double.MIN_VALUE)
+                grabbedData.add("Baro Pressure: " + DF31.format(bpress) + " hPa");
+                            
 //            specialInternalFrame.repaint();
               desktop.repaint();
               try { Thread.sleep(1000L); } catch (Exception ex) {} 
