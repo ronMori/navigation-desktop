@@ -19,7 +19,7 @@ public class UserExitSample
   public void start()
   {
     System.out.println("User exit is starting...");
-    NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+    NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("UserExit", "Sample")
     {
         @Override
         public void manageNMEAString(String nmeaString)

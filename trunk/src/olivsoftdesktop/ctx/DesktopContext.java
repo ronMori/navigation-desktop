@@ -94,7 +94,7 @@ public class DesktopContext
   private int udpRebroadcastPort     = 0;
   private String fileRebroadcastName = "";
   
-  private boolean desktopVerbose = false;
+  private boolean desktopVerbose = "true".equals(System.getProperty("desktop.verbose", "false"));
 
   private DesktopContext()
   {
@@ -113,7 +113,7 @@ public class DesktopContext
   public void setDesktopVerbose(boolean desktopVerbose)
   {
     this.desktopVerbose = desktopVerbose;
-    System.setProperty("verbose", Boolean.toString(desktopVerbose));
+    System.setProperty("desktop.verbose", Boolean.toString(desktopVerbose));
   }
 
   public void setHttpRebroadcastAvailable(boolean httpRebroadcastAvailable)

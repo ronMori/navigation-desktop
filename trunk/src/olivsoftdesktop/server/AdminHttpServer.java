@@ -70,7 +70,7 @@ public class AdminHttpServer
     this._port = port;        
     
     // Infinite loop, waiting for requests
-    Thread httpListenerThread = new Thread()
+    Thread httpListenerThread = new Thread("AdminListener")
     {
       public void run()
       {
@@ -303,7 +303,7 @@ public class AdminHttpServer
                         } 
                       };
                       DesktopContext.getInstance().addApplicationListener(del);
-                      Thread sendRequest = new Thread()
+                      Thread sendRequest = new Thread("Admin Sender")
                         {
                           public void run()
                           {
@@ -568,7 +568,7 @@ public class AdminHttpServer
 //  System.setProperty("admin.http.port", "7070");
     int port = 8080;
     new AdminHttpServer(port);
-    Thread t = new Thread()
+    Thread t = new Thread("For Dev Tests")
       {
         public void run()
         {
