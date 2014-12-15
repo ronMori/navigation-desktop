@@ -32,6 +32,7 @@ import nmea.server.ctx.NMEADataCache;
 
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
+import ocss.nmea.parser.Current;
 import ocss.nmea.parser.Depth;
 import ocss.nmea.parser.Distance;
 import ocss.nmea.parser.GeoPos;
@@ -58,7 +59,7 @@ import user.util.GeomUtil;
 
 public class CharacterModeConsole 
 {
-  private final static boolean DEBUG = false;
+  private final static boolean DEBUG = "true".equals(System.getProperty("cc.verbose", "false"));
   
   private static int cellSize   = 13;
   private static int dataSize   =  5;
@@ -151,16 +152,17 @@ public class CharacterModeConsole
     {
       ex.printStackTrace();
     }
-    // Start refresh thread, every 5 minutes by default
+    // Start refresh thread, every 1 minutes by default
     if ("yes".equals(System.getProperty("console.refresh", "yes")))
     {
-      Thread refresher = new Thread()
+      final int interval = 1;
+      Thread refresher = new Thread("Char Console Reader")
         {
           public void run()
           {
             while (true)
             {
-              try { Thread.sleep(5 * 60 * 1000L); } catch (Exception ex) {}
+              try { Thread.sleep(interval * 60 * 1000L); } catch (Exception ex) {}
               first.setValue(true);
             }
           }
@@ -186,199 +188,290 @@ public class CharacterModeConsole
     
     first.setValue(true);        
     // The small touchscreen (320x240) in 8x8 resolution has 40 columns per line of text, in 6x12, 54 columns.
-    synchronized (NMEAContext.getInstance())
+    if (false)
     {
-      synchronized (NMEAContext.getInstance().getNMEAListeners())
+      synchronized (NMEAContext.getInstance())
       {
-        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
-          {
-            @Override
-            public void manageNMEAString(String nmeaString) // TODO ? Will need an event like CacheHasBeenHit, for GPSd
+        synchronized (NMEAContext.getInstance().getNMEAListeners())
+        {
+          NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("CharConsole", "Console")
             {
-    //        super.manageNMEAString(nmeaString);
-              try
+              @Override
+              public void manageNMEAString(String nmeaString) // TODO ? Will need an event like CacheHasBeenHit, for GPSd
               {
-    //            plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
-                if (first.isTrue())
+      //        super.manageNMEAString(nmeaString);
+                try
                 {
-                  AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
-                  first.setValue(false);
-                  try { initConsole(); }
-                  catch (Exception ex)
-                  {
-                    ex.printStackTrace();
-                  }
+      //          plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
+                  displayData();
+      //          plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
                 }
-                Set<String> keys = consoleData.keySet();
-                for (String s : keys)
+                catch (Exception ex)
                 {
-                  ConsoleData cd = consoleData.get(s);
-                  int col = cd.getX();
-                  int row = cd.getY();
-                  String value = "";
-                  if (nonNumericData.containsKey(s))
-                  {
-                    if ("POS".equals(s))                  
-                      value = DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS), " ", 12) + 
-                              DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng, GeomUtil.NO_DEG, GeomUtil.EW), " ", 12);
-                    else if ("GDT".equals(s))  
-                    {
-                      UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                      value = DesktopUtilities.lpad(SDF.format(utcDate.getValue()), " ", 24);
-                    }
-                    else if ("SLT".equals(s))  
-                    {
-                      SolarDate solarDate = (SolarDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_SOLAR_TIME, true);
-                      value = DesktopUtilities.lpad(SOLAR_DATE_FORMAT.format(solarDate.getValue()), " ", 24);
-                    }
-                    else if ("NWP".equals(s))  
-                    {
-                      value = (String)NMEAContext.getInstance().getCache().get(NMEADataCache.TO_WP, true);
-                    }
-                    else if ("STD".equals(s))
-                    {
-                      boolean withRMC = false;
-                      if (withRMC)
-                      {
-                        if (!startedUpdatedWithRMC)
-                        {
-                          UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                          if (utcDate != null)
-                          {
-                            loggingStarted = utcDate.getValue();
-                            startedUpdatedWithRMC = true;
-                          }
-                        }
-                  //    value = loggingStarted.toString();
-                        UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                        if (utcDate != null)
-                        {
-                          long delta = utcDate.getValue().getTime() - loggingStarted.getTime();
-                          value = Utilities.readableTime(delta, true); // Elapsed since the beginning
-                        }
-                        else
-                          value = DesktopUtilities.lpad(SDF.format(loggingStarted), " ", 24);
-                      }
-                      else
-                      {
-                        long delta = ((Long)NMEAContext.getInstance().getCache().get(NMEADataCache.TIME_RUNNING, true)).longValue();
-                        delta = 1000 * (delta / 1000);
-                        value = Utilities.readableTime(delta, true); // Elapsed since the beginning
-                      }
-                    }
-                  }
-                  else
-                    value = DesktopUtilities.lpad(suffixes.get(s).getFmt().format(getValueFromCache(s)), " ", dataSize); // + " ";
-                  String plot = plotOneValue(1 + ((col - 1) * cellSize), row + 1, value, colorMap.get(cd.getFgData()), colorMap.get(cd.getBgData()));
-                  AnsiConsole.out.println(plot);          
-    //            try { Thread.sleep(10); } catch (Exception ex) {}
+                  System.err.println("============================================");
+                  System.err.println("Error in " + this.getClass().getName());
+                  System.err.println(nmeaString);
+                  ex.printStackTrace();
                 }
-    //          plotMessage(DesktopUtilities.rpad(nmeaString, " ", 100));
               }
-              catch (Exception ex)
-              {
-                System.err.println(nmeaString);
-              }
-            }
-          });
+            });
+        }
       }
-    }        
+    }  
+    else
+    {
+      while (true) // Refreshed every second
+      {
+        try
+        {
+          displayData();
+        }
+        catch (Exception ex)
+        {
+          ex.printStackTrace();
+        }
+        try { Thread.sleep(1000); } catch (Exception ignore) {}
+      }
+    }
   }
   
-  private double getValueFromCache(String key)
+  private void displayData()
+  {
+    if (first.isTrue())
+    {
+      AnsiConsole.out.println(EscapeSeq.ANSI_CLS);
+      first.setValue(false);
+      try { initConsole(); }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+      }
+    }
+    Set<String> keys = consoleData.keySet();
+    for (String s : keys)
+    {
+      ConsoleData cd = consoleData.get(s);
+      int col = cd.getX();
+      int row = cd.getY();
+      String value = "";
+      NMEADataCache ndc = NMEAContext.getInstance().getCache();
+      synchronized (ndc)
+      {
+        if (nonNumericData.containsKey(s))
+        {
+          if ("POS".equals(s))         
+          {
+            try
+            {
+              value = DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lat, GeomUtil.NO_DEG, GeomUtil.NS), " ", 12) + 
+                      DesktopUtilities.lpad(GeomUtil.decToSex(((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lng, GeomUtil.NO_DEG, GeomUtil.EW), " ", 12);
+            }
+            catch (Exception ex)
+            {
+              value = "-";
+          //  ex.printStackTrace();
+            }
+          }
+          else if ("GDT".equals(s))  
+          {
+            try
+            {
+              UTCDate utcDate = (UTCDate) ndc.get(NMEADataCache.GPS_DATE_TIME, true);
+              value = DesktopUtilities.lpad(SDF.format(utcDate.getValue()), " ", 24);
+            }
+            catch (Exception e)
+            {
+              value = "-";
+          //  e.printStackTrace();
+            }
+          }
+          else if ("SLT".equals(s))  
+          {
+            try
+            {
+              SolarDate solarDate =(SolarDate) ndc.get(NMEADataCache.GPS_SOLAR_TIME, true);
+              value = DesktopUtilities.lpad(SOLAR_DATE_FORMAT.format(solarDate.getValue()), " ", 24);
+            }
+            catch (Exception e)
+            {
+              value = "-";
+         //   e.printStackTrace();
+            }
+          }
+          else if ("NWP".equals(s))  
+          {
+            try
+            {
+              value = (String)ndc.get(NMEADataCache.TO_WP, true);
+            }
+            catch (Exception e)
+            {
+              value = "-";
+         //   e.printStackTrace();
+            }
+          }
+          else if ("STD".equals(s))
+          {
+            boolean withRMC = false;
+            if (withRMC)
+            {
+              if (!startedUpdatedWithRMC)
+              {
+                UTCDate utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true);
+                if (utcDate != null)
+                {
+                  loggingStarted = utcDate.getValue();
+                  startedUpdatedWithRMC = true;
+                }
+              }
+              //    value = loggingStarted.toString();
+              UTCDate utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true);
+              if (utcDate != null)
+              {
+                long delta = utcDate.getValue().getTime() - loggingStarted.getTime();
+                value = Utilities.readableTime(delta, true); // Elapsed since the beginning
+              }
+              else
+                value = DesktopUtilities.lpad(SDF.format(loggingStarted), " ", 24);
+            }
+            else
+            {
+              try
+              {
+                long delta = ((Long)ndc.get(NMEADataCache.TIME_RUNNING, true)).longValue();
+                delta = 1000 * (delta / 1000);
+                value = Utilities.readableTime(delta, true); // Elapsed since the beginning
+              }
+              catch (Exception e)
+              {
+                value = "-";
+             // e.printStackTrace();
+              }
+            }
+          }
+        }
+        else
+        {
+          try
+          {
+            value =
+              DesktopUtilities.lpad(suffixes.get(s).getFmt().format(getValueFromCache(s, ndc)), " ", dataSize); // + " ";
+          }
+          catch (Exception e)
+          {
+            value = "-";
+            e.printStackTrace();
+          }
+        }
+      }
+      String plot = plotOneValue(1 + ((col - 1) * cellSize), row + 1, value, colorMap.get(cd.getFgData()), colorMap.get(cd.getBgData()));
+      AnsiConsole.out.println(plot);          
+//    try { Thread.sleep(10); } catch (Exception ex) {}
+    }    
+  }
+  
+  private double getValueFromCache(String key, NMEADataCache ndc)
   {
     double value = 0;
     if ("BSP".equals(key)) 
     {
-      try { value = ((Speed) NMEAContext.getInstance().getCache().get(NMEADataCache.BSP)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Speed)ndc.get(NMEADataCache.BSP)).getValue(); } catch (Exception ignore) {}
     }
     else if ("HDG".equals(key))
     {
-      try { value = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = (int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
     }
     else if ("TWD".equals(key))
     {
-      try { value = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = (int)((Angle360)ndc.get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
     }
     else if ("AWS".equals(key))
     {
-      try { value = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = ((Speed)ndc.get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
     }    
     else if ("AWA".equals(key))
     {
-      try { value = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = (int)((Angle180)ndc.get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
     }    
     else if ("TWS".equals(key))
     {
-      try { value = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = ((Speed)ndc.get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
     }    
     else if ("COG".equals(key))
     {
-      try { value = ((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG)).getValue(); } catch (Exception ex) {}
+      try { value = ((Angle360)ndc.get(NMEADataCache.COG)).getValue(); } catch (Exception ex) {}
     }    
     else if ("SOG".equals(key))
     {
-      try { value = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG)).getValue(); } catch (Exception ex) {}
+      try { value = ((Speed)ndc.get(NMEADataCache.SOG)).getValue(); } catch (Exception ex) {}
     }    
     else if ("TWA".equals(key))
     {
-      try { value = ((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.TWA)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Angle180)ndc.get(NMEADataCache.TWA)).getValue(); } catch (Exception ignore) {}
     }    
     else if ("CDR".equals(key))
     {
-      try { value = ((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.CDR)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Angle360)ndc.get(NMEADataCache.CDR)).getValue(); } catch (Exception ignore) {}
     }    
     else if ("CSP".equals(key))
     {
-      try { value = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.CSP)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Speed)ndc.get(NMEADataCache.CSP)).getValue(); } catch (Exception ignore) {}
     }
     else if ("LAT".equals(key))
     {
-      try { value = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION)).lat; } catch (Exception ignore) {}
+      try { value = ((GeoPos)ndc.get(NMEADataCache.POSITION)).lat; } catch (Exception ignore) {}
     }
     else if ("LNG".equals(key))
     {
-      try { value = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION)).lng; } catch (Exception ignore) {}
+      try { value = ((GeoPos)ndc.get(NMEADataCache.POSITION)).lng; } catch (Exception ignore) {}
     }
     else if ("LOG".equals(key))
     {
-      try { value = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Distance)ndc.get(NMEADataCache.LOG)).getValue(); } catch (Exception ignore) {}
     }
     else if ("MWT".equals(key))
     {
-      try { value = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Temperature)ndc.get(NMEADataCache.WATER_TEMP)).getValue(); } catch (Exception ignore) {}
     }
     else if ("MTA".equals(key))
     {
-      try { value = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.AIR_TEMP)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Temperature)ndc.get(NMEADataCache.AIR_TEMP)).getValue(); } catch (Exception ignore) {}
     }
     else if ("MMB".equals(key))
     {
-      try { value = ((Pressure)NMEAContext.getInstance().getCache().get(NMEADataCache.BARO_PRESS)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Pressure)ndc.get(NMEADataCache.BARO_PRESS)).getValue(); } catch (Exception ignore) {}
     }
     else if ("DBT".equals(key))
     {
-      try { value = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Depth)ndc.get(NMEADataCache.DBT)).getValue(); } catch (Exception ignore) {}
     }    
     else if ("BAT".equals(key))
     {
-      try { value = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.BATTERY)).floatValue(); } catch (Exception ignore) {}
+      try { value = ((Float)ndc.get(NMEADataCache.BATTERY)).floatValue(); } catch (Exception ignore) {}
     }    
     else if ("PRF".equals(key))
     {
-      try { value = 100.0 *((Double)NMEAContext.getInstance().getCache().get(NMEADataCache.PERF)).doubleValue(); } catch (Exception ignore) {}
+      try { value = 100.0 *((Double)ndc.get(NMEADataCache.PERF)).doubleValue(); } catch (Exception ignore) {}
     }    
     else if ("CCS".equals(key))
     {
       try
       {
-        Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
-                            ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
-        Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1 && DEBUG)
-          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
-        for (Long l : keys)
-          value = currentMap.get(l).getSpeed().getValue();
+        Current current = (Current)ndc.get(NMEADataCache.VDR_CURRENT);
+        if (current == null)
+        {
+          Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                              ((Map<Long, NMEADataCache.CurrentDefinition>)ndc.get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+          Set<Long> keys = currentMap.keySet();
+          if (keys.size() != 1 && DEBUG)
+            System.err.println("CCS: Nb entry(ies) in Calculated Current Map:" + keys.size());
+          for (Long l : keys)
+            value = currentMap.get(l).getSpeed().getValue();
+        }
+        else
+        {
+          value = current.speed;
+        }
       }
       catch (Exception ignore) {}
     }
@@ -386,13 +479,21 @@ public class CharacterModeConsole
     {
       try
       {
-        Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
-                            ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
-        Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1 && DEBUG)
-          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
-        for (Long l : keys)
-          value = currentMap.get(l).getDirection().getValue();
+        Current current = (Current)ndc.get(NMEADataCache.VDR_CURRENT);
+        if (current == null)
+        {
+          Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                              ((Map<Long, NMEADataCache.CurrentDefinition>)ndc.get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+          Set<Long> keys = currentMap.keySet();
+          if (keys.size() != 1 && DEBUG)
+             System.err.println("CCD: Nb entry(ies) in Calculated Current Map:" + keys.size());
+          for (Long l : keys)
+            value = currentMap.get(l).getDirection().getValue();
+        }
+        else
+        {
+          value = current.angle;          
+        }
       }
       catch (Exception ignore) {}
     }
@@ -401,10 +502,10 @@ public class CharacterModeConsole
       try
       {
         Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
-                            ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+                            ((Map<Long, NMEADataCache.CurrentDefinition>)ndc.get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
         Set<Long> keys = currentMap.keySet();
         if (keys.size() != 1 && DEBUG)
-          plotMessage("Nb entry(ies) in Calculated Current Map:" + keys.size());
+           System.err.println("TBF: Nb entry(ies) in Calculated Current Map:" + keys.size());
         for (Long l : keys)
           value = l / (60 * 1000);
       }
@@ -412,7 +513,7 @@ public class CharacterModeConsole
     }
     else if ("XTE".equals(key))
     {
-      try { value = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.XTE)).getValue(); } catch (Exception ignore) {}
+      try { value = ((Distance)ndc.get(NMEADataCache.XTE)).getValue(); } catch (Exception ignore) {}
     }    
     return value;
   }

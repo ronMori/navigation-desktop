@@ -24,6 +24,7 @@ import nmea.server.ctx.NMEADataCache;
 
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
+import ocss.nmea.parser.Current;
 import ocss.nmea.parser.Depth;
 import ocss.nmea.parser.Distance;
 import ocss.nmea.parser.GeoPos;
@@ -109,13 +110,13 @@ public class CharModePanel
     }
 
 
-    Thread readerThread = new Thread()
+    Thread readerThread = new Thread("NMEA Reader Thread")
       {
         public void run()
         {
           synchronized (NMEAContext.getInstance().getNMEAListeners())
           {
-            NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+            NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("CharConsole", "Character Console (Panel)")
               {
                 @Override
                 public void manageNMEAString(String nmeaString) // TODO ? Will need an event like CacheHasBeenHit, for GPSd
@@ -224,13 +225,21 @@ public class CharModePanel
     {
       try
       {
-        Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
-                            ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
-        Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1)
-          System.out.println("1 - Nb entry(ies) in Calculated Current Map:" + keys.size());
-        for (Long l : keys)
-          value = currentMap.get(l).getSpeed().getValue();
+          Current current = (Current)NMEAContext.getInstance().getCache().get(NMEADataCache.VDR_CURRENT);
+          if (current == null)
+          {
+          Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                              ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+          Set<Long> keys = currentMap.keySet();
+          if (keys.size() != 1)
+            System.out.println("1 - Nb entry(ies) in Calculated Current Map:" + keys.size());
+          for (Long l : keys)
+            value = currentMap.get(l).getSpeed().getValue();
+        }
+        else
+        {
+          value = current.speed;
+        }
       }
       catch (Exception ignore) {}
     }
@@ -238,13 +247,21 @@ public class CharModePanel
     {
       try
       {
-        Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
-                            ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
-        Set<Long> keys = currentMap.keySet();
-        if (keys.size() != 1)
-          System.out.println("2 - Nb entry(ies) in Calculated Current Map:" + keys.size());
-        for (Long l : keys)
-          value = currentMap.get(l).getDirection().getValue();
+        Current current = (Current)NMEAContext.getInstance().getCache().get(NMEADataCache.VDR_CURRENT);
+        if (current == null)
+        {
+          Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                              ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+          Set<Long> keys = currentMap.keySet();
+          if (keys.size() != 1)
+            System.out.println("2 - Nb entry(ies) in Calculated Current Map:" + keys.size());
+          for (Long l : keys)
+            value = currentMap.get(l).getDirection().getValue();
+        }
+        else
+        {
+          value = current.angle;
+        }
       }
       catch (Exception ignore) {}
     }

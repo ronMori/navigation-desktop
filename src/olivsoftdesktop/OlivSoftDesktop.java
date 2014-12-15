@@ -413,7 +413,7 @@ public class OlivSoftDesktop
     proceed = true; // A Parameter 
     if (proceed)
     {
-      Thread checkForNotification = new Thread()
+      Thread checkForNotification = new Thread("Notification Thread")
         {
           public void run()
           {
@@ -873,8 +873,10 @@ public class OlivSoftDesktop
       final String FILE = "FILE:";
       
       System.out.println("DesktopNMEAReader: New output args:");
+      System.out.println("===================================");
       for (String s: args)
         System.out.println(s);
+      System.out.println("===================================");
 
       String[] output = getOutputChannels(args);
       if (output != null)
@@ -990,11 +992,17 @@ public class OlivSoftDesktop
         // Create NMEAListener to re-broadcast appropriately
         if (udpWriter != null | tcpWriter != null || logFile != null)
         {
-          NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+          NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("Desktop", "manageNMEAString, headless")
             {
               @Override
               public void manageNMEAString(String nmeaString)
               {
+                if ("true".equals(System.getProperty("desktop.verbose", "false")))
+                {
+                  System.out.println("In manageNMEAString (Desktop):");
+                  System.out.println("UDP:" + (_udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable() ? "enabled":"disabled"));
+                  System.out.println("TCP:" + (_tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable() ? "enabled":"disabled"));
+                }
                 super.manageNMEAString(nmeaString);
                 if (_udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable())
                   _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
@@ -1002,7 +1010,7 @@ public class OlivSoftDesktop
                   _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
                 if (_logFile != null && DesktopContext.getInstance().isFileRebroadcastEnable())
                 {
-                  if ("true".equals(System.getProperty("verbose", "false")))
+                  if ("true".equals(System.getProperty("desktop.verbose", "false")))
                     System.err.println((new Date()).toString() + ": Logging [" + DesktopUtilities.superTrim(nmeaString) + "]");
                   try { _logFile.write(DesktopUtilities.superTrim(nmeaString) + "\n"); } catch (Exception ex) { ex.printStackTrace(); }
                 }
@@ -1011,7 +1019,7 @@ public class OlivSoftDesktop
         }
         System.out.println("Rebroadcast in flight:" + formatOutput(output));
   
-        Runtime.getRuntime().addShutdownHook(new Thread() 
+        Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") 
         {
           public void run() 
           { 

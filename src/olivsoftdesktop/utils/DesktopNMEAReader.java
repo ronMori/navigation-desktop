@@ -88,7 +88,7 @@ public class DesktopNMEAReader
       if (cache != null)
       {
 //      System.out.println("Cache has " + cache.size() + " entry(ies).");
-        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+        NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("Desktop", "NMEA Reader")
           {
             public void manageNMEAString(String str)
             {

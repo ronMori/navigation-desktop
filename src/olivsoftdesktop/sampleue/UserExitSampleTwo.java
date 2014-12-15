@@ -27,7 +27,7 @@ public class UserExitSampleTwo
   {
     System.out.println("User exit is starting...");
     
-    watcher = new Thread()
+    watcher = new Thread("Thread for UserExitSampleTwo")
       {
         public void run()
         {

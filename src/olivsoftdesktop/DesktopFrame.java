@@ -180,6 +180,7 @@ import nmea.ui.viewer.spot.ctx.SpotEventListener;
 
 import ocss.nmea.parser.Angle180;
 import ocss.nmea.parser.Angle360;
+import ocss.nmea.parser.Current;
 import ocss.nmea.parser.Depth;
 import ocss.nmea.parser.Distance;
 import ocss.nmea.parser.GeoPos;
@@ -623,7 +624,7 @@ public class DesktopFrame
         ((Graphics2D)gr).setPaint(gradient);
         gr.fillRect(0, 0, this.getWidth(), this.getHeight());
         
-        if (foregroundData.booleanValue())
+        if (foregroundData.booleanValue())// aka Live Wallpaper
         {
       //  System.out.println("Displaying live wall paper.");
           Color wpFontColor = ((ParamPanel.ParamColor)ParamPanel.getData()[ParamData.LIVE_WALLPAPER_FONT_COLOR][ParamPanel.PRM_VALUE]).getColor();
@@ -687,8 +688,7 @@ public class DesktopFrame
             catch (Exception ex) { System.err.println(ex.getMessage()); }
           }
           else
-          {
-             
+          {             
             try 
             { 
               digiFont = ((Font) ParamPanel.getData()[ParamData.WALLPAPER_FONT][ParamPanel.PRM_VALUE]); 
@@ -733,12 +733,13 @@ public class DesktopFrame
             }
           }
           // Some drawings...
+          NMEADataCache ndc = NMEAContext.getInstance().getCache();
           boolean displayRose = true;
           int twd    = 0;
           int hdg    = 0;
-          try { twd = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+          try { synchronized (ndc) { twd = (int)((Angle360)ndc.get(NMEADataCache.TWD, true)).getDoubleValue(); } } catch (Exception ex) { ex.printStackTrace(); }
           // HDG (true)
-          try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+          try { synchronized (ndc) { hdg = (int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } } catch (Exception ex) { ex.printStackTrace(); }
           if (displayRose && roseCheckBox.isSelected())
           {
             Dimension dim = this.getSize();
@@ -840,7 +841,7 @@ public class DesktopFrame
             }
           }
           // Position on a globe?
-          currentPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false);
+          synchronized (ndc) { currentPos = (GeoPos)ndc.get(NMEADataCache.POSITION, false); }
           if (currentPos != null)
           {
             chartPanel.setVisible(globeCheckBox.isSelected());
@@ -877,7 +878,7 @@ public class DesktopFrame
                              bspJumbo.getSize().width, 
                              bspJumbo.getSize().height, 5, 5);
             double bsp = 0d;
-            try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+            try { synchronized (ndc) { bsp = ((Speed)ndc.get(NMEADataCache.BSP, true)).getDoubleValue(); } } catch (Exception ex) { ex.printStackTrace(); }
             setBSP(bsp);
             
             beaufortJumbo.setVisible(true);   
@@ -945,7 +946,7 @@ public class DesktopFrame
                              WINDGAUGE_PANEL_WIDTH, 
                              WINDGAUGE_PANEL_HEIGHT, 10, 10);
             double tws = 0d;
-            try { tws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
+            try { synchronized (ndc) { tws = ((Speed)ndc.get(NMEADataCache.TWS, true)).getDoubleValue(); } } catch (Exception ex) { ex.printStackTrace(); }
             windGaugePanel.setTws((float)tws);
             windGaugePanel.setToolTipText("TWS " + df22.format(tws) + " kts");
             beaufortJumbo.setValue("F " + DF3.format(WindUtils.getBeaufort(tws)));
@@ -1050,266 +1051,267 @@ public class DesktopFrame
               bgw.paintBackgroundWindow(gr);
           }
         }
-  //      if (foregroundData.booleanValue())
-  //        specialInternalFrame.moveToFront();
+  //    if (foregroundData.booleanValue())
+  //      specialInternalFrame.moveToFront();
+//      System.out.println(">>> DEBUG >>> Bottom of the paintComponent");
       }
 
-    @Override
-    public void chartPanelPaintComponent(Graphics gr)
-    {
-      if (foregroundData.booleanValue() && currentPos != null)
+      @Override
+      public void chartPanelPaintComponent(Graphics gr)
       {
-        chartPanel.setVisible(true);
-        Graphics2D g2d = null;
-        if (gr instanceof Graphics2D)
-          g2d = (Graphics2D)gr;
-        World.drawChart(chartPanel, gr);
-        // Plot current pos
-        double ls = currentPos.lat;
-        double gs = currentPos.lng;
-        GeoPoint currPos = new GeoPoint(currentPos.lat, currentPos.lng);
-        Point gp = chartPanel.getPanelPoint(ls, gs);
-        if (isVisible(ls, gs))
+        if (foregroundData.booleanValue() && currentPos != null)
         {
-          gr.setColor(Color.red);
-          gr.fillOval(gp.x - 3, gp.y - 3, 6, 6);
-          chartPanel.postit(gr, "GPS Position", gp.x + 2, gp.y - 2, Color.yellow);
-        }
-        if (sunDayLightCheckBox.isSelected())
-        {
-          boolean debug = false;
-          // Day light
-          double dayCenterLongitude = 0;
-          double dayCenterLatitude = 0;
-          if (sunGHA < 180)
-            dayCenterLongitude = -sunGHA;
-          if (sunGHA >= 180)
-            dayCenterLongitude = 360 - sunGHA;
-          dayCenterLatitude = sunD;
-          
-          GeoPoint sunPos = new GeoPoint(dayCenterLatitude, dayCenterLongitude);
-    //    System.out.println("Sun Position:" + sunPos.toString());
-          Map<Double, Double> nightMap = new HashMap<Double, Double>();
-
-          // the border of the night
-          for (int i=0; i<360; i++)
+          chartPanel.setVisible(true);
+          Graphics2D g2d = null;
+          if (gr instanceof Graphics2D)
+            g2d = (Graphics2D)gr;
+          World.drawChart(chartPanel, gr);
+          // Plot current pos
+          double ls = currentPos.lat;
+          double gs = currentPos.lng;
+          GeoPoint currPos = new GeoPoint(currentPos.lat, currentPos.lng);
+          Point gp = chartPanel.getPanelPoint(ls, gs);
+          if (isVisible(ls, gs))
           {
-            GeoPoint nightGp = deadReckoning(sunPos, 90 * 60, i);
-            double lng = nightGp.getG();
-            if (lng < -180)
-              lng += 360;
-            if (lng > 180)
-              lng -= 360;
-            if (debug)
-            {
-              Point pp = chartPanel.getPanelPoint(nightGp);
-              gr.setColor(Color.green);
-              gr.fillOval(pp.x - 1, pp.y - 1, 2, 2);
-            }
-            if (isVisible(nightGp.getL(), lng))
-              nightMap.put(lng, nightGp.getL());
+            gr.setColor(Color.red);
+            gr.fillOval(gp.x - 3, gp.y - 3, 6, 6);
+            chartPanel.postit(gr, "GPS Position", gp.x + 2, gp.y - 2, Color.yellow);
           }
+          if (sunDayLightCheckBox.isSelected())
+          {
+            boolean debug = false;
+            // Day light
+            double dayCenterLongitude = 0;
+            double dayCenterLatitude = 0;
+            if (sunGHA < 180)
+              dayCenterLongitude = -sunGHA;
+            if (sunGHA >= 180)
+              dayCenterLongitude = 360 - sunGHA;
+            dayCenterLatitude = sunD;
+            
+            GeoPoint sunPos = new GeoPoint(dayCenterLatitude, dayCenterLongitude);
+      //    System.out.println("Sun Position:" + sunPos.toString());
+            Map<Double, Double> nightMap = new HashMap<Double, Double>();
   
-          // Sort the points of the night, and then the points of the limb.
-          // Store the Points (graphical). Sort on y, top to bottom
-          Map<Integer, Integer> nightBorderMap = new HashMap<Integer, Integer>();
-          
-          Set<Double> lngSet = nightMap.keySet();
-          for (Double lng : lngSet)
-          {
-            Double lat = nightMap.get(lng);
-            Point pp = chartPanel.getPanelPoint(new GeoPoint(lat, lng));
-            nightBorderMap.put(pp.y, pp.x);
-          }
-          SortedSet<Integer> sortedNightBorder = new TreeSet<Integer>(nightBorderMap.keySet());
-          Polygon night = new Polygon();
-          Point previous = null;
-          int nb = 1;
-          if (debug)
-          {
-            gr.setColor(Color.yellow);
-            gr.setFont(gr.getFont().deriveFont(14f));
-          }
-          
-          // Night
-          Point firstPoint = null, lastPoint = null;
-          for (Integer y : sortedNightBorder)
-          {
-            int x = nightBorderMap.get(y).intValue();
-            Point pp = new Point(x, y);
-            if (firstPoint == null)
-              firstPoint = pp;
-            lastPoint = pp;
-            night.addPoint(pp.x, pp.y);
+            // the border of the night
+            for (int i=0; i<360; i++)
+            {
+              GeoPoint nightGp = deadReckoning(sunPos, 90 * 60, i);
+              double lng = nightGp.getG();
+              if (lng < -180)
+                lng += 360;
+              if (lng > 180)
+                lng -= 360;
+              if (debug)
+              {
+                Point pp = chartPanel.getPanelPoint(nightGp);
+                gr.setColor(Color.green);
+                gr.fillOval(pp.x - 1, pp.y - 1, 2, 2);
+              }
+              if (isVisible(nightGp.getL(), lng))
+                nightMap.put(lng, nightGp.getL());
+            }
+    
+            // Sort the points of the night, and then the points of the limb.
+            // Store the Points (graphical). Sort on y, top to bottom
+            Map<Integer, Integer> nightBorderMap = new HashMap<Integer, Integer>();
+            
+            Set<Double> lngSet = nightMap.keySet();
+            for (Double lng : lngSet)
+            {
+              Double lat = nightMap.get(lng);
+              Point pp = chartPanel.getPanelPoint(new GeoPoint(lat, lng));
+              nightBorderMap.put(pp.y, pp.x);
+            }
+            SortedSet<Integer> sortedNightBorder = new TreeSet<Integer>(nightBorderMap.keySet());
+            Polygon night = new Polygon();
+            Point previous = null;
+            int nb = 1;
             if (debug)
             {
-//            System.out.println("Nigh:" + pp);
-              if (previous != null)
-              {
-                gr.drawLine(previous.x, previous.y, pp.x, pp.y);
-                if ((nb - 1) % 10 == 0)
-                  gr.drawString(Integer.toString(nb), pp.x, pp.y);
-                nb++;
-              }
-              previous = pp;
+              gr.setColor(Color.yellow);
+              gr.setFont(gr.getFont().deriveFont(14f));
             }
-          }
-          // We are at the bottom
-          Point center = chartPanel.getPanelPoint(currPos);
-          double startAngle   = GeomUtil.getDir(lastPoint.x - center.x,  center.y - lastPoint.y), 
-                 arrivalAngle = GeomUtil.getDir(firstPoint.x - center.x, center.y - firstPoint.y);
-          if (debug)
-          {
-            gr.setColor(Color.yellow);
-            gr.drawString("Start (" + (int)startAngle + "\272)", lastPoint.x, lastPoint.y);
-            gr.drawString("Finish (" + (int)arrivalAngle + "\272)", firstPoint.x, firstPoint.y);
-          }
-          int incr = 0, firstBoundary = 0, lastBoundary = 0;
-          // For the direction (esat/west), see LHA, instead sunAlt
-          double lhaSun = sunGHA + currPos.getG();
-          while (lhaSun < 0)
-            lhaSun += 360;
-          while (lhaSun > 360)
-            lhaSun -= 360;
-          if (debug)
-            System.out.println("Sun LHA:" + lhaSun);
-      //  if (sunAlt > 0) // Daylight, follow the limb, from the bottom toward the west (clockwise)
-          if (lhaSun > 180)
-          {
-            if (debug)
-              System.out.println("From " + startAngle + " to " + arrivalAngle + ", going West");
-            incr = 1;
-            firstBoundary = (int)Math.ceil(startAngle);
-            lastBoundary = (int)Math.floor(arrivalAngle);
-            while (lastBoundary < firstBoundary)
-              lastBoundary += 360;
-          }
-          else            // Night, follow the limb, from the bottom toward the east (counter-clockwise)
-          {
-            if (debug)
-              System.out.println("From " + startAngle + " to " + arrivalAngle + ", going East");
-            incr = -1;
-            firstBoundary = (int)Math.floor(startAngle);
-            lastBoundary = (int)Math.ceil(arrivalAngle);
-            while (lastBoundary > firstBoundary)
-              firstBoundary += 360;
-          }
-          for (int i=firstBoundary; (incr>0 && i<=lastBoundary) || (incr<0 && i>=lastBoundary); i+=incr)
-          {
-            GeoPoint earthCirc = deadReckoning(currPos, 90 * 60, i);
-//            double lng = earthCirc.getG();
-//            if (lng < -180)
-//              lng += 360;
-//            if (lng > 180)
-//              lng -= 360;
-            Point limbPt = chartPanel.getPanelPoint(earthCirc);
-            night.addPoint(limbPt.x, limbPt.y);
+            
+            // Night
+            Point firstPoint = null, lastPoint = null;
+            for (Integer y : sortedNightBorder)
+            {
+              int x = nightBorderMap.get(y).intValue();
+              Point pp = new Point(x, y);
+              if (firstPoint == null)
+                firstPoint = pp;
+              lastPoint = pp;
+              night.addPoint(pp.x, pp.y);
+              if (debug)
+              {
+  //            System.out.println("Nigh:" + pp);
+                if (previous != null)
+                {
+                  gr.drawLine(previous.x, previous.y, pp.x, pp.y);
+                  if ((nb - 1) % 10 == 0)
+                    gr.drawString(Integer.toString(nb), pp.x, pp.y);
+                  nb++;
+                }
+                previous = pp;
+              }
+            }
+            // We are at the bottom
+            Point center = chartPanel.getPanelPoint(currPos);
+            double startAngle   = GeomUtil.getDir(lastPoint.x - center.x,  center.y - lastPoint.y), 
+                   arrivalAngle = GeomUtil.getDir(firstPoint.x - center.x, center.y - firstPoint.y);
             if (debug)
             {
-//            System.out.println("Limb:" + limbPt);
-              if (previous != null)
-              {
-                gr.drawLine(previous.x, previous.y, limbPt.x, limbPt.y);
-                if ((nb - 1) % 10 == 0)
-                  gr.drawString(Integer.toString(nb), limbPt.x, limbPt.y);
-                nb++;
-              }
-              previous = limbPt;
+              gr.setColor(Color.yellow);
+              gr.drawString("Start (" + (int)startAngle + "\272)", lastPoint.x, lastPoint.y);
+              gr.drawString("Finish (" + (int)arrivalAngle + "\272)", firstPoint.x, firstPoint.y);
             }
-          }
-          // Fill the night polygon
-          if (true)
-          {
-            gr.setColor(Color.darkGray);
-            ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-             gr.fillPolygon(night);
-            ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));        
+            int incr = 0, firstBoundary = 0, lastBoundary = 0;
+            // For the direction (esat/west), see LHA, instead sunAlt
+            double lhaSun = sunGHA + currPos.getG();
+            while (lhaSun < 0)
+              lhaSun += 360;
+            while (lhaSun > 360)
+              lhaSun -= 360;
+            if (debug)
+              System.out.println("Sun LHA:" + lhaSun);
+        //  if (sunAlt > 0) // Daylight, follow the limb, from the bottom toward the west (clockwise)
+            if (lhaSun > 180)
+            {
+              if (debug)
+                System.out.println("From " + startAngle + " to " + arrivalAngle + ", going West");
+              incr = 1;
+              firstBoundary = (int)Math.ceil(startAngle);
+              lastBoundary = (int)Math.floor(arrivalAngle);
+              while (lastBoundary < firstBoundary)
+                lastBoundary += 360;
+            }
+            else            // Night, follow the limb, from the bottom toward the east (counter-clockwise)
+            {
+              if (debug)
+                System.out.println("From " + startAngle + " to " + arrivalAngle + ", going East");
+              incr = -1;
+              firstBoundary = (int)Math.floor(startAngle);
+              lastBoundary = (int)Math.ceil(arrivalAngle);
+              while (lastBoundary > firstBoundary)
+                firstBoundary += 360;
+            }
+            for (int i=firstBoundary; (incr>0 && i<=lastBoundary) || (incr<0 && i>=lastBoundary); i+=incr)
+            {
+              GeoPoint earthCirc = deadReckoning(currPos, 90 * 60, i);
+  //            double lng = earthCirc.getG();
+  //            if (lng < -180)
+  //              lng += 360;
+  //            if (lng > 180)
+  //              lng -= 360;
+              Point limbPt = chartPanel.getPanelPoint(earthCirc);
+              night.addPoint(limbPt.x, limbPt.y);
+              if (debug)
+              {
+  //            System.out.println("Limb:" + limbPt);
+                if (previous != null)
+                {
+                  gr.drawLine(previous.x, previous.y, limbPt.x, limbPt.y);
+                  if ((nb - 1) % 10 == 0)
+                    gr.drawString(Integer.toString(nb), limbPt.x, limbPt.y);
+                  nb++;
+                }
+                previous = limbPt;
+              }
+            }
+            // Fill the night polygon
+            if (true)
+            {
+              gr.setColor(Color.darkGray);
+              ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+               gr.fillPolygon(night);
+              ((Graphics2D)gr).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));        
+            }
           }
         }
+        else
+          chartPanel.setVisible(false);
       }
-      else
-        chartPanel.setVisible(false);
-    }
-
-    /**
-     * Spherical Model used here
-     *
-     * @param start in degrees
-     * @param dist in nautical miles
-     * @param bearing in degrees
-     * @return
-     */
-    private GeoPoint deadReckoning(GeoPoint start, double dist, double bearing)
-    {
-      GeoPoint reached = null;
-      double radianDistance = Math.toRadians(dist / 60d);
-      double finalLat = (Math.asin((Math.sin(Math.toRadians(start.getL())) * Math.cos(radianDistance)) +
-                                    (Math.cos(Math.toRadians(start.getL())) * Math.sin(radianDistance) * Math.cos(Math.toRadians(bearing))))); 
-      double finalLng = Math.toRadians(start.getG()) + Math.atan2(Math.sin(Math.toRadians(bearing)) * Math.sin(radianDistance) * Math.cos(Math.toRadians(start.getL())), 
-                                                                  Math.cos(radianDistance) - Math.sin(Math.toRadians(start.getL())) * Math.sin(finalLat));
-      finalLat = Math.toDegrees(finalLat);
-      finalLng = Math.toDegrees(finalLng);
-      
-      reached = new GeoPoint(finalLat, finalLng);
-      return reached;
-    }
-
-    private boolean isVisible(double l, double g)
-    {
-      boolean plot = true;
-      if (chartPanel.getProjection() == ChartPanelInterface.GLOBE_VIEW)
+  
+      /**
+       * Spherical Model used here
+       *
+       * @param start in degrees
+       * @param dist in nautical miles
+       * @param bearing in degrees
+       * @return
+       */
+      private GeoPoint deadReckoning(GeoPoint start, double dist, double bearing)
       {
-        if (!chartPanel.isTransparentGlobe() && chartPanel.isBehind(l, g - chartPanel.getGlobeViewLngOffset()))
-          plot = false;
+        GeoPoint reached = null;
+        double radianDistance = Math.toRadians(dist / 60d);
+        double finalLat = (Math.asin((Math.sin(Math.toRadians(start.getL())) * Math.cos(radianDistance)) +
+                                      (Math.cos(Math.toRadians(start.getL())) * Math.sin(radianDistance) * Math.cos(Math.toRadians(bearing))))); 
+        double finalLng = Math.toRadians(start.getG()) + Math.atan2(Math.sin(Math.toRadians(bearing)) * Math.sin(radianDistance) * Math.cos(Math.toRadians(start.getL())), 
+                                                                    Math.cos(radianDistance) - Math.sin(Math.toRadians(start.getL())) * Math.sin(finalLat));
+        finalLat = Math.toDegrees(finalLat);
+        finalLng = Math.toDegrees(finalLng);
+        
+        reached = new GeoPoint(finalLat, finalLng);
+        return reached;
       }
-      return plot;
-    }
-    
-    @Override
-    public boolean onEvent(EventObject eventObject, int i)
-    {
-      // TODO Implement this method
-      return false;
-    }
-
-    @Override
-    public String getMessForTooltip()
-    {
-      // TODO Implement this method
-      return null;
-    }
-
-    @Override
-    public boolean replaceMessForTooltip()
-    {
-      // TODO Implement this method
-      return false;
-    }
-
-    @Override
-    public void videoCompleted()
-    {
-      // TODO Implement this method
-    }
-
-    @Override
-    public void videoFrameCompleted(Graphics graphics, Point point)
-    {
-      // TODO Implement this method
-    }
-
-    @Override
-    public void zoomFactorHasChanged(double d)
-    {
-      // TODO Implement this method
-    }
-
-    @Override
-    public void chartDDZ(double d, double d2, double d3, double d4)
-    {
-      // TODO Implement this method
-    }
-  };
+  
+      private boolean isVisible(double l, double g)
+      {
+        boolean plot = true;
+        if (chartPanel.getProjection() == ChartPanelInterface.GLOBE_VIEW)
+        {
+          if (!chartPanel.isTransparentGlobe() && chartPanel.isBehind(l, g - chartPanel.getGlobeViewLngOffset()))
+            plot = false;
+        }
+        return plot;
+      }
+      
+      @Override
+      public boolean onEvent(EventObject eventObject, int i)
+      {
+        // TODO Implement this method
+        return false;
+      }
+  
+      @Override
+      public String getMessForTooltip()
+      {
+        // TODO Implement this method
+        return null;
+      }
+  
+      @Override
+      public boolean replaceMessForTooltip()
+      {
+        // TODO Implement this method
+        return false;
+      }
+  
+      @Override
+      public void videoCompleted()
+      {
+        // TODO Implement this method
+      }
+  
+      @Override
+      public void videoFrameCompleted(Graphics graphics, Point point)
+      {
+        // TODO Implement this method
+      }
+  
+      @Override
+      public void zoomFactorHasChanged(double d)
+      {
+        // TODO Implement this method
+      }
+  
+      @Override
+      public void chartDDZ(double d, double d2, double d3, double d4)
+      {
+        // TODO Implement this method
+      }
+    };
 
   private JDesktopPane desktop = new ChartPanelDesktopPane();
   
@@ -2411,7 +2413,7 @@ public class DesktopFrame
           chartLibMenuItem.setEnabled(true);
         }
       });
-    NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener()
+    NMEAContext.getInstance().addNMEAReaderListener(new NMEAReaderListener("Desktop", "Desktop Frame")
       {
         public void internalFrameClosed() 
         {
@@ -2498,7 +2500,7 @@ public class DesktopFrame
 
         public void beginLoad() 
         {
-          Thread load = new Thread()
+          Thread load = new Thread("Spalsh Loader")
             {
               public void run()
               {
@@ -2842,7 +2844,7 @@ public class DesktopFrame
           
           if (simul.trim().length() > 0)
           {
-            nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
+            nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY, "Desktop Frame (2)")
             {
               public void manageNMEAString(String str)
               {
@@ -3025,7 +3027,7 @@ public class DesktopFrame
       case READ_REBROADCAST:
         if ("yes".equals(System.getProperty("headless", "no")) || backGroundNMEARead.isSelected())
         {          
-          nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY)
+          nmeaReaderListener = new NMEAReaderListener(LISTENER_FAMILY, "Desktop Frame (3)")
           {
             public void manageNMEAString(String str) // Receives, Rebroadcasts
             {
@@ -3191,7 +3193,7 @@ public class DesktopFrame
         System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
         calculation.AstroComputer.setDeltaT(((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue());
 //      System.setProperty("deltaT", (ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE]).toString());
-        Thread tideThread = new Thread()
+        Thread tideThread = new Thread("Tide Thread")
           {
             public void run()
             {
@@ -3383,327 +3385,405 @@ public class DesktopFrame
   
   private void startDataGrabber()
   {
-    Thread dataGrabber = new Thread()
+    Thread dataGrabber = new Thread("Data Grabber")
       {
         public void run()
         {
           String degSymbol = "\272"; // " "
-          synchronized (grabbedData)
+          try
           {
             while (foregroundData.booleanValue())
             {
-              grabbedData = new ArrayList<String>();
-              // Time
-              Date ut = new Date(); // TimeUtil.getGMT();
-              grabbedData.add("System:" + SDF.format(ut));
-              double offset = TimeUtil.getGMTOffset();
-              String strOffset = Integer.toString((int)offset);
-              if (offset > 0) strOffset = "+" + strOffset;
-              grabbedData.add("UTC Offset:" + strOffset);
-              // NMEA Data
-              String str = "";
-              try 
-              { 
-                str += ("L:" + lpad(GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.SWING, GeomUtil.NS), " ", 12));
-              } 
-              catch (Exception ex) 
-              { 
-                System.err.println(ex.getLocalizedMessage());
-                str += "-"; 
-              }
-              grabbedData.add(str);            
-              str = "";
-              double g = 0;
-              try 
-              { 
-                g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
-                str += ("G:" + lpad(GeomUtil.decToSex(g, GeomUtil.SWING, GeomUtil.EW), " " , 12)); 
-              } 
-              catch (Exception ex) 
-              { 
-                System.out.println(ex.getLocalizedMessage());
-                str += "-"; 
-              }
-              grabbedData.add(str);            
-              str = "COG:";
-              try 
-              { 
-                str += Integer.toString((int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG, true)).getValue()); 
-              } 
-              catch (Exception ex) 
-              { 
-                System.err.println("COG in Cache:" + ex.getLocalizedMessage()); 
-                str += "-"; 
-              }
-              str += (degSymbol + " SOG:");
-              try 
-              { 
-                str += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
-              } 
-              catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
-              str += " kts";
-              grabbedData.add(str);            
-              
-              str = "xx:xx:xx";            
-              try 
-              { 
+//            System.out.println((">>> DEBUG >>> DataGrabber - top of the loop"));
+              synchronized (grabbedData)
+              {
+                grabbedData = new ArrayList<String>();
+                // Time
+                Date ut = new Date(); // TimeUtil.getGMT();
+                grabbedData.add("System:" + SDF.format(ut));
+                double offset = TimeUtil.getGMTOffset();
+                String strOffset = Integer.toString((int)offset);
+                if (offset > 0) strOffset = "+" + strOffset;
+                grabbedData.add("UTC Offset:" + strOffset);
+                NMEADataCache ndc = NMEAContext.getInstance().getCache();
+                // NMEA Data
+                String str = "";
                 try 
                 { 
-                  UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                  str = "GPS Time: " + SDF.format(utcDate.getValue());
-                  grabbedData.add(str);            
+                  synchronized (ndc) { str += ("L:" + lpad(GeomUtil.decToSex(((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lat, GeomUtil.SWING, GeomUtil.NS), " ", 12)); }
                 } 
-                catch (Exception ignore) 
-                {
-                  System.err.println(ignore.getLocalizedMessage());
+                catch (Exception ex) 
+                { 
+                  System.err.println(ex.getLocalizedMessage());
+                  str += "-"; 
                 }
-                long time = 0L;
+                grabbedData.add(str);            
+                str = "";
+                double g = 0;
                 try 
                 { 
-                  time = ((UTCTime)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); 
+                  synchronized (ndc) { g = ((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lng; }
+                  str += ("G:" + lpad(GeomUtil.decToSex(g, GeomUtil.SWING, GeomUtil.EW), " " , 12)); 
                 } 
-                catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
-                catch (Exception oops) { oops.printStackTrace(); }
-              //          System.out.println("[time:" + time + ", g:" + g + "]");
-                offset = (g / 15d) * 3600d * 1000d; // in milliseconds
-                time += offset;
-                str = "  " + SDF2.format(new Date(time));
-                grabbedData.add(str);         
-                str = "Solar Offset:" + decimalHoursToHMS(offset / (3600 * 1000));                
-                grabbedData.add(str);         
-                if (g != 0)
-                {
-                  // Try sun rise & set from current position
+                catch (Exception ex) 
+                { 
+                  System.out.println(ex.getLocalizedMessage());
+                  str += "-"; 
+                }
+                grabbedData.add(str);            
+                str = "COG:";
+                try 
+                { 
+                  synchronized (ndc) { str += Integer.toString((int)((Angle360)ndc.get(NMEADataCache.COG, true)).getValue()); }
+                } 
+                catch (Exception ex) 
+                { 
+                  System.err.println("COG in Cache:" + ex.getLocalizedMessage()); 
+                  str += "-"; 
+                }
+                str += (degSymbol + " SOG:");
+                try 
+                { 
+                  synchronized (ndc) { str += DF22.format(((Speed)ndc.get(NMEADataCache.SOG, true)).getDoubleValue()); }
+                } 
+                catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
+                str += " kts";
+                grabbedData.add(str);            
+                
+                str = "xx:xx:xx";            
+                try 
+                { 
                   try 
+                  { 
+                    UTCDate utcDate = null;
+                    synchronized (ndc) { utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true); }
+                    str = "GPS Time: " + SDF.format(utcDate.getValue());
+                    grabbedData.add(str);            
+                  } 
+                  catch (Exception ignore) 
                   {
-                    double l = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat; 
-                    g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
-                    
-                    // Get dayligh duration the day before
-                    UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-                    Calendar dayBefore = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
-                    dayBefore.setTimeInMillis(utcDate.getValue().getTime());
-                    dayBefore.add(Calendar.DATE, -1);
-                    AstroComputer.setDateTime(dayBefore.get(Calendar.YEAR), 
-                                              dayBefore.get(Calendar.MONTH) + 1, 
-                                              dayBefore.get(Calendar.DAY_OF_MONTH), 
-                                              dayBefore.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
-                                              dayBefore.get(Calendar.MINUTE), 
-                                              dayBefore.get(Calendar.SECOND));
-                    AstroComputer.calculate();
-                    double[] rsSunYesterday  = AstroComputer.sunRiseAndSet(l, g);
-                    double daylightYesterday = (rsSunYesterday[AstroComputer.UTC_SET_IDX] - rsSunYesterday[AstroComputer.UTC_RISE_IDX]);
-  
-                    Calendar today = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
-                    today.setTimeInMillis(utcDate.getValue().getTime());
-                    AstroComputer.setDateTime(today.get(Calendar.YEAR), 
-                                              today.get(Calendar.MONTH) + 1, 
-                                              today.get(Calendar.DAY_OF_MONTH), 
-                                              today.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
-                                              today.get(Calendar.MINUTE), 
-                                              today.get(Calendar.SECOND));
-                    AstroComputer.calculate();
-                    double sunD = AstroComputer.getSunDecl();
-                    double[] rsSunToday  = AstroComputer.sunRiseAndSet(l, g);
-                    double daylightToday = (rsSunToday[AstroComputer.UTC_SET_IDX] - rsSunToday[AstroComputer.UTC_RISE_IDX]);
-                    double deltaDaylight = daylightToday - daylightYesterday;           
-                    SDF.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
-                    Calendar sunRise = null;
-                    Calendar sunSet = null;
-                    Calendar now = GregorianCalendar.getInstance();
-                    now.setTimeInMillis(utcDate.getValue().getTime()); // From the GPS
-
-                    sunRise = new GregorianCalendar();
-                    sunRise.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
-                    sunRise.set(Calendar.YEAR, now.get(Calendar.YEAR));
-                    sunRise.set(Calendar.MONTH, now.get(Calendar.MONTH));
-                    sunRise.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
-                    sunRise.set(Calendar.SECOND, 0);
-                                  
-                    double r = rsSunToday[AstroComputer.UTC_RISE_IDX] /* + Utils.daylightOffset(sunRise) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC" /*ts.getTimeZone()*/), sunRise.getTime());
-                    int min = (int)((r - ((int)r)) * 60);
-                    sunRise.set(Calendar.MINUTE, min);
-                    sunRise.set(Calendar.HOUR_OF_DAY, (int)r);
-                    
-                    sunSet = new GregorianCalendar();
-                    sunSet.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
-                    sunSet.set(Calendar.YEAR, now.get(Calendar.YEAR));
-                    sunSet.set(Calendar.MONTH, now.get(Calendar.MONTH));
-                    sunSet.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
-                    sunSet.set(Calendar.SECOND, 0);
-                    r = rsSunToday[AstroComputer.UTC_SET_IDX] /* + Utils.daylightOffset(sunSet) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC"/*ts.getTimeZone()*/), sunSet.getTime());
-                    min = (int)((r - ((int)r)) * 60);
-                    sunSet.set(Calendar.MINUTE, min);
-                    sunSet.set(Calendar.HOUR_OF_DAY, (int)r);
-
-                    long daylight = (sunSet.getTimeInMillis() - sunRise.getTimeInMillis()) / 1000L;
-  
-                    if (!Double.isNaN(rsSunToday[AstroComputer.UTC_RISE_IDX]))
+                    System.err.println(ignore.getLocalizedMessage());
+                  }
+                  long time = 0L;
+                  try 
+                  { 
+                    synchronized (ndc) { time = ((UTCTime)ndc.get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); }
+                  } 
+                  catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
+                  catch (Exception oops) { oops.printStackTrace(); }
+                //          System.out.println("[time:" + time + ", g:" + g + "]");
+                  offset = (g / 15d) * 3600d * 1000d; // in milliseconds
+                  time += offset;
+                  str = "  " + SDF2.format(new Date(time));
+                  grabbedData.add(str);         
+                  str = "Solar Offset:" + decimalHoursToHMS(offset / (3600 * 1000));                
+                  grabbedData.add(str);         
+                  if (g != 0)
+                  {
+                    // Try sun rise & set from current position
+                    try 
                     {
-                      double solarOffset = (g / 15d) * 3600d * 1000d; // in milliseconds
-                      time += solarOffset;
-                      SDF2.format(new Date(time));
-
-                      str = "Sun Rise    : " + SUN_RISE_SET_SDF.format(sunRise.getTime());
-                      grabbedData.add(str);           
-                      str = "              Z:" + DF3.format(rsSunToday[AstroComputer.RISE_Z_IDX]) + degSymbol;
-                      grabbedData.add(str);           
-//                    System.out.println("Added:[" + str + "]");
-                      str = "  " + SDF3.format(new Date(sunRise.getTime().getTime() + (long)solarOffset));
-                      grabbedData.add(str);           
-//                    System.out.println("Added:[" + str + "]");
-
-                      str = "Sun Set     : " + SUN_RISE_SET_SDF.format(sunSet.getTime());
-                      grabbedData.add(str);           
-                      str = "              Z:" + DF3.format(rsSunToday[AstroComputer.SET_Z_IDX]) + degSymbol;
-                      grabbedData.add(str);           
-//                    System.out.println("Added:[" + str + "]");
-                      str = "  " + SDF3.format(new Date(sunSet.getTime().getTime() + (long)solarOffset));
-                      grabbedData.add(str);           
-//                    System.out.println("Added:[" + str + "]");
-                      if (daylightToday > 0)
+                      double l = 0;
+                      UTCDate utcDate = null;
+                      synchronized (ndc) 
+                      { 
+                        l = ((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lat; 
+                        g = ((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lng; 
+                        utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true); 
+                      }
+                      // Get dayligh duration the day before
+                      Calendar dayBefore = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                      dayBefore.setTimeInMillis(utcDate.getValue().getTime());
+                      dayBefore.add(Calendar.DATE, -1);
+                      AstroComputer.setDateTime(dayBefore.get(Calendar.YEAR), 
+                                                dayBefore.get(Calendar.MONTH) + 1, 
+                                                dayBefore.get(Calendar.DAY_OF_MONTH), 
+                                                dayBefore.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
+                                                dayBefore.get(Calendar.MINUTE), 
+                                                dayBefore.get(Calendar.SECOND));
+                      AstroComputer.calculate();
+                      double[] rsSunYesterday  = AstroComputer.sunRiseAndSet(l, g);
+                      double daylightYesterday = (rsSunYesterday[AstroComputer.UTC_SET_IDX] - rsSunYesterday[AstroComputer.UTC_RISE_IDX]);
+    
+                      Calendar today = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                      today.setTimeInMillis(utcDate.getValue().getTime());
+                      AstroComputer.setDateTime(today.get(Calendar.YEAR), 
+                                                today.get(Calendar.MONTH) + 1, 
+                                                today.get(Calendar.DAY_OF_MONTH), 
+                                                today.get(Calendar.HOUR_OF_DAY), // 12 - (int)Math.round(AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone(ts.getTimeZone()))), 
+                                                today.get(Calendar.MINUTE), 
+                                                today.get(Calendar.SECOND));
+                      AstroComputer.calculate();
+                      double sunD = AstroComputer.getSunDecl();
+                      double[] rsSunToday  = AstroComputer.sunRiseAndSet(l, g);
+                      double daylightToday = (rsSunToday[AstroComputer.UTC_SET_IDX] - rsSunToday[AstroComputer.UTC_RISE_IDX]);
+                      double deltaDaylight = daylightToday - daylightYesterday;           
+                      SDF.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                      Calendar sunRise = null;
+                      Calendar sunSet = null;
+                      Calendar now = GregorianCalendar.getInstance();
+                      now.setTimeInMillis(utcDate.getValue().getTime()); // From the GPS
+  
+                      sunRise = new GregorianCalendar();
+                      sunRise.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                      sunRise.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                      sunRise.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                      sunRise.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
+                      sunRise.set(Calendar.SECOND, 0);
+                                    
+                      double r = rsSunToday[AstroComputer.UTC_RISE_IDX] /* + Utils.daylightOffset(sunRise) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC" /*ts.getTimeZone()*/), sunRise.getTime());
+                      int min = (int)((r - ((int)r)) * 60);
+                      sunRise.set(Calendar.MINUTE, min);
+                      sunRise.set(Calendar.HOUR_OF_DAY, (int)r);
+                      
+                      sunSet = new GregorianCalendar();
+                      sunSet.setTimeZone(TimeZone.getTimeZone("etc/UTC"));
+                      sunSet.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                      sunSet.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                      sunSet.set(Calendar.DAY_OF_MONTH, now.get(Calendar.DAY_OF_MONTH));
+                      sunSet.set(Calendar.SECOND, 0);
+                      r = rsSunToday[AstroComputer.UTC_SET_IDX] /* + Utils.daylightOffset(sunSet) */ + AstroComputer.getTimeZoneOffsetInHours(TimeZone.getTimeZone("etc/UTC"/*ts.getTimeZone()*/), sunSet.getTime());
+                      min = (int)((r - ((int)r)) * 60);
+                      sunSet.set(Calendar.MINUTE, min);
+                      sunSet.set(Calendar.HOUR_OF_DAY, (int)r);
+  
+                      long daylight = (sunSet.getTimeInMillis() - sunRise.getTimeInMillis()) / 1000L;
+    
+                      if (!Double.isNaN(rsSunToday[AstroComputer.UTC_RISE_IDX]))
                       {
-//                      System.out.println("Daylight:" + daylightToday);
-                        str = "Daylight    : " + DF2.format(daylight / 3600) + "h " + DF2.format((daylight % 3600) / 60L) + "m";
+                        double solarOffset = (g / 15d) * 3600d * 1000d; // in milliseconds
+                        time += solarOffset;
+                        SDF2.format(new Date(time));
+  
+                        str = "Sun Rise    : " + SUN_RISE_SET_SDF.format(sunRise.getTime());
                         grabbedData.add(str);           
-//                      System.out.println("Added:[" + str + "]");
-                        str = " Delta      : " + decimalHoursToHMS(deltaDaylight);
+                        str = "              Z:" + DF3.format(rsSunToday[AstroComputer.RISE_Z_IDX]) + degSymbol;
                         grabbedData.add(str);           
-//                      System.out.println("Added:[" + str + "]");
-                        double dz = Math.abs(l - sunD);
-                        double maxSunAlt = (90 - dz);
-                        str = "Sun Max Alt : " + ((int)maxSunAlt) + degSymbol + DF2.format((maxSunAlt - ((int)maxSunAlt)) * 60) + "'";
+  //                    System.out.println("Added:[" + str + "]");
+                        str = "  " + SDF3.format(new Date(sunRise.getTime().getTime() + (long)solarOffset));
                         grabbedData.add(str);           
+  //                    System.out.println("Added:[" + str + "]");
+  
+                        str = "Sun Set     : " + SUN_RISE_SET_SDF.format(sunSet.getTime());
+                        grabbedData.add(str);           
+                        str = "              Z:" + DF3.format(rsSunToday[AstroComputer.SET_Z_IDX]) + degSymbol;
+                        grabbedData.add(str);           
+  //                    System.out.println("Added:[" + str + "]");
+                        str = "  " + SDF3.format(new Date(sunSet.getTime().getTime() + (long)solarOffset));
+                        grabbedData.add(str);           
+  //                    System.out.println("Added:[" + str + "]");
+                        if (daylightToday > 0)
+                        {
+  //                      System.out.println("Daylight:" + daylightToday);
+                          str = "Daylight    : " + DF2.format(daylight / 3600) + "h " + DF2.format((daylight % 3600) / 60L) + "m";
+                          grabbedData.add(str);           
+  //                      System.out.println("Added:[" + str + "]");
+                          str = " Delta      : " + decimalHoursToHMS(deltaDaylight);
+                          grabbedData.add(str);           
+  //                      System.out.println("Added:[" + str + "]");
+                          double dz = Math.abs(l - sunD);
+                          double maxSunAlt = (90 - dz);
+                          str = "Sun Max Alt : " + ((int)maxSunAlt) + degSymbol + DF2.format((maxSunAlt - ((int)maxSunAlt)) * 60) + "'";
+                          grabbedData.add(str);           
+                        }
+                      }
+                    } 
+                    catch (Exception ex) 
+                    { 
+                      System.err.println(ex.getLocalizedMessage());
+                      str += "-"; 
+                      grabbedData.add(str);            
+                    }
+                  }
+                }
+                catch (Exception ex)
+                {
+                  ex.printStackTrace();
+                }
+                // Sun & Moon Altitude & Azimuth
+                if (true) // TODO Option
+                {
+                  // Second prm: use damping
+                  UTCDate utcDate = null;
+                  GeoPos gpsPos = null;
+                  synchronized (ndc) 
+                  {
+                    utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, false);
+                    gpsPos = (GeoPos)ndc.get(NMEADataCache.POSITION, false); 
+                  }
+                  if (utcDate != null && gpsPos != null)
+                  {
+                    Date date = utcDate.getValue();
+                  
+                    double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
+                    GeoPoint gp = new GeoPoint(gpsPos.lat, gpsPos.lng);
+  
+                    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
+                    cal.setTime(date);
+                    
+                    AlmanacComputer.calculate(cal.get(Calendar.YEAR), 
+                                              cal.get(Calendar.MONTH) + 1, 
+                                              cal.get(Calendar.DAY_OF_MONTH), 
+                                              cal.get(Calendar.HOUR_OF_DAY), 
+                                              cal.get(Calendar.MINUTE), 
+                                              cal.get(Calendar.SECOND), 
+                                              deltaT);
+                    SightReductionUtil sru = new SightReductionUtil();
+                    
+                    sru.setL(gp.getL());
+                    sru.setG(gp.getG());
+                    
+                    double ghaSun = 0d, ghaMoon = 0d;
+                    double decSun = 0d, decMoon = 0d;
+                    
+                    ghaSun = Context.GHAsun;
+                    decSun = Context.DECsun;
+                    
+                    sunGHA = ghaSun;
+                    sunD = decSun;
+  
+                    ghaMoon = Context.GHAmoon;
+                    decMoon = Context.DECmoon;
+                    
+                    sru.setAHG(ghaSun);
+                    sru.setD(decSun);    
+                    sru.calculate();     
+                    
+                    Double heSun = sru.getHe();
+                    Double zSun  = sru.getZ();
+                    sunAlt = heSun.doubleValue();
+                    sunZ = zSun.doubleValue();
+                    
+                    sru.setAHG(ghaMoon);
+                    sru.setD(decMoon);    
+                    sru.calculate();     
+                    
+                    Double heMoon = sru.getHe();
+                    Double zMoon  = sru.getZ();
+                    moonAlt = heMoon.doubleValue();
+                    moonZ = zMoon.doubleValue();
+                    
+  //                printout("GHA:" + GeomUtil.decToSex(ghaSun, GeomUtil.SWING, GeomUtil.NONE));
+  //                printout("Dec:" + GeomUtil.decToSex(decSun, GeomUtil.SWING, GeomUtil.NS));
+  
+                    if (heSun.doubleValue() > 0)
+                    {
+                      grabbedData.add("Sun Alt:" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heSun + ")");
+                      grabbedData.add("Sun Z  :" + GeomUtil.decToSex(zSun, GeomUtil.SWING, GeomUtil.NONE));
+                    }
+                    else
+                      grabbedData.add("Sun under the horizon (" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE) + ")");            
+                    
+                    if (heMoon.doubleValue() > 0)
+                    {
+                      grabbedData.add("Moon Alt:" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heMoon + ")");
+                      grabbedData.add("Moon Z  :" + GeomUtil.decToSex(zMoon, GeomUtil.SWING, GeomUtil.NONE));
+                    }
+                    else
+                      grabbedData.add("Moon under the horizon (" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE) + ")");            
+                  }
+                }
+                double aws = 0d;
+                int awa    = 0;
+                double bsp = 0d;
+                int hdg    = 0;
+                double bl = 0d; // Big Log
+                double sl = 0d; // Small log
+                double depth = 0d;
+                double temp  = 0d;
+                double atemp  = Double.MIN_VALUE;
+                double curSpeed = 0d;
+                int curDir = 0;
+                int currentTimeBuffer = 0;
+                double bpress  = Double.MIN_VALUE;
+                synchronized (ndc) 
+                {
+                  try { aws = ((Speed)ndc.get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+                  try { awa = (int)((Angle180)ndc.get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+                  try { bsp = ((Speed)ndc.get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+                  try { hdg = (int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+                  
+                  try { bl = ((Distance)ndc.get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
+                  try { sl = ((Distance)ndc.get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
+                  try { depth = ((Depth)ndc.get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
+                  try { temp = ((Temperature)ndc.get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
+                  try { atemp = ((Temperature)ndc.get(NMEADataCache.AIR_TEMP, true)).getValue(); } catch (Exception ex) {}              
+                  try { bpress = ((Pressure)ndc.get(NMEADataCache.BARO_PRESS, true)).getValue(); } catch (Exception ex) {}              
+    
+                  try
+                  {
+                    Current current = (Current)ndc.get(NMEADataCache.VDR_CURRENT, true);
+                    if (current == null)
+                    {
+                      Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                                          ((Map<Long, NMEADataCache.CurrentDefinition>)ndc.get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+                      Set<Long> keys = currentMap.keySet();
+                      if (keys.size() != 1)
+                        System.out.println("1 - Nb entry(ies) in Calculated Current Map:" + keys.size());
+                      for (Long l : keys)
+                      {
+                        int tbl = (int)(l / (60 * 1000));
+                        if (tbl > currentTimeBuffer) // Take the bigger one.
+                        {
+                          currentTimeBuffer = tbl;
+                          curSpeed = currentMap.get(l).getSpeed().getValue();
+                          curDir = (int)Math.round(currentMap.get(l).getDirection().getValue());
+                        }
                       }
                     }
-                  } 
-                  catch (Exception ex) 
-                  { 
-                    System.err.println(ex.getLocalizedMessage());
-                    str += "-"; 
-                    grabbedData.add(str);            
+                    else
+                    {
+                      curSpeed = current.speed;
+                      curDir = current.angle;
+                    }
                   }
+                  catch (Exception ignore) {}
                 }
-              }
-              catch (Exception ex)
-              {
-                ex.printStackTrace();
-              }
-              // Sun & Moon Altitude & Azimuth
-              if (true) // TODO Option
-              {
-                // Second prm: use damping
-                UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, false);
-                GeoPos gpsPos = (GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, false); 
-                if (utcDate != null && gpsPos != null)
+                grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
+                grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
+                grabbedData.add("HDG:" + Integer.toString(hdg % 360) + degSymbol);
+                grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
+                grabbedData.add("DBT: " + DF22.format(depth) + " m");
+                grabbedData.add("Water Temp   : " + DF22.format(temp) + degSymbol + "C");
+                if (atemp != Double.MIN_VALUE)
+                  grabbedData.add("Air Temp     : " + DF22.format(atemp) + degSymbol + "C");
+                if (bpress != Double.MIN_VALUE)
+                  grabbedData.add("Baro Pressure: " + DF31.format(bpress) + " hPa");
+                if (currentTimeBuffer > 0)
                 {
-                  Date date = utcDate.getValue();
-                
-                  double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
-                  GeoPoint gp = new GeoPoint(gpsPos.lat, gpsPos.lng);
-
-                  Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("etc/UTC"));
-                  cal.setTime(date);
-                  
-                  AlmanacComputer.calculate(cal.get(Calendar.YEAR), 
-                                            cal.get(Calendar.MONTH) + 1, 
-                                            cal.get(Calendar.DAY_OF_MONTH), 
-                                            cal.get(Calendar.HOUR_OF_DAY), 
-                                            cal.get(Calendar.MINUTE), 
-                                            cal.get(Calendar.SECOND), 
-                                            deltaT);
-                  SightReductionUtil sru = new SightReductionUtil();
-                  
-                  sru.setL(gp.getL());
-                  sru.setG(gp.getG());
-                  
-                  double ghaSun = 0d, ghaMoon = 0d;
-                  double decSun = 0d, decMoon = 0d;
-                  
-                  ghaSun = Context.GHAsun;
-                  decSun = Context.DECsun;
-                  
-                  sunGHA = ghaSun;
-                  sunD = decSun;
-
-                  ghaMoon = Context.GHAmoon;
-                  decMoon = Context.DECmoon;
-                  
-                  sru.setAHG(ghaSun);
-                  sru.setD(decSun);    
-                  sru.calculate();     
-                  
-                  Double heSun = sru.getHe();
-                  Double zSun  = sru.getZ();
-                  sunAlt = heSun.doubleValue();
-                  sunZ = zSun.doubleValue();
-                  
-                  sru.setAHG(ghaMoon);
-                  sru.setD(decMoon);    
-                  sru.calculate();     
-                  
-                  Double heMoon = sru.getHe();
-                  Double zMoon  = sru.getZ();
-                  moonAlt = heMoon.doubleValue();
-                  moonZ = zMoon.doubleValue();
-                  
-//                printout("GHA:" + GeomUtil.decToSex(ghaSun, GeomUtil.SWING, GeomUtil.NONE));
-//                printout("Dec:" + GeomUtil.decToSex(decSun, GeomUtil.SWING, GeomUtil.NS));
-
-                  if (heSun.doubleValue() > 0)
-                  {
-                    grabbedData.add("Sun Alt:" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heSun + ")");
-                    grabbedData.add("Sun Z  :" + GeomUtil.decToSex(zSun, GeomUtil.SWING, GeomUtil.NONE));
-                  }
-                  else
-                    grabbedData.add("Sun under the horizon (" + GeomUtil.decToSex(heSun, GeomUtil.SWING, GeomUtil.NONE) + ")");            
-                  
-                  if (heMoon.doubleValue() > 0)
-                  {
-                    grabbedData.add("Moon Alt:" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE)); // + " (" + heMoon + ")");
-                    grabbedData.add("Moon Z  :" + GeomUtil.decToSex(zMoon, GeomUtil.SWING, GeomUtil.NONE));
-                  }
-                  else
-                    grabbedData.add("Moon under the horizon (" + GeomUtil.decToSex(heMoon, GeomUtil.SWING, GeomUtil.NONE) + ")");            
+                  grabbedData.add("Current Calculated on " + currentTimeBuffer + " min.");
+                  grabbedData.add("  Speed:" + DF22.format(curSpeed) + " kts");
+                  grabbedData.add("    Dir:" + Integer.toString(curDir % 360) + degSymbol);
                 }
+                              
+  //            specialInternalFrame.repaint();
+//              System.out.println("... >>> DEBUG >>> Desktop.repaint");
+                desktop.repaint();
+//                try
+//                {
+//                  SwingUtilities.invokeAndWait(new Runnable()
+//                    {
+//                      public void run()
+//                      {
+//                        desktop.repaint();
+//                      }
+//                    });
+//                }
+//                catch (InvocationTargetException ite)
+//                {
+//                  ite.printStackTrace();
+//                }
+//                catch (InterruptedException ie)
+//                {
+//                  ie.printStackTrace();
+//                }
+                try { Thread.sleep(1000L); } catch (Exception ex) {} 
               }
-              double aws = 0d;
-              try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
-              int awa    = 0;
-              try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
-              double bsp = 0d;
-              try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
-              int hdg    = 0;
-              try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
-              
-              double bl = 0d; // Big Log
-              try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
-              double sl = 0d; // Small log
-              try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
-              double depth = 0d;
-              try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
-              double temp  = 0d;
-              try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
-              double atemp  = Double.MIN_VALUE;
-              try { atemp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.AIR_TEMP, true)).getValue(); } catch (Exception ex) {}              
-              double bpress  = Double.MIN_VALUE;
-              try { bpress = ((Pressure)NMEAContext.getInstance().getCache().get(NMEADataCache.BARO_PRESS, true)).getValue(); } catch (Exception ex) {}              
-              
-              grabbedData.add("AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + degSymbol);
-              grabbedData.add("BSP:" + DF22.format(bsp) + " kts");
-              grabbedData.add("HDG:" + Integer.toString(hdg % 360) + degSymbol);
-              grabbedData.add("Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm");
-              grabbedData.add("DBT: " + DF22.format(depth) + " m");
-              grabbedData.add("Water Temp   : " + DF22.format(temp) + degSymbol + "C");
-              if (atemp != Double.MIN_VALUE)
-                grabbedData.add("Air Temp     : " + DF22.format(atemp) + degSymbol + "C");
-              if (bpress != Double.MIN_VALUE)
-                grabbedData.add("Baro Pressure: " + DF31.format(bpress) + " hPa");
-                            
-//            specialInternalFrame.repaint();
-              desktop.repaint();
-              try { Thread.sleep(1000L); } catch (Exception ex) {} 
             }
+          }
+          catch (Exception ex)
+          {
+            ex.printStackTrace();
           }
        // System.out.println("DataGrabber thread terminated.");
         }
@@ -3769,6 +3849,7 @@ public class DesktopFrame
              getBGWinByTitle(AW_BG_WINDOW_TITLE).isDisplayBGWindow()         ||
              getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow())
       {
+        NMEADataCache ndc = NMEAContext.getInstance().getCache();
         try
         {
           double g = 0d;
@@ -3777,7 +3858,7 @@ public class DesktopFrame
           try 
           { 
 //          posString += ("L:" + GeomUtil.decToSex(NMEACache.getInstance().getLat(), GeomUtil.SWING, GeomUtil.NS)); 
-            posString += ("L:" + GeomUtil.decToSex(((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lat, GeomUtil.SWING, GeomUtil.NS)); 
+            synchronized (ndc) { posString += ("L:" + GeomUtil.decToSex(((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lat, GeomUtil.SWING, GeomUtil.NS)); }
           } 
           catch (Exception ex) 
           { 
@@ -3788,7 +3869,7 @@ public class DesktopFrame
           try 
           { 
 //          g = NMEACache.getInstance().getLng();
-            g = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true)).lng; 
+            synchronized (ndc) { g = ((GeoPos)ndc.get(NMEADataCache.POSITION, true)).lng; }
             posString += ("G:" + GeomUtil.decToSex(g, GeomUtil.SWING, GeomUtil.EW)); 
           } 
           catch (Exception ex) 
@@ -3800,7 +3881,7 @@ public class DesktopFrame
           try 
           { 
 //          hsString += Integer.toString(((int)NMEACache.getInstance().getCog())); 
-            hsString += Integer.toString((int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.COG, true)).getValue()); 
+            synchronized (ndc) { hsString += Integer.toString((int)((Angle360)ndc.get(NMEADataCache.COG, true)).getValue()); }
           } 
           catch (Exception ex) 
           { 
@@ -3811,7 +3892,7 @@ public class DesktopFrame
           try 
           { 
 //          hsString += (NMEACache.getInstance().getSog()); 
-            hsString += DF22.format(((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.SOG, true)).getDoubleValue()); 
+            synchronized (ndc) { hsString += DF22.format(((Speed)ndc.get(NMEADataCache.SOG, true)).getDoubleValue()); }
           } 
           catch (Exception ex) { System.err.println("SOG in Cache"); hsString += "-"; } // TODO A Format
           hsString += " kts";
@@ -3824,7 +3905,7 @@ public class DesktopFrame
             { 
 //            gpsTimeString = "GPS Time:" + sdf3.format(NMEACache.getInstance().getGpsDate());
 //            gpsTimeString = "GPS Time:" + sdf3.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
-              gpsTimeString = SDF.format(((UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true)).getValue());
+              synchronized (ndc) { gpsTimeString = SDF.format(((UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true)).getValue()); }
             } 
             catch (Exception ignore) 
             {
@@ -3834,7 +3915,7 @@ public class DesktopFrame
             try 
             { 
 //            time = NMEACache.getInstance().getGpsDate().getTime(); 
-              time = ((UTCTime)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); 
+              synchronized (ndc) { time = ((UTCTime)ndc.get(NMEADataCache.GPS_TIME, true)).getValue().getTime(); }
             } 
             catch (NullPointerException npe) { System.err.println("NPE for GPS Time..."); }
             catch (Exception oops) { oops.printStackTrace(); }
@@ -3855,161 +3936,163 @@ public class DesktopFrame
 //        int hdg    = NMEACache.getInstance().getHdg();
 //        double bl  = NMEACache.getInstance().getBigLog();
 //        double sl  = NMEACache.getInstance().getSmallLog();
-          
-          double aws = 0d;
-          try { aws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
-          int awa    = 0;
-          try { awa = (int)((Angle180)NMEAContext.getInstance().getCache().get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
-          double bsp = 0d;
-          try { bsp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
-          int hdg    = 0;
-          try { hdg = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
-          
-          double bl = 0d;
-          try { bl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
-          double sl = 0d;
-          try { sl = ((Distance)NMEAContext.getInstance().getCache().get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
-          double depth = 0d;
-          try { depth = ((Depth)NMEAContext.getInstance().getCache().get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
-          double temp  = 0d;
-          try { temp = ((Temperature)NMEAContext.getInstance().getCache().get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
-          
-          windString  = "AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + "\272\n";
-          bspString   = "BSP:" + DF22.format(bsp) + " kts\n";
-          hdgString   = "HDG:" + Integer.toString(hdg) + "\n";
-          logString   = "Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm\n";
-          depthString = "DBT: " + DF22.format(depth) + " m\n";
-          tempString  = "Water Temp:" + DF22.format(temp) + "\272C";
-          
-          nmeaString = gpsTimeString + "\n" + 
-                       posString + "\n" +
-                       hsString +
-                       solarTime + (solarTime.endsWith("\n")?"":"\n") +
-                       windString + 
-                       bspString +
-                       hdgString +
-                       logString +
-                       depthString +
-                       tempString;
-          
-          satList = new ArrayList<GPSSatellite>();
-          Map<Integer, SVData> satmap = NMEACache.getInstance().getSatellites();
-
-          if (satmap != null)
-          {
-            Set<Integer> k = satmap.keySet();
-            for (Integer satKey : k)
-            {
-              SVData svdata = satmap.get(satKey);
-              GPSSatellite gps = new GPSSatellite(svdata.getSvID(),
-                                                  svdata.getElevation(),
-                                                  svdata.getAzimuth(),
-                                                  svdata.getSnr());
-              satList.add(gps);
-            }
-          }
-          
-          if (getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow()) // Calculate Almanac
-          {
-            GeoPos pos = ((GeoPos)NMEAContext.getInstance().getCache().get(NMEADataCache.POSITION, true));
-            UTCDate utcDate = (UTCDate)NMEAContext.getInstance().getCache().get(NMEADataCache.GPS_DATE_TIME, true);
-            if (utcDate == null) // Then get System date
-            {
-              Date ut = TimeUtil.getGMT();
-              utcDate = new UTCDate(ut);
-            }
-            // Almanac Data
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(utcDate.getValue());
-            double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
-            Core.julianDate(cal.get(Calendar.YEAR), 
-                            cal.get(Calendar.MONTH) + 1, 
-                            cal.get(Calendar.DAY_OF_MONTH), 
-                            cal.get(Calendar.HOUR_OF_DAY), 
-                            cal.get(Calendar.MINUTE), 
-                            cal.get(Calendar.SECOND), 
-                            deltaT);
+          synchronized (ndc) 
+          { 
+            double aws = 0d;
+            try { aws = ((Speed)ndc.get(NMEADataCache.AWS, true)).getDoubleValue(); } catch (Exception ex) {}
+            int awa    = 0;
+            try { awa = (int)((Angle180)ndc.get(NMEADataCache.AWA, true)).getDoubleValue(); } catch (Exception ex) {}
+            double bsp = 0d;
+            try { bsp = ((Speed)ndc.get(NMEADataCache.BSP, true)).getDoubleValue(); } catch (Exception ex) {}
+            int hdg    = 0;
+            try { hdg = (int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
             
-            Anomalies.nutation();
-            Anomalies.aberration();
+            double bl = 0d;
+            try { bl = ((Distance)ndc.get(NMEADataCache.LOG, true)).getDoubleValue(); } catch (Exception ex) {}          
+            double sl = 0d;
+            try { sl = ((Distance)ndc.get(NMEADataCache.DAILY_LOG, true)).getDoubleValue(); } catch (Exception ex) {}     
+            double depth = 0d;
+            try { depth = ((Depth)ndc.get(NMEADataCache.DBT, true)).getDoubleValue(); } catch (Exception ex) {}
+            double temp  = 0d;
+            try { temp = ((Temperature)ndc.get(NMEADataCache.WATER_TEMP, true)).getValue(); } catch (Exception ex) {}
             
-            Core.aries();
-            Core.sun();
-            Venus.compute();
-            Mars.compute();
-            Jupiter.compute();
-            Saturn.compute();
-            Moon.compute();
-            Core.polaris();
-            Core.moonPhase();
-            Core.weekDay();
-            SightReductionUtil sru = null;
-            if (pos != null)
+            windString  = "AWS:" + DF22.format(aws) + " kts, AWA:" + Integer.toString(awa) + "\272\n";
+            bspString   = "BSP:" + DF22.format(bsp) + " kts\n";
+            hdgString   = "HDG:" + Integer.toString(hdg) + "\n";
+            logString   = "Log: " + DF22.format(bl) + " nm, " + DF22.format(sl) + " nm\n";
+            depthString = "DBT: " + DF22.format(depth) + " m\n";
+            tempString  = "Water Temp:" + DF22.format(temp) + "\272C";
+            
+            nmeaString = gpsTimeString + "\n" + 
+                         posString + "\n" +
+                         hsString +
+                         solarTime + (solarTime.endsWith("\n")?"":"\n") +
+                         windString + 
+                         bspString +
+                         hdgString +
+                         logString +
+                         depthString +
+                         tempString;
+            
+            satList = new ArrayList<GPSSatellite>();
+            Map<Integer, SVData> satmap = NMEACache.getInstance().getSatellites();
+  
+            if (satmap != null)
             {
-              sru = new SightReductionUtil();
-              sru.setL(pos.lat);
-              sru.setG(pos.lng);
+              Set<Integer> k = satmap.keySet();
+              for (Integer satKey : k)
+              {
+                SVData svdata = satmap.get(satKey);
+                GPSSatellite gps = new GPSSatellite(svdata.getSvID(),
+                                                    svdata.getElevation(),
+                                                    svdata.getAzimuth(),
+                                                    svdata.getSnr());
+                satList.add(gps);
+              }
             }
-            rtaString = "Aries\tGHA\t" + GeomUtil.decToSex(Context.GHAAtrue, GeomUtil.SWING, GeomUtil.NONE);                
-            rtaString += "\nSun\tGHA\t" + GeomUtil.decToSex(Context.GHAsun, GeomUtil.SWING, GeomUtil.NONE);                 
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsun, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);
-            if (pos != null)
+            
+            if (getBGWinByTitle(REALTIME_ALMANAC_BG_WINDOW_TITLE).isDisplayBGWindow()) // Calculate Almanac
             {
-              sru.setAHG(Context.GHAsun);
-              sru.setD(Context.DECsun);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
-            }
-            rtaString += "\nMoon\tGHA\t" + GeomUtil.decToSex(Context.GHAmoon, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmoon, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
-            if (pos != null)
-            {
-              sru.setAHG(Context.GHAmoon);
-              sru.setD(Context.DECmoon);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
-            }
-            rtaString += "\nVenus\tGHA\t" + GeomUtil.decToSex(Context.GHAvenus, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECvenus, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
-            if (pos != null)
-            {
-              sru.setAHG(Context.GHAvenus);
-              sru.setD(Context.DECvenus);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
-            }
-            rtaString += "\nMars\tGHA\t" + GeomUtil.decToSex(Context.GHAmars, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmars, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
-            if (pos != null)
-            {
-              sru.setAHG(Context.GHAmars);
-              sru.setD(Context.DECmars);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
-            }
-            rtaString += "\nJupiter\tGHA\t" + GeomUtil.decToSex(Context.GHAjupiter, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECjupiter, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
-            if (pos != null)
-            {
-              sru.setAHG(Context.GHAjupiter);
-              sru.setD(Context.DECjupiter);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
-            }
-            rtaString += "\nSaturn\tGHA\t" + GeomUtil.decToSex(Context.GHAsaturn, GeomUtil.SWING, GeomUtil.NONE);                  
-            rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsaturn, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
-            if (pos != null)
-            {
-              sru.setAHG(Context.GHAsaturn);
-              sru.setD(Context.DECsaturn);    
-              sru.calculate();  
-              rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
-              rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              GeoPos pos = ((GeoPos)ndc.get(NMEADataCache.POSITION, true));
+              UTCDate utcDate = (UTCDate)ndc.get(NMEADataCache.GPS_DATE_TIME, true);
+              if (utcDate == null) // Then get System date
+              {
+                Date ut = TimeUtil.getGMT();
+                utcDate = new UTCDate(ut);
+              }
+              // Almanac Data
+              Calendar cal = Calendar.getInstance();
+              cal.setTime(utcDate.getValue());
+              double deltaT = ((Double)(ParamPanel.getData()[ParamData.DELTA_T][ParamPanel.PRM_VALUE])).doubleValue();
+              Core.julianDate(cal.get(Calendar.YEAR), 
+                              cal.get(Calendar.MONTH) + 1, 
+                              cal.get(Calendar.DAY_OF_MONTH), 
+                              cal.get(Calendar.HOUR_OF_DAY), 
+                              cal.get(Calendar.MINUTE), 
+                              cal.get(Calendar.SECOND), 
+                              deltaT);
+              
+              Anomalies.nutation();
+              Anomalies.aberration();
+              
+              Core.aries();
+              Core.sun();
+              Venus.compute();
+              Mars.compute();
+              Jupiter.compute();
+              Saturn.compute();
+              Moon.compute();
+              Core.polaris();
+              Core.moonPhase();
+              Core.weekDay();
+              SightReductionUtil sru = null;
+              if (pos != null)
+              {
+                sru = new SightReductionUtil();
+                sru.setL(pos.lat);
+                sru.setG(pos.lng);
+              }
+              rtaString = "Aries\tGHA\t" + GeomUtil.decToSex(Context.GHAAtrue, GeomUtil.SWING, GeomUtil.NONE);                
+              rtaString += "\nSun\tGHA\t" + GeomUtil.decToSex(Context.GHAsun, GeomUtil.SWING, GeomUtil.NONE);                 
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsun, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAsun);
+                sru.setD(Context.DECsun);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
+              rtaString += "\nMoon\tGHA\t" + GeomUtil.decToSex(Context.GHAmoon, GeomUtil.SWING, GeomUtil.NONE);                  
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmoon, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAmoon);
+                sru.setD(Context.DECmoon);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
+              rtaString += "\nVenus\tGHA\t" + GeomUtil.decToSex(Context.GHAvenus, GeomUtil.SWING, GeomUtil.NONE);                  
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECvenus, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAvenus);
+                sru.setD(Context.DECvenus);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
+              rtaString += "\nMars\tGHA\t" + GeomUtil.decToSex(Context.GHAmars, GeomUtil.SWING, GeomUtil.NONE);                  
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECmars, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAmars);
+                sru.setD(Context.DECmars);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
+              rtaString += "\nJupiter\tGHA\t" + GeomUtil.decToSex(Context.GHAjupiter, GeomUtil.SWING, GeomUtil.NONE);                  
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECjupiter, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAjupiter);
+                sru.setD(Context.DECjupiter);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
+              rtaString += "\nSaturn\tGHA\t" + GeomUtil.decToSex(Context.GHAsaturn, GeomUtil.SWING, GeomUtil.NONE);                  
+              rtaString += "\n\tD\t" + GeomUtil.decToSex(Context.DECsaturn, GeomUtil.SWING, GeomUtil.NS, GeomUtil.LEADING_SIGN);                 
+              if (pos != null)
+              {
+                sru.setAHG(Context.GHAsaturn);
+                sru.setD(Context.DECsaturn);    
+                sru.calculate();  
+                rtaString += "\n\tAlt\t" + GeomUtil.decToSex(sru.getHe(), GeomUtil.SWING, GeomUtil.NONE);
+                rtaString += "\n\tZ\t" + GeomUtil.decToSex(sru.getZ(), GeomUtil.SWING, GeomUtil.NONE);
+              }
             }
           }
         }
@@ -4526,10 +4609,32 @@ public class DesktopFrame
       try { tws = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.TWS, true)).getDoubleValue(); } catch (Exception ex) {}
       double twa = 0d; 
       try { twa = ((Angle180) NMEAContext.getInstance().getCache().get(NMEADataCache.TWA, true)).getValue(); } catch (Exception ignore) {}
-      int cdr = 0; // TODO The calculated one
-      try { cdr = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.CDR, true)).getDoubleValue(); } catch (Exception ex) {}
-      double csp = 0; // TODO The calculated one
-      try { csp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.CSP, true)).getDoubleValue(); } catch (Exception ex) {}
+      int cdr = 0; 
+//    try { cdr = (int)((Angle360)NMEAContext.getInstance().getCache().get(NMEADataCache.CDR, true)).getDoubleValue(); } catch (Exception ex) {}
+      double csp = 0;
+//    try { csp = ((Speed)NMEAContext.getInstance().getCache().get(NMEADataCache.CSP, true)).getDoubleValue(); } catch (Exception ex) {}
+      try
+      {
+        Current current = (Current)NMEAContext.getInstance().getCache().get(NMEADataCache.VDR_CURRENT);
+        if (current == null)
+        {
+          Map<Long, NMEADataCache.CurrentDefinition> currentMap = 
+                              ((Map<Long, NMEADataCache.CurrentDefinition>)NMEAContext.getInstance().getCache().get(NMEADataCache.CALCULATED_CURRENT));  //.put(bufferLength, new NMEADataCache.CurrentDefinition(bufferLength, new Speed(speed), new Angle360(dir)));
+          Set<Long> keys = currentMap.keySet();
+          for (Long l : keys)
+          {
+            cdr = (int)Math.round(currentMap.get(l).getDirection().getValue());
+            csp = currentMap.get(l).getSpeed().getValue();
+          }
+        }
+        else
+        {
+          cdr = current.angle;
+          csp = current.speed;
+        }
+      }
+      catch (Exception ignore) {}
+                  
       float bat = 0;
       try { bat = ((Float)NMEAContext.getInstance().getCache().get(NMEADataCache.BATTERY, true)).floatValue(); } catch (Exception ignore) {}
       double xte = 0;
@@ -4572,12 +4677,12 @@ public class DesktopFrame
           str += ("LOG:" + lpad(DIST_FMT.format(bl), " ", 11)     + "\n");
         else if ("MAT".equals(id) && airtemp != -Double.MAX_VALUE)
           str += ("MAT:" + lpad(TEMP_FMT.format(airtemp), " ", 7) + "\n");
-        else if ("PRS".equals(id) && prmsl > 0)
+        else if ("PRS".equals(id) /* && prmsl > 0 */)
           str += ("PRS:" + lpad(PRESS_FMT.format(prmsl), " ", 10) + "\n");
-        else if ("CDR".equals(id) && prmsl > 0)
+        else if ("CDR".equals(id))
           str += ("CDR:" + lpad(DIR_FMT.format(cdr), " ", 5) + "\n");
         else if ("CSP".equals(id))
-          str += ("AWS:" + lpad(SPEED_FMT.format(csp), " ", 8)    + "\n");
+          str += ("CSP:" + lpad(SPEED_FMT.format(csp), " ", 8)    + "\n");
         else if ("BAT".equals(id))
           str += ("BAT:" + lpad(VOLT_FMT.format(bat), " ", 7)    + "\n");
         else if ("XTE".equals(id))
