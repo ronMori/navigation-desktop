@@ -758,10 +758,10 @@ public class DesktopFrame
             }
             // Draw arrows here
             // TWD
-            int x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
-            int y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(twd + 90)));  
-            int x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(twd + 90)));  
-            int y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(twd + 90)));  
+            int x1 = (dim.width / 2)  + (int)((radius * 0.75) * Math.cos(Math.toRadians(twd + 90)));  
+            int y1 = (dim.height / 2) + (int)((radius * 0.75) * Math.sin(Math.toRadians(twd + 90)));  
+            int x2 = (dim.width / 2)  - (int)((radius * 0.75) * Math.cos(Math.toRadians(twd + 90)));  
+            int y2 = (dim.height / 2) - (int)((radius * 0.75) * Math.sin(Math.toRadians(twd + 90)));  
             Point from = new Point(x1, y1), to = new Point(x2, y2);
             Graphics2D g2 = (Graphics2D)gr;
             Utils.drawHollowArrow(g2, from, to, wpFontColor);
@@ -772,31 +772,57 @@ public class DesktopFrame
             String str = "TWD";
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
             int strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
-            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75) - 20);        
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.70) - 20);        
             str = Integer.toString(twd % 360) + "\272";
             strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
-            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.70));        
             g2.setTransform(oldTx);
 
-            x1 = (dim.width / 2)  + (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
-            y1 = (dim.height / 2) + (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
-            x2 = (dim.width / 2)  - (int)((radius * 0.8) * Math.cos(Math.toRadians(hdg + 90)));  
-            y2 = (dim.height / 2) - (int)((radius * 0.8) * Math.sin(Math.toRadians(hdg + 90)));  
+            x1 = (dim.width / 2)  + (int)((radius * 0.75) * Math.cos(Math.toRadians(hdg + 90)));  
+            y1 = (dim.height / 2) + (int)((radius * 0.75) * Math.sin(Math.toRadians(hdg + 90)));  
+            x2 = (dim.width / 2)  - (int)((radius * 0.75) * Math.cos(Math.toRadians(hdg + 90)));  
+            y2 = (dim.height / 2) - (int)((radius * 0.75) * Math.sin(Math.toRadians(hdg + 90)));  
             from = new Point(x1, y1); 
             to = new Point(x2, y2);
             Utils.drawHollowArrow(g2, from, to, wpFontColor);
         //  AffineTransform oldTx = g2.getTransform();
+            // An inner "rose", for the twd
+            graphicXOffset = 0;
+            graphicYOffset = 0;
+            radius *= 0.95;
+            for (int i=twd; i<twd+360; i+= 1)
+            {
+              int notchLength = ((i-twd)%45==0?20:((i-twd)%5==0?15:10));
+              int _x1 = (dim.width / 2) + (int)((radius - notchLength) * Math.cos(Math.toRadians(i)));  
+              int _y1 = (dim.height / 2) + (int)((radius - notchLength) * Math.sin(Math.toRadians(i)));  
+              int _x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
+              int _y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
+              gr.drawLine(_x1 + graphicXOffset, _y1 + graphicYOffset, _x2 + graphicXOffset, _y2 + graphicYOffset);
+            }
 
             g2.transform(AffineTransform.getTranslateInstance((dim.width / 2), (dim.height / 2)));
             g2.transform(AffineTransform.getRotateInstance(Math.toRadians(hdg)));  
             str = "HDG";
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 20f));
             strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
-            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75) - 20);        
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.70) - 20);        
             str = Integer.toString(hdg % 360) + "\272";
             strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
-            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+            g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.70));        
             g2.setTransform(oldTx);
+            // An inner "rose", for the heading
+            graphicXOffset = 0;
+            graphicYOffset = 0;
+            radius *= 0.95;
+            for (int i=hdg; i<hdg+360; i+= 1)
+            {
+              int notchLength = ((i-hdg)%45==0?20:((i-hdg)%5==0?15:10));
+              int _x1 = (dim.width / 2) + (int)((radius - notchLength) * Math.cos(Math.toRadians(i)));  
+              int _y1 = (dim.height / 2) + (int)((radius - notchLength) * Math.sin(Math.toRadians(i)));  
+              int _x2 = (dim.width / 2) + (int)((radius) * Math.cos(Math.toRadians(i)));  
+              int _y2 = (dim.height / 2) + (int)((radius) * Math.sin(Math.toRadians(i)));  
+              gr.drawLine(_x1 + graphicXOffset, _y1 + graphicYOffset, _x2 + graphicXOffset, _y2 + graphicYOffset);
+            }
             
             // Sun & Moon
             if (sunAlt >= 0 && sunAzimuthCheckBox.isSelected())
@@ -813,10 +839,10 @@ public class DesktopFrame
               str = "Sun";
               g2.setFont(g2.getFont().deriveFont(Font.BOLD, 16f));
               strWidth = gr.getFontMetrics(g2.getFont()).stringWidth(str.trim());
-              g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.75));        
+              g2.drawString(str, -strWidth / 2, (int)((dim.height / 2) * -0.70));        
               str = GeomUtil.decToSex(sunAlt, GeomUtil.SWING, GeomUtil.NONE);
               strWidth = gr.getFontMetrics(gr.getFont()).stringWidth(str.trim());
-              g2.drawString(str, -strWidth / 2, ((int)((dim.height / 2) * -0.75)) - 18);        
+              g2.drawString(str, -strWidth / 2, ((int)((dim.height / 2) * -0.70)) - 18);        
               g2.setTransform(oldTx);
             }
             if (moonAlt >= 0 && moonAzimuthCheckBox.isSelected())

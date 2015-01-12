@@ -24,7 +24,8 @@ public class DesktopContext
 //public final static String VERSION_NUMBER = "3.0.1.1"; // In sync with the Weather Wizard
 //public final static String VERSION_NUMBER = "3.0.1.2"; // In sync with the Weather Wizard
 //public final static String VERSION_NUMBER = "3.0.1.3"; // In sync with the Weather Wizard
-  public final static String VERSION_NUMBER = "3.0.1.4"; // In sync with the Weather Wizard
+//public final static String VERSION_NUMBER = "3.0.1.4"; // In sync with the Weather Wizard
+  public final static String VERSION_NUMBER = "3.0.1.5"; // In sync with the Weather Wizard
 
   public final static String PRODUCT_ID     = "desktop." + VERSION_NUMBER;
   
