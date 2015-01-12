@@ -582,6 +582,10 @@ public class OlivSoftDesktop
 
   public static void main(String[] args)
   {
+    System.out.println("-------------------------------------");
+    System.out.println("Starting: " + DesktopContext.PRODUCT_ID);
+    System.out.println("-------------------------------------");
+
     Logger.log("Starting the Desktop", Logger.INFO);      
     if (!"yes".equals(System.getProperty("headless", "no")))
     {
