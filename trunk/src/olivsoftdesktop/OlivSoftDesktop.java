@@ -21,10 +21,12 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
 
@@ -586,6 +588,36 @@ public class OlivSoftDesktop
     System.out.println("Starting: " + DesktopContext.PRODUCT_ID);
     System.out.println("-------------------------------------");
 
+    // No Rebroadcast list
+    File nbl = new File("no.rebroadcast.list");
+    if (nbl.exists())
+    {
+      try
+      {
+        List<String> noRebroadcastList = new ArrayList<String>();
+        
+        BufferedReader br = new BufferedReader(new FileReader(nbl));
+        String line = "";
+        while (line != null)
+        {
+          line = br.readLine();
+          if (line != null)
+          {
+            if (!line.startsWith("#"))
+              noRebroadcastList.add(line);
+          }
+        }
+        br.close();
+        DesktopContext.getInstance().setNoRebroadcastList(noRebroadcastList);
+      }
+      catch (Exception ex)
+      {
+        ex.printStackTrace();
+      }
+    }
+    
+
+
     Logger.log("Starting the Desktop", Logger.INFO);      
     if (!"yes".equals(System.getProperty("headless", "no")))
     {
@@ -1008,9 +1040,9 @@ public class OlivSoftDesktop
                   System.out.println("TCP:" + (_tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable() ? "enabled":"disabled"));
                 }
                 super.manageNMEAString(nmeaString);
-                if (_udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable())
+                if (_udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable() && !DesktopContext.getInstance().notToBeRebroadcasted(nmeaString))
                   _udpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
-                if (_tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable())
+                if (_tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable() && !DesktopContext.getInstance().notToBeRebroadcasted(nmeaString))
                   _tcpWriter.write((DesktopUtilities.superTrim(nmeaString) + NMEA_EOS).getBytes());
                 if (_logFile != null && DesktopContext.getInstance().isFileRebroadcastEnable())
                 {

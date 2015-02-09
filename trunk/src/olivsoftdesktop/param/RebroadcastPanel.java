@@ -11,14 +11,20 @@ import java.awt.event.ActionListener;
 
 import java.text.DecimalFormat;
 
+import java.util.List;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+
+import olivsoftdesktop.ctx.DesktopContext;
 
 public class RebroadcastPanel
   extends JPanel
@@ -51,6 +57,8 @@ public class RebroadcastPanel
   
   private boolean withLogFile = false;
   private boolean withRMI     = true;
+  private JButton excludedStringButton = new JButton();
+  private JSeparator jSeparator1 = new JSeparator();
 
   public RebroadcastPanel()
   {
@@ -74,7 +82,7 @@ public class RebroadcastPanel
     throws Exception
   {
     this.setLayout(gridBagLayout1);
-    this.setSize(new Dimension(263, 68));
+    this.setSize(new Dimension(263, 126));
     xmlJsonComboBox.removeAllItems();
     xmlJsonComboBox.addItem("XML");
     xmlJsonComboBox.addItem("json");
@@ -129,29 +137,46 @@ public class RebroadcastPanel
 //    gpsdPortFormattedTextField.setHorizontalAlignment(JTextField.CENTER);
 //    gpsdPortFormattedTextField.setText("2947");
 
-    this.add(httpPanel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 5), 0, 0));
-    this.add(UDPCheckBox, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 5), 0, 0));
-    this.add(TCPCheckBox, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 5), 0, 0));
-    this.add(httpPortLabel, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(udpPortLabel, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(tcpPortLabel, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 0, 0, 0), 0, 0));
-    this.add(httpPortFormattedTextField, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 5, 0, 5), 0, 0));
-    this.add(udpPortFormattedTextField, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 5, 0, 5), 0, 0));
-    this.add(tcpPortFormattedTextField, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
-          new Insets(0, 5, 0, 5), 0, 0));
-    this.add(verboseCheckBox, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-          new Insets(0, 10, 0, 0), 0, 0));
-    this.add(udpHostNameTextField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
-          new Insets(0, 10, 0, 0), 0, 0));
-    
+    this.add(httpPanel,
+             new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 5), 0, 0));
+    this.add(UDPCheckBox,
+             new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 5), 0, 0));
+    this.add(TCPCheckBox,
+             new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 5), 0, 0));
+    this.add(httpPortLabel,
+             new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 0), 0, 0));
+    this.add(udpPortLabel,
+             new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 0), 0, 0));
+    this.add(tcpPortLabel,
+             new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 0, 0, 0), 0, 0));
+    this.add(httpPortFormattedTextField,
+             new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 5, 0, 5), 0, 0));
+    this.add(udpPortFormattedTextField,
+             new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 5, 0, 5), 0, 0));
+    this.add(tcpPortFormattedTextField,
+             new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(0, 5, 0, 5), 0, 0));
+    this.add(verboseCheckBox,
+             new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                    new Insets(0, 10, 0, 0), 0, 0));
+    this.add(udpHostNameTextField,
+             new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                    new Insets(0, 10, 0, 0), 0, 0));
+
+    this.add(excludedStringButton,
+             new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
+                                    new Insets(5, 0, 0, 0), 0, 0));
+    this.add(jSeparator1,
+             new GridBagConstraints(0, 5, 4, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
+                                    new Insets(5, 0, 0, 0), 0, 0));
     if (withRMI)
     {
       this.add(RMICheckBox, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
@@ -244,6 +269,15 @@ public class RebroadcastPanel
       });
     logFileTextField.setHorizontalAlignment(JTextField.RIGHT);
     logFileButton.setText("...");
+    excludedStringButton.setText("Excluded Strings");
+    excludedStringButton.setToolTipText("From the file no.rebroadcast.list");
+    excludedStringButton.addActionListener(new ActionListener()
+    {
+      public void actionPerformed(ActionEvent e)
+      {
+        excludedStringsButton_actionPerformed(e);
+      }
+    });
     tcpPortLabel.setEnabled(false);
     
     tcpPortFormattedTextField.setEnabled(false);
@@ -378,5 +412,19 @@ public class RebroadcastPanel
   public String getLogFileName()
   {
     return logFileTextField.getText();
+  }
+
+  private void excludedStringsButton_actionPerformed(ActionEvent e)
+  {
+    String mess = "NMEA Sentences excluded from re-broadcasting:\n";
+    List<String> nrbl = DesktopContext.getInstance().getNoRebroadcastList();
+    if (nrbl == null || nrbl.size() == 0)
+      mess += "none";
+    else
+    {
+      for (String s : nrbl)
+        mess += (s + "\n");
+    }
+    JOptionPane.showMessageDialog(this, mess, "Not Re-broadcasted", JOptionPane.INFORMATION_MESSAGE);
   }
 }

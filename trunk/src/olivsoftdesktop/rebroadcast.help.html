@@ -87,6 +87,19 @@ java -cp $CP \
       <br>
       In the example above, TCP re-broadcast will be avaiable, but will start only when turned <b>ON</b> by the Admin Server. As wee said, this is available for the <code>HTTP</code>, <code>TCP</code>, <code>UDP</code>, and <code>FILE</code> outputs.
     </p>
+    <p>
+      There is also an option to prevent some strings from being re-broadcasted.
+      <br>
+      Create a file named <code>no.rebroadcast.list</code>, and on each line, put a regular expression that matches the strings <b>to exclude</b>.
+      <br>
+      Example:
+      <pre>
+ # Regular expressions for the strings NOT to rebroadcast
+ ^\$IIMWV,.*
+ # ^\$IIRMB,.*      
+      </pre>
+      The lines beginning with a '#' are considered as comments.
+    </p>
     <hr>
     <address>&copy; 2014, OlivSoft</address>
   </body>
