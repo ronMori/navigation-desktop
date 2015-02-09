@@ -83,8 +83,10 @@ import java.awt.event.WindowEvent;
 
 import java.awt.geom.AffineTransform;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -2879,7 +2881,7 @@ public class DesktopFrame
                 
                 String prefix = "File:";
                 String message = str;
-                if (TCPPort != -1 && str != null)
+                if (TCPPort != -1 && str != null && !DesktopContext.getInstance().notToBeRebroadcasted(str))
                 {
                   if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on TCP Port " + TCPPort + ": [" + str + "]");
@@ -2889,7 +2891,7 @@ public class DesktopFrame
                     prefix += (" => TCP " + TCPPort);
                   }
                 }
-                if (UDPPort != -1 && str != null)
+                if (UDPPort != -1 && str != null && !DesktopContext.getInstance().notToBeRebroadcasted(str))
                 {
                   if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);
@@ -3075,7 +3077,7 @@ public class DesktopFrame
               // Add condition set by the Admin HTTP Port...
               if (TCPPort != -1)
               {
-                if (tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable())
+                if (tcpWriter != null && DesktopContext.getInstance().isTcpRebroadcastEnable() && !DesktopContext.getInstance().notToBeRebroadcasted(str))
                 {
                   if (DesktopContext.getInstance().isDesktopVerbose())
                     System.out.println("Rebroadcasting on TCP Port " + TCPPort + ":" + str);
@@ -3083,7 +3085,7 @@ public class DesktopFrame
                   prefix += (" => TCP " + TCPPort);
                 }
               }
-              if (UDPPort != -1 && udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable())
+              if (UDPPort != -1 && udpWriter != null && DesktopContext.getInstance().isUdpRebroadcastEnable() && !DesktopContext.getInstance().notToBeRebroadcasted(str))
               {
                 if (DesktopContext.getInstance().isDesktopVerbose())
                   System.out.println("Rebroadcasting on UDP Port " + UDPPort + ":" + str);

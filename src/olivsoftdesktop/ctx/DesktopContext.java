@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import olivsoftdesktop.DesktopFrame;
 
 import olivsoftdesktop.server.RMI_NMEAServerManager;
@@ -51,6 +54,47 @@ public class DesktopContext
   private boolean fileRebroadcastAvailable = false;
   
   private int httpRebroadcastPort    = 0;
+
+  private List<String> noRebroadcastList = null;
+
+  public void setNoRebroadcastList(List<String> noRebroadcastList)
+  {
+    this.noRebroadcastList = noRebroadcastList;
+  }
+
+  public List<String> getNoRebroadcastList()
+  {
+    return noRebroadcastList;
+  }
+  
+  public boolean notToBeRebroadcasted(String data)
+  {
+    boolean b = false;
+    try
+    {
+      if (noRebroadcastList != null)
+      {
+        for (String s : noRebroadcastList)
+        {
+          Pattern ptrn = Pattern.compile(s);
+          Matcher m = ptrn.matcher(data);
+          if (m.find())
+          {
+      //    System.out.println(">>> DEBUG >>> Excluded from re-broadcast:" + data);
+            b = true;
+            break;
+          }
+        }
+      }
+    }
+    catch (Exception ex)
+    {
+      ex.printStackTrace();
+    }
+//    if (!b)
+//      System.out.println(">>> DEBUG >>> String accepted:" + data);
+    return b;
+  }
 
   public void setHttpRebroadcastPort(int httpRebroadcastPort)
   {
