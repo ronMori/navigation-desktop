@@ -379,11 +379,11 @@ public class CharacterModeConsole
     }
     else if ("HDG".equals(key))
     {
-      try { value = (int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = ((int)((Angle360)ndc.get(NMEADataCache.HDG_TRUE, true)).getDoubleValue()) % 360; } catch (Exception ex) {}
     }
     else if ("TWD".equals(key))
     {
-      try { value = (int)((Angle360)ndc.get(NMEADataCache.TWD, true)).getDoubleValue(); } catch (Exception ex) {}
+      try { value = ((int)((Angle360)ndc.get(NMEADataCache.TWD, true)).getDoubleValue()) % 360; } catch (Exception ex) {}
     }
     else if ("AWS".equals(key))
     {
