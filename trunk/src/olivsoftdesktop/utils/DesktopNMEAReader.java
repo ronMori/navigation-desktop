@@ -29,6 +29,8 @@ public class DesktopNMEAReader
   private String data = null;
   private int option = -1;
   
+  private boolean connected = false, quit = false;
+  
   CustomNMEAClient nmeaClient = null;
 
   public DesktopNMEAReader(boolean v,
@@ -48,13 +50,29 @@ public class DesktopNMEAReader
     this.host = host;
     this.data = fName;
     this.pfile = propertiesFile;
-    try
+    
+    this.quit = false;
+    this.connected = false;
+    while (!this.connected && !this.quit)
     {
-      jbInit();
+      try
+      {
+        jbInit();
+        this.connected = true;
+      }
+      catch (Exception e)
+      {
+        e.printStackTrace();
+      }
+      if (!this.connected)
+      {
+        System.out.println("... Will retry to connect.");
+        try { Thread.sleep(1000L); } catch (InterruptedException ie) {}
+      }
     }
-    catch (Exception e)
+    if (!this.connected)
     {
-      e.printStackTrace();
+      System.err.println("Stop trying to connect...");
     }
   }
   
@@ -225,6 +243,7 @@ public class DesktopNMEAReader
   {
     if (DesktopContext.getInstance().isDesktopVerbose())
       System.out.println(this.getClass().getName() + ": Stop Reading requested.");
+    this.quit = true;
     nmeaClient.stopReading();
   }
 
